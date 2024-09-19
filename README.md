@@ -2,7 +2,9 @@
 
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json))](https://github.com/astral-sh/ruff)
 
-This repo contains
+This repo contains the code for WQU Capstone project where we investigate the use of LLM multi-agent systems for solving tasks
+in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
+systems may perform on other financial tasks as well.
 
 ## Development
 
