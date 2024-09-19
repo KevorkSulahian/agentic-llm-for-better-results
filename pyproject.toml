@@ -23,6 +23,15 @@ dependencies = [
 
 [tool.ruff]
 line-length = 100
+unfixable = [
+  "F401", # F401 unused imports
+]
+
+[tool.ruff.extend-per-file-ignores]
+"__init__.py" = [
+  "F401",
+  "F403",
+]
 
 [tool.uv]
 dev-dependencies = [
