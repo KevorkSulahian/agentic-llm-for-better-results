@@ -21,12 +21,15 @@ dependencies = [
     { name = "great-tables" },
     { name = "ipywidgets" },
     { name = "jupyterlab" },
+    { name = "jupyterlab-quarto" },
     { name = "langchain" },
     { name = "matplotlib" },
     { name = "pandas" },
     { name = "seaborn" },
     { name = "spacy" },
+    { name = "tabulate" },
     { name = "transformers" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -39,18 +42,21 @@ requires-dist = [
     { name = "cohere", specifier = ">=5.9.2" },
     { name = "crewai", specifier = ">=0.61" },
     { name = "crewai-tools", specifier = ">=0.12.1" },
-    { name = "datasets", specifier = ">=3.0.0" },
-    { name = "edgartools", specifier = ">=2.31.0" },
+    { name = "datasets", specifier = ">=3" },
+    { name = "edgartools", specifier = ">=2.31" },
     { name = "feedparser", specifier = ">=6.0.11" },
     { name = "great-tables", specifier = ">=0.11.1" },
     { name = "ipywidgets", specifier = ">=8.1.5" },
     { name = "jupyterlab", specifier = ">=4.2.5" },
+    { name = "jupyterlab-quarto", specifier = ">=0.3.5" },
     { name = "langchain", specifier = ">=0.2.16" },
     { name = "matplotlib", specifier = ">=3.9.2" },
     { name = "pandas", specifier = ">=2.2.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "spacy", specifier = ">=3.7.6" },
+    { name = "tabulate", specifier = ">=0.9.0" },
     { name = "transformers", specifier = ">=4.44.2" },
+    { name = "typer", specifier = ">=0.12.5" },
 ]
 
 [package.metadata.requires-dev]
@@ -2257,6 +2263,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/90/51/9187be60d989df97f5f0aba133fa54e7300f17616e065d1ada7d7646b6d6/jupyterlab_pygments-0.3.0.tar.gz", hash = "sha256:721aca4d9029252b11cfa9d185e5b5af4d54772bb8072f9b7036f4170054d35d", size = 512900 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/dd/ead9d8ea85bf202d90cc513b533f9c363121c7792674f78e0d8a854b63b4/jupyterlab_pygments-0.3.0-py3-none-any.whl", hash = "sha256:841a89020971da1d8693f1a99997aefc5dc424bb1b251fd6322462a1b8842780", size = 15884 },
+]
+
+[[package]]
+name = "jupyterlab-quarto"
+version = "0.3.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/52/aa211744900c92abe527427296454ba3868cf7257aab36a07e50ce50b817/jupyterlab_quarto-0.3.5.tar.gz", hash = "sha256:535f9ea7e1e67ebc0e7d2b14b05126399551881f65a0ecd5d00b8437b66ba974", size = 1066111 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/6b/a3c4d85f8f609c78336e76b78733d5cdd0871b79fcce1fa66533849aab0c/jupyterlab_quarto-0.3.5-py3-none-any.whl", hash = "sha256:114165409aaad2e68202374ab3d02b08015ed3898427d81bdb3fe9f995e151b9", size = 909228 },
 ]
 
 [[package]]

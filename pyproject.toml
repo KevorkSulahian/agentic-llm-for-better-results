@@ -19,12 +19,15 @@ dependencies = [
   "great-tables>=0.11.1",
   "ipywidgets>=8.1.5",
   "jupyterlab>=4.2.5",
+  "jupyterlab-quarto>=0.3.5",
   "langchain>=0.2.16",
   "matplotlib>=3.9.2",
   "pandas>=2.2.2",
   "seaborn>=0.13.2",
   "spacy>=3.7.6",
+  "tabulate>=0.9",
   "transformers>=4.44.2",
+  "typer>=0.12.5",
 ]
 
 [tool.ruff]
