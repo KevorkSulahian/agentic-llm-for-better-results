@@ -29,13 +29,13 @@ dependencies = [
 
 [tool.ruff]
 line-length = 100
-unfixable = [
-  "F401", # F401 unused imports
-]
-
-extend-per-file-ignores."__init__.py" = [
+lint.extend-per-file-ignores."__init__.py" = [
   "F401",
   "F403",
+]
+
+lint.unfixable = [
+  "F401", # F401 unused imports
 ]
 
 [tool.uv]
