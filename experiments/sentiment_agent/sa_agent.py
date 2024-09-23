@@ -32,15 +32,14 @@ def get_fpb_data() -> pd.DataFrame:
 
 def encode_sentiment(sentiment: str) -> int:
     sentiment = sentiment.lower().strip().rstrip(".")
-    match sentiment:
-        case "negative":
-            return 0
-        case "neutral":
-            return 1
-        case "positive":
-            return 2
-        case _:
-            raise ValueError(f"Invalid sentiment: {sentiment}")
+    if sentiment == "negative":
+        return 0
+    elif sentiment == "neutral":
+        return 1
+    elif sentiment == "positive":
+        return 2
+    else:
+        raise ValueError(f"Invalid sentiment: {sentiment}")
 
 
 def main(
@@ -90,15 +89,14 @@ def main(
         process=Process.sequential,  # Default option
     )
 
-    match dataset:
-        case "fpb":
-            df = get_fpb_data()
-            if limit:
-                df = df.head(limit)
-            records = df.to_dict(orient="records")
-        case _:
-            print("Unsupported dataset")
-            raise typer.Exit(1)
+    if dataset == "fpb":
+        df = get_fpb_data()
+        if limit:
+            df = df.head(limit)
+        records = df.to_dict(orient="records")
+    else:
+        print("Unsupported dataset")
+        raise typer.Exit(1)
 
     print(f"Running sentiment analysis on {len(records)} records")
     print("Preview of dataset")
