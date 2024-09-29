@@ -26,6 +26,7 @@ def initialize_llm(model_option, api_key, groq_api_key):
             # base_url="https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-70B-Instruct",
             api_key=api_key,
             temperature=0.1,
+            max_tokens=4000,
         )
     else:
         raise ValueError("Invalid model option selected")
