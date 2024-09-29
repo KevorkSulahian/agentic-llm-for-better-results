@@ -1,33 +1,14 @@
-from pathlib import Path
+import time
 from typing import Optional
 
 import pandas as pd
 import typer
+import util
+from config import DataSetEnum, LlmModelEnum
 from crewai import Agent, Crew, Process, Task
-from datasets import load_dataset
 from rich import print
 from tabulate import tabulate
 from typing_extensions import Annotated
-
-OLLAMA_MODELS = ["llama3.1", "mistral-nemo"]
-DATASETS = ["fpb"]
-
-FPB_CONFIGURATION = "sentences_50agree"
-
-
-def get_fpb_data() -> pd.DataFrame:
-    if Path.is_file(Path(f"fpb_{FPB_CONFIGURATION}.csv")):
-        print("Using cached FPB dataset")
-        df = pd.read_csv(f"fpb_{FPB_CONFIGURATION}.csv")
-    else:
-        print("Downloading FPB dataset")
-        dataset = load_dataset(
-            path="takala/financial_phrasebank", name=FPB_CONFIGURATION, trust_remote_code=True
-        )
-        dataset["train"].to_csv(f"fpb_{FPB_CONFIGURATION}.csv")
-        df = dataset["train"].to_pandas()
-    df = df.rename(columns={"sentence": "phrase"})
-    return df
 
 
 def encode_sentiment(sentiment: str) -> int:
@@ -43,27 +24,41 @@ def encode_sentiment(sentiment: str) -> int:
 
 
 def main(
-    model: Annotated[str, typer.Argument(help="Model name. E.g. llama3.1 or mistral-nemo")],
-    dataset: Annotated[str, typer.Argument(help="Dataset name. E.g. fpb")],
+    model_name: Annotated[
+        LlmModelEnum,
+        typer.Argument(help="Model name"),
+    ] = LlmModelEnum.llama3_1,
+    dataset: Annotated[DataSetEnum, typer.Argument(help="Dataset name")] = DataSetEnum.fpb,
     limit: Annotated[
         Optional[int], typer.Option(help="Number of entries from dataset to analyze")
-    ] = 10,
+    ] = None,
+    show: Annotated[bool, typer.Option(help="Show confusion matrix")] = False,
 ):
     """
     Use an LLM as an Agent to run sentiment analysis on a dataset with crewAI
     """
-    if model not in OLLAMA_MODELS:
-        print(f"Model {model} not supported")
-        return
-    model = f"ollama/{model}"
-    if dataset not in DATASETS:
-        print(f"Dataset {dataset} not supported")
-        return
+    if dataset == "fpb":
+        df = util.get_fpb_data()
+        if limit:
+            df = df.head(limit)
+        records = df.to_dict(orient="records")
+    else:
+        print("Unsupported dataset")
+        raise typer.Exit(1)
+
+    print(f"Running sentiment analysis on {len(records)} records")
+    print("Preview of dataset")
+    with pd.option_context("display.max_colwidth", 200):
+        print(df.head(10))
+    typer.confirm("Proceed with sentiment analysis?", abort=True)
+
+    model = f"ollama/{model_name.value}"
 
     print(f"Running sentiment analysis on dataset: {dataset} using {model}")
     if limit:
         print(f"Limiting to {limit} records")
 
+    # Setup crewAI system
     sa_agent = Agent(
         role="Sentiment Analysis Agent",
         goal="Classify the financial sentiment of the phrase with a single word as positive, negative, or neutral",
@@ -89,21 +84,6 @@ def main(
         process=Process.sequential,  # Default option
     )
 
-    if dataset == "fpb":
-        df = get_fpb_data()
-        if limit:
-            df = df.head(limit)
-        records = df.to_dict(orient="records")
-    else:
-        print("Unsupported dataset")
-        raise typer.Exit(1)
-
-    print(f"Running sentiment analysis on {len(records)} records")
-    print("Preview of dataset")
-    df_preview = df.head(limit) if limit else df.head(10)
-    print(tabulate(df_preview, headers="keys"))
-    typer.confirm("Proceed with sentiment analysis?", abort=True)
-
     # Perform sentiment analysis
     results = crew.kickoff_for_each(inputs=records)
 
@@ -115,8 +95,15 @@ def main(
     print("Accuracy: ", result_df["correct"].mean())
     print("Preview of dataset with predictions")
     print(tabulate(result_df, headers="keys"))
-    result_df.to_csv("sa_results.csv", index=False)
-    print("Results saved to sa_results.csv")
+
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    output = f"sa_results_{model_name.value}_{dataset.value}_{timestamp}.csv"
+    result_df.to_csv(output, index=False)
+    print(f"Results saved to {output}")
+
+    util.output_performance_summary(
+        df["label"], result_df["predicted"], model_name.value, dataset.value, show
+    )
 
 
 if __name__ == "__main__":
