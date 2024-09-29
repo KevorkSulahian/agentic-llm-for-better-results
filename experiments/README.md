@@ -29,6 +29,10 @@ The following tools can be used to work with LLMs locally:
 
 This [LiteLLM page](https://models.litellm.ai/) gives a quick overview of the context length and model price for different LLMs.
 
+This Hugging Face page lists all models that have a warm inference serverless deployment which means they are
+accessible to use via the [InferenceClient](https://huggingface.co/docs/huggingface_hub/package_reference/inference_client) from
+[huggingface_hub](https://github.com/huggingface/huggingface_hub) Python package.
+
 ### ollama
 
 [ollama CLI reference](https://github.com/ollama/ollama?tab=readme-ov-file#cli-reference)
