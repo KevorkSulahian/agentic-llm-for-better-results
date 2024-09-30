@@ -38,6 +38,7 @@ repos:
           ]
         additional_dependencies:
           - types-tabulate
+          - types-PyYAML
 
   - repo: https://github.com/tox-dev/pyproject-fmt
     rev: "2.2.4"

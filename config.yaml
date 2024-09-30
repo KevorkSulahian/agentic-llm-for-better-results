@@ -1,0 +1,16 @@
+---
+defaults:
+  start_date: "2023-01-01"
+  tickerid: NVDA
+  tickerids:
+    - AMZN
+    - AAPL
+    - NVDA
+    - GOOGL
+    - WMT
+    - MSFT
+    - TSLA
+    - JPM
+    - BAC
+    - WFC
+    - XOM
