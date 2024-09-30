@@ -1,6 +1,6 @@
-# agentic-llm-for-better-results
+# FinMAS - Financial Analysis by Multi-Agent System
 
-[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json))](https://github.com/astral-sh/ruff)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 This repo contains the code for WQU Capstone project where we investigate the use of LLM multi-agent systems for solving tasks
 in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
@@ -8,9 +8,14 @@ systems may perform on other financial tasks as well.
 
 ## Usage
 
-To run the app, clone the repo, install the virtual environment and activate it.
+To run the app do the following:
 
-We use [AlphaVantage](https://www.alphavantage.co/) to get fundamental data (income statements).
+1. Clone the repo
+2. Install the virtual environment and activate it.
+3. Setup `.env` file
+4. Start the server by using `panel serve`
+
+We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).
 Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.
 You can create your `.env` file by copying the `.env.template` file in the repo.
 
@@ -30,7 +35,7 @@ Commit messages are encouraged to follow the [Conventional Commits](https://www.
 
 ### Virtual environment
 
-To install the virtual environment, using extremely fast [uv project manager](https://github.com/astral-sh/uv) is recommended.
+To install the virtual environment, we use the extremely fast [uv project manager](https://github.com/astral-sh/uv).
 Install `uv` using [the standalone installer](https://github.com/astral-sh/uv?tab=readme-ov-file#installation) is recommended.
 To create or sync a virtual environment the following command can be used in the project folder:
 
@@ -44,9 +49,9 @@ To exclude the development dependencies (like `pre-commit`) append the `--no-dev
 uv sync --no-dev
 ```
 
-To add or remove packages simply use `uv add <package>` or `uv remove <package>`.
+To add or remove packages, simply use `uv add <package>` or `uv remove <package>`.
 
-To activate the virtual environment use the following command:
+Activate the virtual environment with the following command:
 
 ```bash
 source .venv/bin/activate  # macOS or Linux
