@@ -15,8 +15,8 @@ To run the app do the following:
 3. Setup `.env` file
 4. Start the server by using `panel serve`
 
-We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).
-Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.
+We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).  
+Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.  
 You can create your `.env` file by copying the `.env.template` file in the repo.
 
 From the repo folder, the following command can start the app:
