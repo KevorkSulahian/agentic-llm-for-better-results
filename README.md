@@ -6,6 +6,20 @@ This repo contains the code for WQU Capstone project where we investigate the us
 in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
 systems may perform on other financial tasks as well.
 
+## Usage
+
+To run the app, clone the repo, install the virtual environment and activate it.
+
+We use [AlphaVantage](https://www.alphavantage.co/) to get fundamental data (income statements).
+Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.
+You can create your `.env` file by copying the `.env.sample` file in the repo.
+
+From the repo folder, the following command can start the app:
+
+```bash
+panel serve finmas/panel/app.py --show
+```
+
 ## Development
 
 The project setup is inspired by both [Python for Data Science](https://www.python4data.science/en/latest/productive/index.html) and
