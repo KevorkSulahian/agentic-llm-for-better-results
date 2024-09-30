@@ -2,13 +2,13 @@ import datetime as dt
 
 import hvplot.pandas  # noqa: F401
 import pandas as pd
+import panel as pn
 import param
 import plotly.graph_objects as go
 import yfinance as yf
-
-import panel as pn
-from finmanalysis.panel.constants import defaults
 from panel.viewable import Viewable
+
+from finmanalysis.panel.constants import defaults
 
 pn.extension("tabulator", "plotly", template="fast")
 
@@ -42,22 +42,22 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.fetch_yf_data(None)
 
     def fetch_yf_data(self, event) -> None:
-        df = yf.download(
-            self.ticker_select.value,
-            start=self.start_picker.value,
-            end=self.end_picker.value,
-            interval="1d",
-            auto_adjust=True,
-            threads=True,
-            progress=False,
-        )
-        df = df.reset_index()
-        df.columns = df.columns.str.lower()
-        self.ohlcv_df = df
-        self.update_counter.value += 1
+        with self.fetch_data_btn.param.update(loading=True):
+            df = yf.download(
+                self.ticker_select.value,
+                start=self.start_picker.value,
+                end=self.end_picker.value,
+                interval="1d",
+                auto_adjust=True,
+                threads=True,
+                progress=False,
+            )
+            df = df.reset_index()
+            df.columns = df.columns.str.lower()
+            self.ohlcv_df = df
+            self.update_counter.value += 1
 
-    @pn.depends("update_counter")
-    def get_tickerid_plot(self):
+    def get_tickerid_plot(self, *args, **kwargs):
         if self.ohlcv_df.empty:
             return None
         fig = go.Figure(
@@ -76,6 +76,7 @@ class FinMAnalysis(pn.viewable.Viewer):
             margin=dict(l=10, r=10, t=10, b=10),
             xaxis_title="Date",
             yaxis_title="Price (USD)",
+            title=self.ticker_select.value,
         )
         return fig
 
@@ -89,7 +90,9 @@ class FinMAnalysis(pn.viewable.Viewer):
             ),
             pn.Column(
                 pn.Card(
-                    pn.pane.Plotly(self.get_tickerid_plot),
+                    pn.pane.Plotly(
+                        pn.bind(self.get_tickerid_plot, update_counter=self.update_counter)
+                    ),
                     width=800,
                     height=600,
                     margin=10,
