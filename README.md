@@ -12,7 +12,7 @@ To run the app, clone the repo, install the virtual environment and activate it.
 
 We use [AlphaVantage](https://www.alphavantage.co/) to get fundamental data (income statements).
 Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.
-You can create your `.env` file by copying the `.env.sample` file in the repo.
+You can create your `.env` file by copying the `.env.template` file in the repo.
 
 From the repo folder, the following command can start the app:
 
