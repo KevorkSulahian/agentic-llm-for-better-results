@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+import time
 
 import hvplot.pandas  # noqa: F401
 import pandas as pd
@@ -42,8 +43,8 @@ class FinMAnalysis(pn.viewable.Viewer):
     update_counter = pn.widgets.IntInput(value=0)
 
     fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
-    # ohlcv_tbl = None
     income_statement_tbl = None
+    time_elapsed: dict[str, float] = {}
 
     def __init__(self, **params) -> None:
         super().__init__(**params)
@@ -56,18 +57,20 @@ class FinMAnalysis(pn.viewable.Viewer):
 
     def fetch_data(self, event) -> None:
         with self.fetch_data_btn.param.update(loading=True):
+            start = time.time()
             self.fetch_price_data(event)
             self.fetch_fundamental_data(event)
+            self.time_elapsed["fetch_data"] = round(time.time() - start, 1)
             self.update_counter.value += 1
 
-    @pn.depends("update_counter")
-    def _data_alert_box(self) -> pn.pane.Alert:
+    def _data_alert_box(self, *args, **kwargs) -> pn.pane.Alert:
         message = f"Data fetched for {self.ticker_select.value}"
         alert_type = "success"
         if os.getenv("ALPHAVANTAGE_API_KEY") is None:
             message = "Set ALPHAVANTAGE_API_KEY in the .env file"
             alert_type = "danger"
-        return pn.pane.Alert(message, alert_type=alert_type, margin=0)
+        message += f". Spent {self.time_elapsed.get('fetch_data', 0)}s"
+        return pn.pane.Alert(message, alert_type=alert_type)
 
     def fetch_price_data(self, event) -> None:
         df: pd.DataFrame = yf.download(
@@ -107,7 +110,6 @@ class FinMAnalysis(pn.viewable.Viewer):
         income_statement = income_statement[INCOME_STATEMENT_COLS]
         income_statement = income_statement.astype(int)
 
-        # Add column for profit margin
         income_statement["netProfitMargin"] = (
             income_statement["netIncome"] / income_statement["totalRevenue"]
         )
@@ -195,7 +197,7 @@ class FinMAnalysis(pn.viewable.Viewer):
                     self.freq_select,
                     self.fetch_data_btn,
                 ),
-                self._data_alert_box,
+                pn.bind(self._data_alert_box, update_counter=self.update_counter),
                 width=300,
             ),
             pn.Column(
