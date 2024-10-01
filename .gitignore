@@ -89,3 +89,5 @@ cython_debug/
 
 # ruff
 .ruff_cache/
+uv.lock
+.DS_Store
