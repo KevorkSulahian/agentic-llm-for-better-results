@@ -10,16 +10,17 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+  "alpaca-py>=0.31",
   "alpha-vantage>=3",
   "cohere>=5.9.2",
   "crewai>=0.65.2",
   "crewai-tools>=0.12.1",
   "datasets>=3",
-  "edgartools>=2.31",
   "feedparser>=6.0.11",
   "google-generativeai>=0.8.2",
   "great-tables>=0.11.1",
-  "huggingface-hub[cli]>=0.25.1",
+  "html2text>=2024.2.26",
+  "huggingface-hub[cli]",
   "hvplot>=0.11",
   "ipywidgets>=8.1.5",
   "jupyterlab>=4.2.5",
@@ -27,7 +28,13 @@ dependencies = [
   "langchain>=0.2.16",
   "langchain-huggingface>=0.0.3",
   "litellm>=1.48.6",
+  "llama-index>=0.11.16",
+  "llama-index-embeddings-huggingface>=0.3.1",
+  "llama-index-llms-huggingface-api>=0.2",
+  "llama-index-llms-ollama>=0.3.3",
+  "llama-index-readers-json>=0.2",
   "matplotlib>=3.9.2",
+  "nbconvert>=7.16.4",
   "pandas>=2.2.2",
   "panel>=1.5.1",
   "plotly>=5.24.1",
@@ -41,6 +48,15 @@ dependencies = [
   "transformers>=4.44.2",
   "typer>=0.12.5",
   "yfinance>=0.2.43",
+]
+
+optional-dependencies.pdf = [
+  "pdfkit>=1",
+  "pypdf>=4.3.1",
+]
+optional-dependencies.sec = [
+  "datamule>=0.332",
+  "edgartools>=2.34",
 ]
 
 [tool.ruff]
