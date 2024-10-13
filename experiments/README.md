@@ -33,6 +33,11 @@ This Hugging Face page lists all models that have a warm inference serverless de
 accessible to use via the [InferenceClient](https://huggingface.co/docs/huggingface_hub/package_reference/inference_client) from
 [huggingface_hub](https://github.com/huggingface/huggingface_hub) Python package.
 
+### Groq
+
+There is a free plan for API calls with the following rate limits: https://console.groq.com/settings/limits
+The models have the following context windows: https://console.groq.com/docs/models
+
 ### ollama
 
 [ollama CLI reference](https://github.com/ollama/ollama?tab=readme-ov-file#cli-reference)

@@ -4,6 +4,15 @@
 uv.lock
 .DS_Store
 
+# Embedding model
+embeddings/
+
+# Vector Store Index storage
+storage/
+
+# SEC filings
+filings/
+
 ### JupyterNotebooks ###
 
 .ipynb_checkpoints
