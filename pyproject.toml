@@ -30,6 +30,7 @@ dependencies = [
   "litellm>=1.48.6",
   "llama-index>=0.11.16",
   "llama-index-embeddings-huggingface>=0.3.1",
+  "llama-index-llms-groq>=0.2",
   "llama-index-llms-huggingface-api>=0.2",
   "llama-index-llms-ollama>=0.3.3",
   "llama-index-readers-json>=0.2",
