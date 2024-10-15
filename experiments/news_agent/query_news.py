@@ -15,7 +15,7 @@ from constants import (
     NewsSourceEnum,
 )
 from dotenv import find_dotenv, load_dotenv
-from news_fetcher import NewsFetcher, parse_news_to_dataframe, parse_news_to_documents
+from news_fetcher import NewsFetcher
 from rich import print
 from typing_extensions import Annotated
 from utils import get_groq_models, prompt_for_id
@@ -115,16 +115,16 @@ def main(
         llm_provider, llm_name, temperature=temperature, max_tokens=max_tokens
     )
 
-    news_fetcher = NewsFetcher(source=source)
-    records = news_fetcher.get_news(ticker)
-    news_df = parse_news_to_dataframe(records)
+    news_fetcher = NewsFetcher()
+    records = news_fetcher.get_news(ticker, source=source)
+    news_df = pd.DataFrame.from_records(records)
     with pd.option_context("display.max_colwidth", 100):
         news_df["published"] = news_df["published"].dt.strftime("%Y-%m-%d %H:%M")
-        print(news_df[["title", "published"]])
+        print(news_df[["title", "published", "num_symbols"]])
 
     print("Loading embedding model, creating vector store index and loading LLM model")
 
-    documents = parse_news_to_documents(records)
+    documents = news_fetcher.parse_news_to_documents(records, field="content")
 
     embed_model = get_embedding_model()
 

@@ -3,21 +3,16 @@ import os
 import time
 
 import feedparser
-import pandas as pd
 from alpaca.data.historical.news import NewsClient
 from alpaca.data.models import NewsSet
 from alpaca.data.requests import NewsRequest
+from benzinga_news import HEADLINE_IGNORE_LIST, get_benzinga_content_text
 from constants import ALPACA_NEWS_START_DATE, NewsSourceEnum
+import sys
 
 
 class NewsFetcher:
-    def __init__(self, source: NewsSourceEnum):
-        self.source = source
-
-    def get_news(self, ticker: str) -> list[dict]:
-        return self._get_news(ticker, self.source)
-
-    def _get_news(self, ticker: str, source: NewsSourceEnum) -> list[dict]:
+    def get_news(self, ticker: str, source: NewsSourceEnum) -> list[dict]:
         match source:
             case NewsSourceEnum.yahoo_finance:
                 print(f"Fetching Yahoo Finance news for {ticker}")
@@ -62,36 +57,46 @@ class NewsFetcher:
         assert isinstance(news_set, NewsSet)
 
         records = []
-        for news in news_set.data["news"]:
+
+        # Filter out news items from a fixed headline ignore list
+        news_items = [
+            news
+            for news in news_set.data["news"]
+            if not any(
+                ignore_headline.lower() in news.headline.lower()
+                for ignore_headline in HEADLINE_IGNORE_LIST
+            )
+        ]
+
+        for news in news_items:
             record = dict(
                 title=news.headline,
                 link=news.url,
                 id=news.id,
                 published=news.updated_at,
                 summary=news.summary,
-                # TODO: Add content, symbols, author fields
+                content=get_benzinga_content_text(news.content),
+                num_symbols=len(news.symbols),
+                # TODO: Add author fields
             )
             records.append(record)
 
         return records
 
+    def parse_news_to_documents(self, records: list[dict], field: str = "summary"):
+        from llama_index.core import Document
 
-def parse_news_to_dataframe(news: list[dict]) -> pd.DataFrame:
-    df = pd.DataFrame.from_records(news)
-    return df
+        documents = []
 
+        for item in records:
+            text = f"Title: {item['title']}\nPublished: {item['published'].date().isoformat()}\n"
+            try:
+                text += f"{item[field]}"
+            except KeyError as e:
+                print(f"The news item does not contain a content field. Error: {e}")
+                sys.exit(1)
 
-def parse_news_to_documents(news: list[dict]):
-    from llama_index.core import Document
+            doc = Document(text=text)
+            documents.append(doc)
 
-    documents = []
-    for item in news:
-        text = (
-            f"Title: {item['title']}\n"
-            f"Published: {item['published'].date().isoformat()}\n"
-            f"Summary: {item['summary']}"
-        )
-        doc = Document(text=text)
-        documents.append(doc)
-
-    return documents
+        return documents
