@@ -1,6 +1,7 @@
 import datetime as dt
 import os
 import time
+import sys
 
 import hvplot.pandas  # noqa: F401
 import pandas as pd
@@ -10,6 +11,9 @@ import yfinance as yf
 from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
+
+# Add the root directory of the project to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Necessary for windows users.
 
 from finmas.panel.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.panel.formatting import income_statement_config, ohlcv_config
@@ -108,7 +112,8 @@ class FinMAnalysis(pn.viewable.Viewer):
         income_statement.sort_index(inplace=True, ascending=False)
 
         income_statement = income_statement[INCOME_STATEMENT_COLS]
-        income_statement = income_statement.astype(int)
+        # income_statement = income_statement.astype(int) # Too small
+        income_statement = income_statement.astype('Int64')
 
         income_statement["netProfitMargin"] = (
             income_statement["netIncome"] / income_statement["totalRevenue"]

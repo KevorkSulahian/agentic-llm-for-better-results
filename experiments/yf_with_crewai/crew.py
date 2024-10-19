@@ -1,31 +1,39 @@
 import os
-from crewai import Agent, Task, Crew, Process
-from .tools.sentiment_analysis import ticker_sentiment_analysis
-from .tools.technical_analysis import yf_tech_analysis
-from .tools.analyze_data import yf_fundamental_analysis
-from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
+from crewai import Agent, Task, Crew, Process, LLM
+from tools.sentiment_analysis import ticker_sentiment_analysis
+from tools.technical_analysis import yf_tech_analysis
+from tools.analyze_data import yf_fundamental_analysis
+# from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from langchain_openai import ChatOpenAI
-
+from dotenv import load_dotenv
 
 # Environment Variables
-# load_dotenv()
-
 
 # Model Selection
-def initialize_llm(model_option, openai_api_key, groq_api_key):
-    if model_option == "OpenAI GPT-4o":
-        return ChatOpenAI(openai_api_key=openai_api_key, model="gpt-4o", temperature=0.1)
+def initialize_llm(model_option, api_key = None, groq_api_key = None):
+    if  model_option == 'ollama':
+        return ChatOpenAI(
+            openai_api_base="http://localhost:11434/v1",
+            openai_api_key="ollama",                 
+            model_name="ollama/llama3.1:8b-instruct-q6_K"
+        )
+        # return LLM(model= f"ollama/llama3.1:8b-instruct-q6_K", base_url="http://localhost:11434")
+    elif model_option == "OpenAI GPT-4o":
+        return ChatOpenAI(openai_api_key=api_key, model="gpt-4o", temperature=0.1)
     elif model_option == "OpenAI GPT-4o Mini":
-        return ChatOpenAI(openai_api_key=openai_api_key, model="gpt-4o-mini", temperature=0.1)
+        return ChatOpenAI(openai_api_key=api_key, model="gpt-4o-mini", temperature=0.1)
+        
+    
+
     else:
         raise ValueError("Invalid model option selected")
 
 
-def create_crew(stock_symbol, model_option, openai_api_key, groq_api_key):
-    llm = initialize_llm(model_option, openai_api_key, groq_api_key)
+def create_crew(stock_symbol, model_option, API_KEY = None):
+    llm = initialize_llm(model_option)
     # Tools Initialization
     sentiment_analysis_tool = ticker_sentiment_analysis
-    # serper_tool = SerperDevTool()
+
     yf_tech_tool = yf_tech_analysis
     yf_fundamental_tool = yf_fundamental_analysis
 
@@ -36,7 +44,7 @@ def create_crew(stock_symbol, model_option, openai_api_key, groq_api_key):
         verbose=True,
         memory=True,
         backstory="With a Ph.D. in Financial Economics and 15 years of experience in equity research, you're known for your meticulous data collection and insightful analysis.",
-        tools=[YahooFinanceNewsTool(), sentiment_analysis_tool],  # reddit_tool, serper_tool,
+        tools=[sentiment_analysis_tool],
         llm=llm,
     )
 
@@ -69,26 +77,38 @@ def create_crew(stock_symbol, model_option, openai_api_key, groq_api_key):
         tools=[
             yf_fundamental_tool,
             yf_tech_tool,
-            YahooFinanceNewsTool(),
+            # YahooFinanceNewsTool(),
             sentiment_analysis_tool,
         ],  # reddit_tool, serper_tool,
         llm=llm,
     )
 
     # Task Definitions
+    # research_task = Task(
+    #     description=(
+    #         "Conduct research on {stock_symbol}. Your analysis should include:\n"
+    #         "1. Current stock price and historical performance (5 years).\n"
+    #         "2. Key financial metrics (P/E, EPS growth, revenue growth, margins).\n"
+    #         "3. Recent news and press releases (1 month).\n"
+    #         "4. Analyst ratings and price targets (min 3 analysts).\n"
+    #         "5. sentiment analysis from yfinance (100 posts).\n"
+    #         "6. Major institutional holders and recent changes.\n"
+    #         "7. Competitive landscape and {stock_symbol}'s market share.\n"
+    #         "Use reputable financial websites for data."
+    #     ),
+    #     expected_output="A detailed 150-word research report with data sources and brief analysis.",
+    #     agent=researcher,
+    # )
+
     research_task = Task(
         description=(
             "Conduct research on {stock_symbol}. Your analysis should include:\n"
-            "1. Current stock price and historical performance (5 years).\n"
-            "2. Key financial metrics (P/E, EPS growth, revenue growth, margins).\n"
-            "3. Recent news and press releases (1 month).\n"
-            "4. Analyst ratings and price targets (min 3 analysts).\n"
-            "5. sentiment analysis from yfinance (100 posts).\n"
-            "6. Major institutional holders and recent changes.\n"
-            "7. Competitive landscape and {stock_symbol}'s market share.\n"
-            "Use reputable financial websites for data."
+            "The results of tool sentiment analysis on {stock_symbol}.\n"
+            "The tool's function name is ticker_sentiment_analysis and you can call it using {stock_symbol} and a keyword that corresponds to {stock_symbol}.\n"
+            "And this will return the overall sentiment, number of articles, and sentiment counts. \n"
+            "Use the ticker_sentiment_analysis tool for data."
         ),
-        expected_output="A detailed 150-word research report with data sources and brief analysis.",
+        expected_output="A detailed 150-word research report on the current sentiment of the ticker in the market.",
         agent=researcher,
     )
 
@@ -134,7 +154,7 @@ def create_crew(stock_symbol, model_option, openai_api_key, groq_api_key):
             "4. Technical Analysis: Key findings.\n"
             "5. Fundamental Analysis: Top strengths and concerns.\n"
             "6. Risk and Opportunity: Major risk and growth catalyst.\n"
-            "7. yfinance Sentiment: Key takeaway from sentiment analysis,\n"
+            "7. Sentiment: Key takeaway from sentiment analysis, that includes number of articles used and the overal score.\n"
             "8. Investment Thesis: Bull and bear cases.\n"
             "9. Price Target: 12-month forecast.\n"
         ),
@@ -148,13 +168,15 @@ def create_crew(stock_symbol, model_option, openai_api_key, groq_api_key):
         tasks=[research_task, technical_analysis_task, fundamental_analysis_task, report_task],
         process=Process.sequential,
         cache=True,
+        planning = True
     )
 
     result = crew.kickoff(inputs={"stock_symbol": stock_symbol})
 
     os.makedirs("./crew_results", exist_ok=True)
     file_path = f"./crew_results/crew_result_{stock_symbol}.md"
-    result_str = str(result)
+    
+    result_str = f"Token Usage: {result.token_usage} \n\n" + str(result)
     with open(file_path, "w") as file:
         file.write(result_str)
 
