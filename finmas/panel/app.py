@@ -12,13 +12,9 @@ from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
-<<<<<<< HEAD
 # Add the root directory of the project to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Necessary for windows users.
 
-=======
-from finmas.news import NewsFetcher
->>>>>>> 7b719f56c3ef65f7df8cae02b86506e34d70d237
 from finmas.panel.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.panel.formatting import (
     income_statement_config,
