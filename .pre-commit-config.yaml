@@ -52,5 +52,12 @@ repos:
     rev: "v3.3.3"
     hooks:
       - id: prettier
-        types_or: [yaml, markdown]
-        args: ["--config", ".prettierrc"]
+        types_or: [yaml]
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.18
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
