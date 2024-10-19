@@ -19,6 +19,7 @@ dependencies = [
   "feedparser>=6.0.11",
   "google-generativeai>=0.8.2",
   "great-tables>=0.11.1",
+  "html-to-markdown>=1.1",
   "html2text>=2024.2.26",
   "huggingface-hub[cli]",
   "hvplot>=0.11",
