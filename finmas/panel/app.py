@@ -71,14 +71,13 @@ class FinMAnalysis(pn.viewable.Viewer):
         value=dt.date.today(),
         width=100,
     )
+    include_fundamental_data = pn.widgets.Checkbox(name="Include Fundamental Data", value=False)
+    include_news = pn.widgets.Checkbox(name="Include News", value=False)
+
     update_counter = pn.widgets.IntInput(value=0)
 
     fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
-    income_statement_tbl = None
     time_elapsed: dict[str, float] = {}
-
-    llm_models_tbl = None
-    news_tbl = None
 
     def __init__(self, **params) -> None:
         super().__init__(**params)
@@ -86,7 +85,8 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.llm_model.options = [defaults["llm_model"]]
         self.llm_model.value = defaults["llm_model"]
         self.llm_provider.value = defaults["llm_provider"]
-        self.update_llm_models_tbl()
+        self.llm_provider.param.watch(self.update_llm_models_tbl, "value")
+        self.update_llm_models_tbl(None)
 
         # Ticker
         self.ticker_select.value = defaults["tickerid"]
@@ -99,8 +99,13 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.fetch_data_btn.on_click(self.fetch_data)
         self.fetch_data(None)
 
-    @pn.depends("llm_provider.value", watch=True)
-    def update_llm_models_tbl(self):
+        # About tab
+        with open("finmas/panel/about.md", mode="r", encoding="utf-8") as f:
+            about = f.read()
+
+        self.about_md = pn.pane.Markdown(about)
+
+    def update_llm_models_tbl(self, event):
         """
         Updates the LLM models table if the LLM provider have changed.
         Initializes the table with the Tabulator widget.
@@ -109,7 +114,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         if self.llm_provider.value == "groq":
             df = get_groq_models()
 
-        if self.llm_models_tbl is None:
+        if event is None:
             # Initialize the models table
             selection = df.index[df["id"] == self.llm_model.value].tolist()
             self.llm_models_tbl = pn.widgets.Tabulator(
@@ -129,14 +134,23 @@ class FinMAnalysis(pn.viewable.Viewer):
             self.llm_model.value = llm_model_id
 
     def fetch_data(self, event) -> None:
-        """Fetches data for the app"""
+        """Main handler for fetching data for the app"""
         with self.fetch_data_btn.param.update(loading=True):
             start = time.time()
             self.fetch_price_data(event)
-            self.fetch_fundamental_data(event)
-            self.fetch_news(event)
+
+            if self.include_fundamental_data.value:
+                self.fetch_fundamental_data(event)
+            else:
+                self.income_statement_tbl = None
+
+            if self.include_news.value:
+                self.fetch_news(event)
+            else:
+                self.news_tbl = None
+
             self.time_elapsed["fetch_data"] = round(time.time() - start, 1)
-            self.update_counter.value += 1
+            self.update_counter.value += 1  # This trigges updates of plots and tables widgets
 
     def _data_alert_box(self, *args, **kwargs) -> pn.pane.Alert:
         message = f"Data fetched for {self.ticker_select.value}"
@@ -160,7 +174,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         df.reset_index(inplace=True)
         df.columns = df.columns.str.lower()
 
-        if event is None:
+        if getattr(self, "ohlcv_tbl", None) is None:
             self.ohlcv_tbl = pn.widgets.Tabulator(df, **ohlcv_config)
         elif isinstance(self.ohlcv_tbl, pn.widgets.Tabulator):
             self.ohlcv_tbl.value = df
@@ -193,15 +207,15 @@ class FinMAnalysis(pn.viewable.Viewer):
             income_statement["netIncome"] / income_statement["totalRevenue"]
         )
 
-        if event is None:
-            self.income_statement_tbl = pn.widgets.Tabulator(
+        if getattr(self, "income_statement_tbl", None) is None:
+            self.income_statement_tbl = pn.widgets.Tabulator(  # type: ignore
                 income_statement, **income_statement_config
             )
         elif isinstance(self.income_statement_tbl, pn.widgets.Tabulator):
             self.income_statement_tbl.value = income_statement.copy()
 
     def fetch_news(self, event) -> None:
-        """Fetch news from the chosen news provider and the chosen ticker"""
+        """Fetch news from the selected news provider and the selected ticker"""
         news_fetcher = NewsFetcher()
         records = news_fetcher.get_news(
             ticker=self.ticker_select.value,
@@ -213,8 +227,8 @@ class FinMAnalysis(pn.viewable.Viewer):
         df = pd.DataFrame.from_records(records)
         df["published"] = df["published"].dt.strftime("%Y-%m-%d")
 
-        if self.news_tbl is None:
-            self.news_tbl = pn.widgets.Tabulator(
+        if getattr(self, "news_tbl", None) is None:
+            self.news_tbl = pn.widgets.Tabulator(  # type: ignore
                 df, row_content=self.get_news_content, **news_config
             )
         elif isinstance(self.news_tbl, pn.widgets.Tabulator):
@@ -229,10 +243,22 @@ class FinMAnalysis(pn.viewable.Viewer):
             sizing_mode="stretch_width",
         )
 
+    def get_income_statement_tbl(self, *args, **kwargs):
+        """Get the income statement table"""
+        if getattr(self, "income_statement_tbl", None) is None:
+            return pn.pane.Markdown("No Fundamental data")
+        return self.income_statement_tbl
+
+    def get_news_tbl(self, *args, **kwargs):
+        """Get the news table"""
+        if getattr(self, "news_tbl", None) is None:
+            return pn.pane.Markdown("No News data")
+        return self.news_tbl
+
     def get_ta_plot(self, *args, **kwargs) -> go.Figure:
-        """Plot Technical analysis"""
+        """Get the plot for Technical analysis"""
         if self.ohlcv_tbl is None or self.ohlcv_tbl.value.empty:
-            return None
+            return pn.pane.Markdown("No Technical Analysis data")
         df = self.ohlcv_tbl.value
         fig = go.Figure(
             data=[
@@ -265,12 +291,16 @@ class FinMAnalysis(pn.viewable.Viewer):
             ),
             type="date",
         )
-        return fig
+        return pn.pane.Plotly(fig)
 
     def get_income_statement_plot(self, *args, **kwargs) -> go.Figure:
         """Plot income statement table"""
-        if self.income_statement_tbl is None or self.income_statement_tbl.value.empty:
-            return None
+        if (
+            getattr(self, "income_statement_tbl", None) is None
+            or self.income_statement_tbl.value.empty  # type: ignore
+        ):
+            return pn.pane.Markdown("No Fundamental data")
+        assert isinstance(self.income_statement_tbl, pn.widgets.Tabulator)
         df = self.income_statement_tbl.value
 
         fig = go.Figure()
@@ -294,7 +324,7 @@ class FinMAnalysis(pn.viewable.Viewer):
             yaxis=dict(title="USD", side="right"),
             legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=0),
         )
-        return fig
+        return pn.pane.Plotly(fig)
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -306,6 +336,8 @@ class FinMAnalysis(pn.viewable.Viewer):
                     pn.Row(self.start_picker, self.end_picker),
                     self.news_source,
                     pn.Row(self.news_start, self.news_end),
+                    self.include_fundamental_data,
+                    self.include_news,
                     self.fetch_data_btn,
                 ),
                 pn.bind(self._data_alert_box, update_counter=self.update_counter),
@@ -319,10 +351,8 @@ class FinMAnalysis(pn.viewable.Viewer):
                             pn.Row(
                                 pn.Column(
                                     pn.Card(
-                                        pn.pane.Plotly(
-                                            pn.bind(
-                                                self.get_ta_plot, update_counter=self.update_counter
-                                            )
+                                        pn.bind(
+                                            self.get_ta_plot, update_counter=self.update_counter
                                         ),
                                         width=800,
                                         height=400,
@@ -333,27 +363,27 @@ class FinMAnalysis(pn.viewable.Viewer):
                                 ),
                                 pn.Column(
                                     pn.Card(
-                                        pn.pane.Plotly(
-                                            pn.bind(
-                                                self.get_income_statement_plot,
-                                                update_counter=self.update_counter,
-                                            )
+                                        pn.bind(
+                                            self.get_income_statement_plot,
+                                            update_counter=self.update_counter,
                                         ),
                                         width=800,
                                         height=400,
                                         margin=10,
                                         title="Income Statement",
                                     ),
-                                    self.income_statement_tbl,
+                                    pn.bind(
+                                        self.get_income_statement_tbl,
+                                        update_counter=self.update_counter,
+                                    ),
                                 ),
                             ),
-                            pn.Row(self.news_tbl),
+                            pn.Row(pn.bind(self.get_news_tbl, update_counter=self.update_counter)),
                         ),
                     ),
                     ("Models", pn.Column(self.llm_models_tbl)),
                     ("Crews", pn.Column(pn.pane.Markdown("## Crew Configuration"))),
-                    # TODO: Include a Markdown file that explains the app and with link to the github repo and the authors.
-                    ("About", pn.Column(pn.pane.Markdown("## About"))),
+                    ("About", pn.Column(self.about_md)),
                 )
             ),
         )
