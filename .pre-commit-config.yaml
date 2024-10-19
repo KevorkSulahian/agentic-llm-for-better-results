@@ -36,6 +36,7 @@ repos:
             "--ignore-missing-imports",
             "--disable-error-code=top-level-await",
             "--disable-error-code=empty-body",
+            "--disable-error-code=has-type",
           ]
         additional_dependencies:
           - types-tabulate

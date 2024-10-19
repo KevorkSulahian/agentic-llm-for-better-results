@@ -11,16 +11,34 @@ from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
+from finmas.news import NewsFetcher
 from finmas.panel.constants import INCOME_STATEMENT_COLS, defaults
-from finmas.panel.formatting import income_statement_config, ohlcv_config
+from finmas.panel.formatting import (
+    income_statement_config,
+    llm_models_config,
+    news_config,
+    ohlcv_config,
+)
+from finmas.utils import get_groq_models, to_datetime
 
 hvplot.extension("plotly")
-pn.extension("tabulator", "plotly", template="fast")
+pn.extension(
+    "tabulator",
+    "plotly",
+    template="fast",
+    css_files=["https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"],
+)
 
 load_dotenv(find_dotenv())
 
 
 class FinMAnalysis(pn.viewable.Viewer):
+    llm_provider = pn.widgets.Select(
+        name="LLM Provider",
+        options=["groq"],
+        width=100,
+    )
+    llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
     ticker_select = pn.widgets.Select(name="Ticker", width=100)
     start_picker = pn.widgets.DatetimeInput(
         name="Start",
@@ -36,8 +54,21 @@ class FinMAnalysis(pn.viewable.Viewer):
     )
     freq_select = pn.widgets.Select(
         name="Fundamental Freq",
-        options=["quarterly", "annual"],
+        options=["Quarterly", "Annual"],
         value=defaults["fundamental_freq"],
+        width=100,
+    )
+    news_source = pn.widgets.Select(name="News Source", width=100)
+    news_start = pn.widgets.DatetimeInput(
+        name="Start",
+        format="%Y-%m-%d",
+        value=dt.date.today() - dt.timedelta(days=14),
+        width=100,
+    )
+    news_end = pn.widgets.DatetimeInput(
+        name="End",
+        format="%Y-%m-%d",
+        value=dt.date.today(),
         width=100,
     )
     update_counter = pn.widgets.IntInput(value=0)
@@ -46,20 +77,64 @@ class FinMAnalysis(pn.viewable.Viewer):
     income_statement_tbl = None
     time_elapsed: dict[str, float] = {}
 
+    llm_models_tbl = None
+    news_tbl = None
+
     def __init__(self, **params) -> None:
         super().__init__(**params)
+        # Models
+        self.llm_model.options = [defaults["llm_model"]]
+        self.llm_model.value = defaults["llm_model"]
+        self.llm_provider.value = defaults["llm_provider"]
+        self.update_llm_models_tbl()
 
+        # Ticker
         self.ticker_select.value = defaults["tickerid"]
         self.ticker_select.options = defaults["tickerids"]
+
+        # News
+        self.news_source.options = [defaults["news_source"]]
+        self.news_source.value = defaults["news_source"]
 
         self.fetch_data_btn.on_click(self.fetch_data)
         self.fetch_data(None)
 
+    @pn.depends("llm_provider.value", watch=True)
+    def update_llm_models_tbl(self):
+        """
+        Updates the LLM models table if the LLM provider have changed.
+        Initializes the table with the Tabulator widget.
+        The current LLM model is selected in the table.
+        """
+        if self.llm_provider.value == "groq":
+            df = get_groq_models()
+
+        if self.llm_models_tbl is None:
+            # Initialize the models table
+            selection = df.index[df["id"] == self.llm_model.value].tolist()
+            self.llm_models_tbl = pn.widgets.Tabulator(
+                df,
+                on_click=self.handle_llm_models_tbl_click,
+                selection=selection,
+                **llm_models_config,
+            )
+        else:
+            self.llm_models_tbl.value = df
+        self.llm_model.options = df["id"].tolist()
+
+    def handle_llm_models_tbl_click(self, event):
+        """Callback for when a row in LLM models table is clicked"""
+        llm_model_id = self.llm_models_tbl.value.iloc[event.row]["id"]
+        if self.llm_model.value != llm_model_id:
+            self.llm_model.value = llm_model_id
+
     def fetch_data(self, event) -> None:
+        """Fetches data for the app"""
         with self.fetch_data_btn.param.update(loading=True):
             start = time.time()
             self.fetch_price_data(event)
             self.fetch_fundamental_data(event)
+            self.fetch_news(event)
             self.time_elapsed["fetch_data"] = round(time.time() - start, 1)
             self.update_counter.value += 1
 
@@ -96,12 +171,16 @@ class FinMAnalysis(pn.viewable.Viewer):
             return
         fundamentals = FundamentalData(output_format="pandas")
 
-        if self.freq_select.value == "quarterly":
+        if self.freq_select.value == "Quarterly":
             data_func = fundamentals.get_income_statement_quarterly
         else:
             data_func = fundamentals.get_income_statement_annual
 
-        income_statement: pd.DataFrame = data_func(self.ticker_select.value)[0]
+        try:
+            income_statement: pd.DataFrame = data_func(self.ticker_select.value)[0]
+        except Exception as e:
+            print(e)
+            return
 
         income_statement.set_index("fiscalDateEnding", inplace=True)
         income_statement.index = pd.to_datetime(income_statement.index)
@@ -120,6 +199,35 @@ class FinMAnalysis(pn.viewable.Viewer):
             )
         elif isinstance(self.income_statement_tbl, pn.widgets.Tabulator):
             self.income_statement_tbl.value = income_statement.copy()
+
+    def fetch_news(self, event) -> None:
+        """Fetch news from the chosen news provider and the chosen ticker"""
+        news_fetcher = NewsFetcher()
+        records = news_fetcher.get_news(
+            ticker=self.ticker_select.value,
+            source=self.news_source.value,
+            start=to_datetime(self.news_start.value),
+            end=to_datetime(self.news_end.value),
+        )
+
+        df = pd.DataFrame.from_records(records)
+        df["published"] = df["published"].dt.strftime("%Y-%m-%d")
+
+        if self.news_tbl is None:
+            self.news_tbl = pn.widgets.Tabulator(
+                df, row_content=self.get_news_content, **news_config
+            )
+        elif isinstance(self.news_tbl, pn.widgets.Tabulator):
+            self.news_tbl.value = df
+
+    @pn.cache
+    def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
+        """Get the news content as HTML"""
+        return pn.Row(
+            pn.pane.HTML(row["content"], sizing_mode="stretch_width"),
+            max_width=600,
+            sizing_mode="stretch_width",
+        )
 
     def get_ta_plot(self, *args, **kwargs) -> go.Figure:
         """Plot Technical analysis"""
@@ -192,35 +300,61 @@ class FinMAnalysis(pn.viewable.Viewer):
         return pn.Row(
             pn.Column(
                 pn.WidgetBox(
-                    self.ticker_select,
+                    self.llm_provider,
+                    self.llm_model,
+                    pn.Row(self.ticker_select, self.freq_select),
                     pn.Row(self.start_picker, self.end_picker),
-                    self.freq_select,
+                    self.news_source,
+                    pn.Row(self.news_start, self.news_end),
                     self.fetch_data_btn,
                 ),
                 pn.bind(self._data_alert_box, update_counter=self.update_counter),
                 width=300,
             ),
             pn.Column(
-                pn.Card(
-                    pn.pane.Plotly(pn.bind(self.get_ta_plot, update_counter=self.update_counter)),
-                    width=800,
-                    height=600,
-                    margin=10,
-                    title="Technical Analysis",
-                ),
-                self.ohlcv_tbl,
-            ),
-            pn.Column(
-                pn.Card(
-                    pn.pane.Plotly(
-                        pn.bind(self.get_income_statement_plot, update_counter=self.update_counter)
+                pn.Tabs(
+                    (
+                        "Analysis",
+                        pn.Column(
+                            pn.Row(
+                                pn.Column(
+                                    pn.Card(
+                                        pn.pane.Plotly(
+                                            pn.bind(
+                                                self.get_ta_plot, update_counter=self.update_counter
+                                            )
+                                        ),
+                                        width=800,
+                                        height=400,
+                                        margin=10,
+                                        title="Technical Analysis",
+                                    ),
+                                    self.ohlcv_tbl,
+                                ),
+                                pn.Column(
+                                    pn.Card(
+                                        pn.pane.Plotly(
+                                            pn.bind(
+                                                self.get_income_statement_plot,
+                                                update_counter=self.update_counter,
+                                            )
+                                        ),
+                                        width=800,
+                                        height=400,
+                                        margin=10,
+                                        title="Income Statement",
+                                    ),
+                                    self.income_statement_tbl,
+                                ),
+                            ),
+                            pn.Row(self.news_tbl),
+                        ),
                     ),
-                    width=800,
-                    height=400,
-                    margin=10,
-                    title="Income Statement",
-                ),
-                self.income_statement_tbl,
+                    ("Models", pn.Column(self.llm_models_tbl)),
+                    ("Crews", pn.Column(pn.pane.Markdown("## Crew Configuration"))),
+                    # TODO: Include a Markdown file that explains the app and with link to the github repo and the authors.
+                    ("About", pn.Column(pn.pane.Markdown("## About"))),
+                )
             ),
         )
 
