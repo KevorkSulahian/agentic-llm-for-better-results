@@ -1,6 +1,9 @@
 ---
 defaults:
-  fundamental_freq: quarterly
+  llm_provider: groq
+  llm_model: llama3-8b-8192
+  news_source: Benzinga
+  fundamental_freq: Quarterly
   start_date: "2023-01-01"
   tickerid: NVDA
   tickerids:
