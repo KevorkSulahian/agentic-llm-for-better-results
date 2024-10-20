@@ -1,4 +1,4 @@
-from sec_tool import SECTools
+from sec_tool import SECTools, SECFilingSearchSchema
 from edgar import set_identity
 
 # Set identity for SEC API access
@@ -9,8 +9,15 @@ def test_sec_tools():
     sec_tool = SECTools()
 
     # Test 10-K filing
-    stock_ticker = "NVDA"
-    query = "What was the gross profit last year?"
+    try:
+        input_data = SECFilingSearchSchema(
+            ticker="NVDA", query="What was the gross profit last year?"
+        )
+        stock_ticker = input_data.ticker
+        query = input_data.query
+    except Exception as e:
+        print(f"Invalid input: {e}")
+        return
 
     # Search in 10-K
     try:
