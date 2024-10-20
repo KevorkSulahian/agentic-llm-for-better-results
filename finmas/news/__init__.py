@@ -1,1 +1,1 @@
-from finmas.news.news_fetcher import NewsFetcher
+from finmas.news.utils import get_news_fetcher

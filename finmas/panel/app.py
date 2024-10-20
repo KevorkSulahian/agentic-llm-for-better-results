@@ -13,16 +13,19 @@ from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
 # Add the root directory of the project to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Necessary for windows users.
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+)  # Necessary for windows users.
 
-from finmas.panel.constants import INCOME_STATEMENT_COLS, defaults
+from finmas.news import get_news_fetcher
+from finmas.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.panel.formatting import (
     income_statement_config,
     llm_models_config,
     news_config,
     ohlcv_config,
 )
-from finmas.utils import get_groq_models, to_datetime
+from finmas.utils import get_groq_models, to_datetime, get_huggingface_models
 
 hvplot.extension("plotly")
 pn.extension(
@@ -38,7 +41,7 @@ load_dotenv(find_dotenv())
 class FinMAnalysis(pn.viewable.Viewer):
     llm_provider = pn.widgets.Select(
         name="LLM Provider",
-        options=["groq"],
+        options=defaults["llm_providers"],
         width=100,
     )
     llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
@@ -116,6 +119,8 @@ class FinMAnalysis(pn.viewable.Viewer):
         """
         if self.llm_provider.value == "groq":
             df = get_groq_models()
+        elif self.llm_provider.value == "huggingface":
+            df = get_huggingface_models()
 
         if event is None:
             # Initialize the models table
@@ -205,7 +210,7 @@ class FinMAnalysis(pn.viewable.Viewer):
 
         income_statement = income_statement[INCOME_STATEMENT_COLS]
         # income_statement = income_statement.astype(int) # Too small
-        income_statement = income_statement.astype('Int64')
+        income_statement = income_statement.astype("Int64")
 
         income_statement["netProfitMargin"] = (
             income_statement["netIncome"] / income_statement["totalRevenue"]
@@ -220,10 +225,9 @@ class FinMAnalysis(pn.viewable.Viewer):
 
     def fetch_news(self, event) -> None:
         """Fetch news from the selected news provider and the selected ticker"""
-        news_fetcher = NewsFetcher()
+        news_fetcher = get_news_fetcher(self.news_source.value)
         records = news_fetcher.get_news(
             ticker=self.ticker_select.value,
-            source=self.news_source.value,
             start=to_datetime(self.news_start.value),
             end=to_datetime(self.news_end.value),
         )
