@@ -1,16 +1,11 @@
 from finmas.constants import defaults
-from finmas.utils import get_environment_variable, get_groq_models, get_huggingface_models
+from finmas.utils import get_environment_variable, get_valid_models
 
 
-def validate_llm_info(llm_provider: str, llm_model: str):
+def validate_llm_info(llm_provider: str, llm_model: str) -> None:
     if llm_provider not in ["groq", "huggingface", "openai"]:
         raise ValueError(f"Invalid LLM provider: {llm_provider}")
-    if llm_provider == "groq":
-        valid_models = get_groq_models()["id"].tolist()
-    elif llm_provider == "huggingface":
-        valid_models = get_huggingface_models()["id"].tolist()
-    elif llm_provider == "openai":
-        valid_models = defaults["openai_models"]
+    valid_models = get_valid_models(llm_provider)["id"].tolist()
 
     if llm_model not in valid_models:
         raise ValueError(f"Invalid LLM model: {llm_model}. Valid models are: {valid_models}")

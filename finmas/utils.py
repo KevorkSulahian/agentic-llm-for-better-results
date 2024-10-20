@@ -2,12 +2,13 @@ import datetime as dt
 import os
 import re
 
+import numpy as np
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import numpy as np
 
 from finmas.cache_config import cache
+from finmas.constants import defaults
 
 HF_ACTIVE_MODELS_URL = (
     "https://huggingface.co/models?inference=warm&pipeline_tag=text-generation&sort=trending"
@@ -28,6 +29,18 @@ def get_environment_variable(key: str) -> str:
         raise ValueError(
             f"{key} not found in environment variables. Please set {key} in the .env file."
         )
+
+
+def get_valid_models(llm_provider: str) -> pd.DataFrame:
+    """Get a list of valid models for the given LLM provider"""
+    if llm_provider == "groq":
+        return get_groq_models()
+    elif llm_provider == "huggingface":
+        return get_huggingface_models()
+    elif llm_provider == "openai":
+        return get_openai_models()
+    else:
+        raise ValueError(f"Invalid LLM provider: {llm_provider}")
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
@@ -85,3 +98,18 @@ def get_groq_models() -> pd.DataFrame:
     df = df[["id", "downloads", "likes", "context_window", "owned_by", "created"]]
 
     return df.sort_values(by=["owned_by", "context_window", "id"]).reset_index(drop=True)
+
+
+def get_openai_models() -> pd.DataFrame:
+    """Get a DataFrame of the currenct active OpenAI models"""
+    df = pd.DataFrame(
+        {
+            "id": defaults["openai_models"],
+            "downloads": np.nan,
+            "likes": np.nan,
+            "context_window": np.nan,
+            "owned_by": "OpenAI",
+            "created": np.nan,
+        }
+    )
+    return df

@@ -25,7 +25,7 @@ from finmas.panel.formatting import (
     news_config,
     ohlcv_config,
 )
-from finmas.utils import get_groq_models, to_datetime, get_huggingface_models
+from finmas.utils import to_datetime, get_valid_models
 
 hvplot.extension("plotly")
 pn.extension(
@@ -117,10 +117,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         Initializes the table with the Tabulator widget.
         The current LLM model is selected in the table.
         """
-        if self.llm_provider.value == "groq":
-            df = get_groq_models()
-        elif self.llm_provider.value == "huggingface":
-            df = get_huggingface_models()
+        df = get_valid_models(self.llm_provider.value)
 
         if event is None:
             # Initialize the models table
