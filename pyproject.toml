@@ -16,6 +16,7 @@ dependencies = [
   "crewai>=0.65.2",
   "crewai-tools>=0.12.1",
   "datasets>=3",
+  "diskcache>=5.6.3",
   "feedparser>=6.0.11",
   "google-generativeai>=0.8.2",
   "great-tables>=0.11.1",
@@ -74,5 +75,7 @@ lint.unfixable = [
 
 [tool.uv]
 dev-dependencies = [
+  "mypy>=1.12.0",
+  "pandas-stubs>=2.2.3.241009",
   "pre-commit>=3.8.0",
 ]

@@ -13,6 +13,8 @@ storage/
 # SEC filings
 filings/
 
+.finmas_cache/
+
 ### JupyterNotebooks ###
 
 .ipynb_checkpoints

@@ -2,6 +2,9 @@
 defaults:
   llm_provider: groq
   llm_model: llama3-8b-8192
+  llm_temperature: 0.7
+  llm_max_tokens: 1024
+  hf_embedding_model: BAAI/bge-small-en-v1.5
   news_source: Benzinga
   fundamental_freq: Quarterly
   start_date: "2023-01-01"
@@ -18,3 +21,6 @@ defaults:
     - BAC
     - WFC
     - XOM
+  openai_models:
+    - gpt-4o
+    - gpt-4o-mini

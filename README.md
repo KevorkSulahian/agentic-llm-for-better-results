@@ -15,9 +15,14 @@ To run the app do the following:
 3. Setup `.env` file
 4. Start the server by using `panel serve`
 
-We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).  
-Set your `ALPHAVANTAGE_API_KEY` in the `.env` file in the repo folder.  
+We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).\
 You can create your `.env` file by copying the `.env.template` file in the repo.
+Set the following API keys in the `.env` file in the repo folder:
+
+- `ALPHAVANTAGE_API_KEY` for fundamental data.
+- `GROQ_API_KEY` for access to running Groq models.
+- `ALPACA_API_KEY` and `ALPACA_API_SECRET` for access to Benzinga Historical News API.
+- `OPENAI_API_KEY` for accessing OpenAI models `gpt-4o` and `gpt-4o-mini`.
 
 From the repo folder, the following command can start the app:
 
