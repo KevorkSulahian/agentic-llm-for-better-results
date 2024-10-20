@@ -1,6 +1,10 @@
 ---
 defaults:
   llm_provider: groq
+  llm_providers:
+    - groq
+    - openai
+    - huggingface
   llm_model: llama3-8b-8192
   llm_temperature: 0.7
   llm_max_tokens: 1024

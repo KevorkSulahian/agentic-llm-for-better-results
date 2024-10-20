@@ -1,0 +1,21 @@
+news_analyzer_task:
+  description: >
+    Create a news analysis report for articles for the company {ticker}.
+  expected_output: >
+    A news report that includes key events, and key company news.
+  agent: news_analyzer
+
+sentiment_analysis_task:
+  description: >
+    Create a report on the sentiment of the news articles for {ticker}.
+  expected_output: >
+    A sentiment analysis report that includes the overall sentiment of the news.
+  agent: sentiment_analyzer
+
+news_summary_task:
+  description: >
+    Create a news summary report for {ticker}.
+    Include key events, market sentiment, and key company news.
+  expected_output: >
+    A news summary report that contains key insights and clear sections.
+  agent: news_summarizer
