@@ -1,35 +1,37 @@
 import os
-from crewai import Agent, Task, Crew, Process, LLM
+from crewai import Agent, Task, Crew, Process
+
+# from crewai import Agent, Task, Crew, Process, LLM
 from tools.sentiment_analysis import ticker_sentiment_analysis
 from tools.technical_analysis import yf_tech_analysis
 from tools.analyze_data import yf_fundamental_analysis
+
 # from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 # Environment Variables
 
+
 # Model Selection
-def initialize_llm(model_option, api_key = None, groq_api_key = None):
-    if  model_option == 'ollama':
+def initialize_llm(model_option, api_key=None, groq_api_key=None):
+    if model_option == "ollama":
         return ChatOpenAI(
             openai_api_base="http://localhost:11434/v1",
-            openai_api_key="ollama",                 
-            model_name="ollama/llama3.1:8b-instruct-q6_K"
+            openai_api_key="ollama",
+            model_name="ollama/llama3.1:8b-instruct-q6_K",
         )
         # return LLM(model= f"ollama/llama3.1:8b-instruct-q6_K", base_url="http://localhost:11434")
     elif model_option == "OpenAI GPT-4o":
         return ChatOpenAI(openai_api_key=api_key, model="gpt-4o", temperature=0.1)
     elif model_option == "OpenAI GPT-4o Mini":
         return ChatOpenAI(openai_api_key=api_key, model="gpt-4o-mini", temperature=0.1)
-        
-    
 
     else:
         raise ValueError("Invalid model option selected")
 
 
-def create_crew(stock_symbol, model_option, API_KEY = None):
+def create_crew(stock_symbol, model_option, API_KEY=None):
     llm = initialize_llm(model_option)
     # Tools Initialization
     sentiment_analysis_tool = ticker_sentiment_analysis
@@ -168,14 +170,14 @@ def create_crew(stock_symbol, model_option, API_KEY = None):
         tasks=[research_task, technical_analysis_task, fundamental_analysis_task, report_task],
         process=Process.sequential,
         cache=True,
-        planning = True
+        planning=True,
     )
 
     result = crew.kickoff(inputs={"stock_symbol": stock_symbol})
 
     os.makedirs("./crew_results", exist_ok=True)
     file_path = f"./crew_results/crew_result_{stock_symbol}.md"
-    
+
     result_str = f"Token Usage: {result.token_usage} \n\n" + str(result)
     with open(file_path, "w") as file:
         file.write(result_str)
