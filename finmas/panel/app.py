@@ -12,6 +12,15 @@ from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
+# Get the absolute path of the directory containing the crew.py file
+crew_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../experiments/yf_with_crewai'))
+
+# Add that directory to sys.path
+sys.path.insert(0, crew_path)
+
+# Now, you can import crew.py
+from crew import create_crew
+
 # Add the root directory of the project to the Python path
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -85,6 +94,10 @@ class FinMAnalysis(pn.viewable.Viewer):
     fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
     time_elapsed: dict[str, float] = {}
 
+    # Crew addition
+    generate_crew_btn = pn.widgets.Button(name="Generate Crew Report", button_type="primary")
+    crew_output = pn.pane.Markdown("No Crew report generated yet.", sizing_mode="stretch_width")
+
     def __init__(self, **params) -> None:
         super().__init__(**params)
         # Models
@@ -105,11 +118,16 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.fetch_data_btn.on_click(self.fetch_data)
         self.fetch_data(None)
 
+        # Attach callback to the crew button
+        self.generate_crew_btn.on_click(self.generate_crew_report)
+
         # About tab
         with open("finmas/panel/about.md", mode="r", encoding="utf-8") as f:
             about = f.read()
 
         self.about_md = pn.pane.Markdown(about)
+
+        
 
     def update_llm_models_tbl(self, event):
         """
@@ -330,6 +348,27 @@ class FinMAnalysis(pn.viewable.Viewer):
             legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=0),
         )
         return pn.pane.Plotly(fig)
+    
+    def generate_crew_report(self, event) -> None:
+        """Generates the Crew report and displays the output in Markdown"""
+        ticker = self.ticker_select.value
+        llm_model = self.llm_model.value
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+
+        if openai_api_key is None:
+            self.crew_output.object = "Please set OPENAI_API_KEY in the .env file"
+            return
+
+        # Call create_crew function
+        try:
+            # result = create_crew(ticker, llm_model, openai_api_key) # Will need to update for this to work
+            result = create_crew(ticker, "OpenAI GPT-4o Mini", openai_api_key)
+            # We can read from MD if necessary 
+            # with open(result, "r") as file:
+            #     result_content = file.read()
+            self.crew_output.object = result
+        except Exception as e:
+            self.crew_output.object = f"An error occurred while generating the Crew report: {str(e)}"
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -387,11 +426,20 @@ class FinMAnalysis(pn.viewable.Viewer):
                         ),
                     ),
                     ("Models", pn.Column(self.llm_models_tbl)),
-                    ("Crews", pn.Column(pn.pane.Markdown("## Crew Configuration"))),
+                    (
+                        "Crews",
+                        pn.Column(
+                            pn.pane.Markdown("## Crew Configuration"),
+                            self.generate_crew_btn,
+                            self.crew_output,
+                        ),
+                    ),
                     ("About", pn.Column(self.about_md)),
                 )
             ),
         )
+    
+
 
 
 if pn.state.served:

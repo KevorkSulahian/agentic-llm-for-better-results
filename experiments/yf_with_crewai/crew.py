@@ -175,11 +175,11 @@ def create_crew(stock_symbol, model_option, API_KEY=None):
 
     result = crew.kickoff(inputs={"stock_symbol": stock_symbol})
 
-    os.makedirs("./crew_results", exist_ok=True)
-    file_path = f"./crew_results/crew_result_{stock_symbol}.md"
+    # os.makedirs("./crew_results", exist_ok=True)
+    # file_path = f"./crew_results/crew_result_{stock_symbol}.md"
 
     result_str = f"Token Usage: {result.token_usage} \n\n" + str(result)
-    with open(file_path, "w") as file:
-        file.write(result_str)
+    # with open(file_path, "w") as file:
+    #     file.write(result_str)
 
-    return file_path
+    return result_str
