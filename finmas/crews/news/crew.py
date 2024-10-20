@@ -23,6 +23,7 @@ class NewsAnalysisCrew:
         return Agent(
             config=self.agents_config["news_analyzer"],  # type: ignore
             verbose=True,
+            memory=True, # helpful for smaller llm in case they fail -> won't repeat the same thing twice
             llm=self.crewai_llm,
             tools=[self.llama_index_news_tool],
         )
@@ -32,6 +33,7 @@ class NewsAnalysisCrew:
         return Agent(
             config=self.agents_config["sentiment_analyzer"],  # type: ignore
             verbose=True,
+            memory=True,
             llm=self.crewai_llm,
             tools=[self.llama_index_news_tool],
         )
@@ -41,6 +43,7 @@ class NewsAnalysisCrew:
         return Agent(
             config=self.agents_config["news_summarizer"],  # type: ignore
             verbose=True,
+            memory=True,
             llm=self.crewai_llm,
         )
 
@@ -71,5 +74,6 @@ class NewsAnalysisCrew:
             cache=True,
             process=Process.sequential,
             verbose=True,
+            planning=True,
             output_log_file="crew.log",
         )
