@@ -9,12 +9,12 @@ FILINGS_DIR = "filings"
 # https://huggingface.co/models?inference=warm&sort=trending&pipeline_tag=text-generation
 HF_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 HF_MODELS = {
-    "llama-3.2-1B-Inst": "meta-llama/Llama-3.2-1B-Instruct",
-    "llama-3.2-3B-Inst": "meta-llama/Llama-3.2-3B-Instruct",
+    "llama-3.2-1B-Instruct": "meta-llama/Llama-3.2-1B-Instruct",
+    "llama-3.2-3B-Instruct": "meta-llama/Llama-3.2-3B-Instruct",
     "mistral-7B-Instruct": "mistralai/Mistral-7B-Instruct-v0.3",
 }
 HF_BASE_URL = "https://api-inference.huggingface.co/models"
-DEFAULT_HF_MODEL = "llama-3.2-3B-Inst"
+DEFAULT_HF_MODEL = "llama-3.2-3B-Instruct"
 
 DEFAULT_GROQ_MODEL = "llama3-8b-8192"
 

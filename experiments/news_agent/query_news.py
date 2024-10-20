@@ -120,11 +120,15 @@ def main(
     news_df = pd.DataFrame.from_records(records)
     with pd.option_context("display.max_colwidth", 100):
         news_df["published"] = news_df["published"].dt.strftime("%Y-%m-%d %H:%M")
-        print(news_df[["title", "published", "num_symbols"]])
+        news_columns = ["title", "published"]
+        if source == NewsSourceEnum.benzinga:
+            news_columns.append("num_symbols")
+        print(news_df[news_columns])
 
     print("Loading embedding model, creating vector store index and loading LLM model")
 
-    documents = news_fetcher.parse_news_to_documents(records, field="content")
+    field = "summary" if source == NewsSourceEnum.yahoo_finance else "content"
+    documents = news_fetcher.parse_news_to_documents(records, field=field)
 
     embed_model = get_embedding_model()
 
