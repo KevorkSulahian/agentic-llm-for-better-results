@@ -28,7 +28,8 @@ class SECTools:
         """
         Initializes the SEC tools for retrieving and searching through SEC filings.
 
-        :param model_name: The HuggingFace model name for generating text embeddings.
+        Args:
+            model_name (str): The HuggingFace model name for generating text embeddings.
         """
         # HF tokenizer and model for embeddings
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -42,9 +43,12 @@ class SECTools:
         """
         Search a query within the latest 10-Q filing for a given stock ticker.
 
-        :param stock: The stock ticker symbol (e.g., 'AAPL').
-        :param query: The query to search within the filing.
-        :return: The most relevant sections of the filing.
+        Args:
+            stock (str): The stock ticker symbol (e.g., 'AAPL').
+            query (str): The query to search within the filing.
+
+        Returns:
+            str: The most relevant sections of the filing.
         """
         content = self.get_filing_content(stock, "10-Q")
         if not content:
@@ -56,9 +60,12 @@ class SECTools:
         """
         Search a query within the latest 10-K filing for a given stock ticker.
 
-        :param stock: The stock ticker symbol (e.g., 'AAPL').
-        :param query: The query to search within the filing.
-        :return: The most relevant sections of the filing.
+        Args:
+            stock (str): The stock ticker symbol (e.g., 'AAPL').
+            query (str): The query to search within the filing.
+
+        Returns:
+            str: The most relevant sections of the filing.
         """
         content = self.get_filing_content(stock, "10-K")
         if not content:
@@ -70,9 +77,12 @@ class SECTools:
         """
         Fetches the latest 10-K or 10-Q filing content for the given stock ticker.
 
-        :param ticker: The stock ticker symbol.
-        :param filing_type: The type of filing (e.g., '10-K' or '10-Q').
-        :return: The content of the filing as a plain text string.
+        Args:
+            ticker (str): The stock ticker symbol.
+            filing_type (str): The type of filing (e.g., '10-K' or '10-Q').
+
+        Returns:
+            Optional[str]: The content of the filing as a plain text string, or None if not found.
         """
         try:
             filings_dir = Path(FILINGS_DIR) / ticker / filing_type
@@ -94,10 +104,12 @@ class SECTools:
         """
         Converts the HTML content of the SEC filing into plain text.
 
-        :param file_path: The file path of the downloaded SEC filing.
-        :return: The plain text representation of the filing.
+        Args:
+            file_path (str): The file path of the downloaded SEC filing.
+
+        Returns:
+            str: The plain text representation of the filing.
         """
-        """Convert the HTML content of the filing to plain text."""
         h = html2text.HTML2Text()
         h.ignore_links = False
         with open(file_path, "r", encoding="utf-8") as html_file:
@@ -108,9 +120,12 @@ class SECTools:
         """
         Perform an embedding-based search using FAISS to retrieve relevant sections of the content.
 
-        :param content: The plain text content of the filing.
-        :param query: The search query.
-        :return: The most relevant sections of the content.
+        Args:
+            content (str): The plain text content of the filing.
+            query (str): The search query.
+
+        Returns:
+            str: The most relevant sections of the content.
         """
         chunks = self.chunk_text(content, chunk_size=1000, overlap=100)
         chunk_embeddings = [self.get_embedding(chunk) for chunk in chunks]
@@ -137,10 +152,13 @@ class SECTools:
         """
         Splits the text into chunks with a defined overlap for better context retention.
 
-        :param text: The input text to be chunked.
-        :param chunk_size: The size of each chunk in characters.
-        :param overlap: The number of overlapping characters between chunks.
-        :return: A list of text chunks.
+        Args:
+            text (str): The input text to be chunked.
+            chunk_size (int, optional): The size of each chunk in characters. Defaults to 1000.
+            overlap (int, optional): The number of overlapping characters between chunks. Defaults to 100.
+
+        Returns:
+            List[str]: A list of text chunks.
         """
         sentences = re.split(r"(?<=[.!?]) +", text)
         chunks, chunk = [], []
@@ -161,8 +179,11 @@ class SECTools:
         """
         Generate the embedding for a given text using a pre-trained HuggingFace model.
 
-        :param text: The input text to generate embeddings for.
-        :return: A NumPy array representing the text embedding.
+        Args:
+            text (str): The input text to generate embeddings for.
+
+        Returns:
+            np.ndarray: A NumPy array representing the text embedding.
         """
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
         with torch.no_grad():
