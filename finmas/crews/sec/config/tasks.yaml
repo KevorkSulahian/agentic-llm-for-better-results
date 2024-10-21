@@ -1,0 +1,21 @@
+sec_filing_analysis_task:
+  description: >
+    Create an analysis report for the SEC filings (10-K or 10-Q) for the company {ticker}.
+  expected_output: >
+    A report that includes key financial metrics, risks, and operational updates based on the latest SEC filings.
+  agent: sec_filing_analyzer
+
+sec_filing_sentiment_task:
+  description: >
+    Create a sentiment analysis report for the company's SEC filings (10-K or 10-Q).
+  expected_output: >
+    A sentiment analysis report that highlights the tone and sentiment expressed in the management discussion and analysis section.
+  agent: sec_filing_sentiment_analyzer
+
+sec_filing_summary_task:
+  description: >
+    Create a summary report for the company's SEC filings (10-K or 10-Q).
+    Include key financial insights, sentiment, and operational highlights.
+  expected_output: >
+    A concise summary report that provides key financial metrics, major updates, and an overall assessment.
+  agent: sec_filing_summarizer

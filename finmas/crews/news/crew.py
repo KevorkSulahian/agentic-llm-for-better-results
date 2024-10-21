@@ -74,5 +74,5 @@ class NewsAnalysisCrew:
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file="crew.log",
+            output_log_file="news_crew.log",
         )

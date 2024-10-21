@@ -9,9 +9,11 @@ embeddings/
 
 # Vector Store Index storage
 storage/
+sec_storage/
 
-# SEC filings
-filings/
+# Crew Logs
+news_crew.log
+sec_crew.log
 
 .finmas_cache/
 

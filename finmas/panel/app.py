@@ -14,6 +14,7 @@ from panel.viewable import Viewable
 
 from finmas.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.crews.news.crew import NewsAnalysisCrew
+from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
 from finmas.news import get_news_fetcher
 from finmas.panel.formatting import (
@@ -23,6 +24,7 @@ from finmas.panel.formatting import (
     ohlcv_config,
 )
 from finmas.utils import get_valid_models, to_datetime
+from typing import Union
 
 hvplot.extension("plotly")
 pn.extension(
@@ -355,6 +357,8 @@ class FinMAnalysis(pn.viewable.Viewer):
         Displays the output in Markdown.
         """
         with self.kickoff_crew_btn.param.update(loading=True):
+            crew: Union[NewsAnalysisCrew, SECFilingCrew]
+
             if self.crew_select.value == "news":
                 if getattr(self, "news_records", None) is None:
                     self.crew_output.object = "Need to fetch news data first."
@@ -367,30 +371,43 @@ class FinMAnalysis(pn.viewable.Viewer):
                     llm_provider=self.llm_provider.value,
                     llm_model=self.llm_model.value,
                 )
-
-                inputs = {"ticker": self.ticker_select.value}
-                self.crew_usage_metrics.object = "Started crew..."
+            elif self.crew_select.value == "SEC":
+                self.crew_usage_metrics.object = "Loading SEC filing data and performing analysis"
                 try:
-                    output = crew.crew().kickoff(inputs=inputs)
+                    crew = SECFilingCrew(
+                        ticker=self.ticker_select.value,
+                        llm_provider=self.llm_provider.value,
+                        llm_model=self.llm_model.value,
+                    )
                 except Exception as e:
-                    self.crew_output_status.object = str(e)
+                    self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
                     self.crew_output_status.alert_type = "danger"
                     return
 
-                self.crew_usage_metrics.object = get_usage_metrics_as_string(output.token_usage)
+            inputs = {"ticker": self.ticker_select.value}
+            self.crew_usage_metrics.object = "Started crew..."
 
-                # Store output to markdown file
-                timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{self.ticker_select.value}_{self.news_source.value}_news_analysis_{timestamp}.md"
-                output_dir = Path(defaults["crew_output_dir"])
-                output_dir.mkdir(parents=True, exist_ok=True)
-                with open(output_dir / filename, "w") as f:
-                    f.write(output.raw)
+            try:
+                output = crew.crew().kickoff(inputs=inputs)
+            except Exception as e:
+                self.crew_output_status.object = str(e)
+                self.crew_output_status.alert_type = "danger"
+                return
 
-                self.crew_output_status.object = f"Output stored in {str(output_dir / filename)}"
-                self.crew_output_status.alert_type = "success"
+            # Display the results
+            self.crew_usage_metrics.object = get_usage_metrics_as_string(output.token_usage)
+            timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = (
+                f"{self.ticker_select.value}_{self.crew_select.value}_analysis_{timestamp}.md"
+            )
+            output_dir = Path(defaults["crew_output_dir"])
+            output_dir.mkdir(parents=True, exist_ok=True)
+            with open(output_dir / filename, "w") as f:
+                f.write(output.raw)
 
-                self.crew_output.object = output.raw
+            self.crew_output_status.object = f"Output stored in {str(output_dir / filename)}"
+            self.crew_output_status.alert_type = "success"
+            self.crew_output.object = output.raw
 
     def __panel__(self) -> Viewable:
         return pn.Row(
