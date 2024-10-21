@@ -17,7 +17,7 @@ def get_embedding_model():
     # Set environment variable for Hugging Face to use our cache directory
     os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
     return HuggingFaceEmbedding(
-        model_name=defaults["HF_EMBEDDING_MODEL"], device="cpu", cache_folder=str(cache_dir)
+        model_name=defaults["hf_embedding_model"], device="cpu", cache_folder=str(cache_dir)
     )
 
 

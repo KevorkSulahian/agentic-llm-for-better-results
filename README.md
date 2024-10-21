@@ -11,9 +11,35 @@ systems may perform on other financial tasks as well.
 To run the app do the following:
 
 1. Clone the repo
-2. Install the virtual environment and activate it.
-3. Setup `.env` file
-4. Start the server by using `panel serve`
+
+```shell
+git clone https://github.com/KevorkSulahian/agentic-llm-for-better-results.git
+cd agentic-llm-for-better-results
+```
+
+2. Create a virtual environment and install the dependencies into the environment.
+
+Using `venv` and `pip`
+
+```shell
+python -m venv .venv
+source .venv/bin/activate  # macOS or Linux
+.venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+```
+
+Using uv
+
+```shell
+uv sync
+```
+
+3. Setup `.env` file with necessary API keys.
+4. Start the server by using `panel`:
+
+```shell
+panel serve finmas/panel/app.py --show
+```
 
 We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).\
 You can create your `.env` file by copying the `.env.template` file in the repo.
@@ -25,10 +51,6 @@ Set the following API keys in the `.env` file in the repo folder:
 - `OPENAI_API_KEY` for accessing OpenAI models `gpt-4o` and `gpt-4o-mini`.
 
 From the repo folder, the following command can start the app:
-
-```bash
-panel serve finmas/panel/app.py --show
-```
 
 ## Development
 

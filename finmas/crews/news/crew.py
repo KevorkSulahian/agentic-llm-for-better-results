@@ -12,8 +12,7 @@ class NewsAnalysisCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, ticker: str, records: list[dict], llm_provider: str, llm_model: str):
-        self.ticker = ticker
+    def __init__(self, records: list[dict], llm_provider: str, llm_model: str):
         self.crewai_llm = get_crewai_llm_model(llm_provider, llm_model)
         self.llama_index_news_tool = get_news_tool(records, llm_provider, llm_model)
         super().__init__()
@@ -23,7 +22,7 @@ class NewsAnalysisCrew:
         return Agent(
             config=self.agents_config["news_analyzer"],  # type: ignore
             verbose=True,
-            memory=True, # helpful for smaller llm in case they fail -> won't repeat the same thing twice
+            memory=True,  # helpful for smaller llm in case they fail -> won't repeat the same thing twice
             llm=self.crewai_llm,
             tools=[self.llama_index_news_tool],
         )
@@ -67,7 +66,7 @@ class NewsAnalysisCrew:
 
     @crew
     def crew(self) -> Crew:
-        """Creates the SEC Filings Analysis crew"""
+        """Creates News Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
             tasks=self.tasks,  # type: ignore

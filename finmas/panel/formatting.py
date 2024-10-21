@@ -31,7 +31,7 @@ ohlcv_config = dict(
 )
 
 news_config = dict(
-    page_size=10,
+    page_size=15,
     pagination="local",
     # formatters={"link": {"type": "link", "target": "_blank"}},
     formatters={

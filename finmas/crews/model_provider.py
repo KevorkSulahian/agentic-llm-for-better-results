@@ -33,7 +33,7 @@ def get_crewai_llm_model(llm_provider: str, llm_model: str):
 def get_llama_index_llm(llm_provider: str, llm_model: str):
     """Get a llama-index compatible LLM model"""
     validate_llm_info(llm_provider, llm_model)
-    config = dict(temperature=defaults["temperature"], max_tokens=defaults["max_tokens"])
+    config = dict(temperature=defaults["llm_temperature"], max_tokens=defaults["llm_max_tokens"])
     if llm_provider == "groq":
         from llama_index.llms.groq import Groq
 

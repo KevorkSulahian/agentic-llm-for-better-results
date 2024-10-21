@@ -1,7 +1,7 @@
 import datetime as dt
 import os
 import time
-import sys
+from pathlib import Path
 
 import hvplot.pandas  # noqa: F401
 import pandas as pd
@@ -12,29 +12,17 @@ from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
-# Get the absolute path of the directory containing the crew.py file
-crew_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../experiments/yf_with_crewai'))
-
-# Add that directory to sys.path
-sys.path.insert(0, crew_path)
-
-# Now, you can import crew.py
-from crew import create_crew
-
-# Add the root directory of the project to the Python path
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-)  # Necessary for windows users.
-
-from finmas.news import get_news_fetcher
 from finmas.constants import INCOME_STATEMENT_COLS, defaults
+from finmas.crews.news.crew import NewsAnalysisCrew
+from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
+from finmas.news import get_news_fetcher
 from finmas.panel.formatting import (
     income_statement_config,
     llm_models_config,
     news_config,
     ohlcv_config,
 )
-from finmas.utils import to_datetime, get_valid_models
+from finmas.utils import get_valid_models, to_datetime
 
 hvplot.extension("plotly")
 pn.extension(
@@ -94,9 +82,13 @@ class FinMAnalysis(pn.viewable.Viewer):
     fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
     time_elapsed: dict[str, float] = {}
 
-    # Crew addition
-    generate_crew_btn = pn.widgets.Button(name="Generate Crew Report", button_type="primary")
-    crew_output = pn.pane.Markdown("No Crew report generated yet.", sizing_mode="stretch_width")
+    crew_select = pn.widgets.Select(name="Crew", width=100)
+    kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
+    crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
+    crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
+    crew_usage_metrics = pn.pane.Markdown("")
+    crew_output_status = pn.pane.Alert("No Crew output generated yet.", alert_type="warning")
+    crew_output = pn.pane.Markdown("", sizing_mode="stretch_width")
 
     def __init__(self, **params) -> None:
         super().__init__(**params)
@@ -118,8 +110,12 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.fetch_data_btn.on_click(self.fetch_data)
         self.fetch_data(None)
 
-        # Attach callback to the crew button
-        self.generate_crew_btn.on_click(self.generate_crew_report)
+        # Crews
+        self.crew_select.param.watch(self.update_crew_config_markdown, "value")
+        self.crew_select.options = defaults["crews"]
+        self.crew_select.value = defaults["crew"]
+
+        self.kickoff_crew_btn.on_click(self.generate_crew_output)
 
         # About tab
         with open("finmas/panel/about.md", mode="r", encoding="utf-8") as f:
@@ -127,7 +123,11 @@ class FinMAnalysis(pn.viewable.Viewer):
 
         self.about_md = pn.pane.Markdown(about)
 
-        
+    def update_crew_config_markdown(self, event):
+        """Update the crew configuration markdown"""
+        config_path = Path(__file__).parent.parent / "crews" / self.crew_select.value / "config"
+        self.crew_agents_config_md.object = get_yaml_config_as_markdown(config_path, "agents")
+        self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks")
 
     def update_llm_models_tbl(self, event):
         """
@@ -241,13 +241,13 @@ class FinMAnalysis(pn.viewable.Viewer):
     def fetch_news(self, event) -> None:
         """Fetch news from the selected news provider and the selected ticker"""
         news_fetcher = get_news_fetcher(self.news_source.value)
-        records = news_fetcher.get_news(
+        self.news_records = news_fetcher.get_news(
             ticker=self.ticker_select.value,
             start=to_datetime(self.news_start.value),
             end=to_datetime(self.news_end.value),
         )
 
-        df = pd.DataFrame.from_records(records)
+        df = pd.DataFrame.from_records(self.news_records)
         df["published"] = df["published"].dt.strftime("%Y-%m-%d")
 
         if getattr(self, "news_tbl", None) is None:
@@ -348,27 +348,49 @@ class FinMAnalysis(pn.viewable.Viewer):
             legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=0),
         )
         return pn.pane.Plotly(fig)
-    
-    def generate_crew_report(self, event) -> None:
-        """Generates the Crew report and displays the output in Markdown"""
-        ticker = self.ticker_select.value
-        llm_model = self.llm_model.value
-        openai_api_key = os.getenv("OPENAI_API_KEY")
 
-        if openai_api_key is None:
-            self.crew_output.object = "Please set OPENAI_API_KEY in the .env file"
-            return
+    def generate_crew_output(self, event) -> None:
+        """
+        Constructs the crew and kicks off the crew with defined inputs.
+        Displays the output in Markdown.
+        """
+        with self.kickoff_crew_btn.param.update(loading=True):
+            if self.crew_select.value == "news":
+                if getattr(self, "news_records", None) is None:
+                    self.crew_output.object = "Need to fetch news data first."
+                    return
+                self.crew_usage_metrics.object = (
+                    "Loading embedding model and creating vector store index"
+                )
+                crew = NewsAnalysisCrew(
+                    records=self.news_records,
+                    llm_provider=self.llm_provider.value,
+                    llm_model=self.llm_model.value,
+                )
 
-        # Call create_crew function
-        try:
-            # result = create_crew(ticker, llm_model, openai_api_key) # Will need to update for this to work
-            result = create_crew(ticker, "OpenAI GPT-4o Mini", openai_api_key)
-            # We can read from MD if necessary 
-            # with open(result, "r") as file:
-            #     result_content = file.read()
-            self.crew_output.object = result
-        except Exception as e:
-            self.crew_output.object = f"An error occurred while generating the Crew report: {str(e)}"
+                inputs = {"ticker": self.ticker_select.value}
+                self.crew_usage_metrics.object = "Started crew..."
+                try:
+                    output = crew.crew().kickoff(inputs=inputs)
+                except Exception as e:
+                    self.crew_output_status.object = str(e)
+                    self.crew_output_status.alert_type = "danger"
+                    return
+
+                self.crew_usage_metrics.object = get_usage_metrics_as_string(output.token_usage)
+
+                # Store output to markdown file
+                timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{self.ticker_select.value}_{self.news_source.value}_news_analysis_{timestamp}.md"
+                output_dir = Path(defaults["crew_output_dir"])
+                output_dir.mkdir(parents=True, exist_ok=True)
+                with open(output_dir / filename, "w") as f:
+                    f.write(output.raw)
+
+                self.crew_output_status.object = f"Output stored in {str(output_dir / filename)}"
+                self.crew_output_status.alert_type = "success"
+
+                self.crew_output.object = output.raw
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -398,7 +420,7 @@ class FinMAnalysis(pn.viewable.Viewer):
                                         pn.bind(
                                             self.get_ta_plot, update_counter=self.update_counter
                                         ),
-                                        width=800,
+                                        width=600,
                                         height=400,
                                         margin=10,
                                         title="Technical Analysis",
@@ -411,7 +433,7 @@ class FinMAnalysis(pn.viewable.Viewer):
                                             self.get_income_statement_plot,
                                             update_counter=self.update_counter,
                                         ),
-                                        width=800,
+                                        width=600,
                                         height=400,
                                         margin=10,
                                         title="Income Statement",
@@ -428,19 +450,37 @@ class FinMAnalysis(pn.viewable.Viewer):
                     ("Models", pn.Column(self.llm_models_tbl)),
                     (
                         "Crews",
-                        pn.Column(
-                            pn.pane.Markdown("## Crew Configuration"),
-                            self.generate_crew_btn,
-                            self.crew_output,
+                        pn.Row(
+                            pn.Column(
+                                pn.pane.Markdown("## Crew Configuration"),
+                                pn.WidgetBox(
+                                    self.crew_select,
+                                    self.kickoff_crew_btn,
+                                    self.crew_usage_metrics,
+                                    horizontal=True,
+                                ),
+                                pn.Column(
+                                    pn.Card(
+                                        self.crew_agents_config_md,
+                                        margin=10,
+                                        title="Agents",
+                                    ),
+                                    pn.Card(
+                                        self.crew_tasks_config_md,
+                                        margin=10,
+                                        title="Tasks",
+                                    ),
+                                    width=600,
+                                ),
+                            ),
+                            pn.Column(self.crew_output_status, self.crew_output),
                         ),
                     ),
                     ("About", pn.Column(self.about_md)),
                 )
             ),
         )
-    
-
 
 
 if pn.state.served:
-    FinMAnalysis().servable(title="FinMAS")
+    FinMAnalysis().servable(title="FinMAS - Financial Multi-Agent System")

@@ -28,3 +28,8 @@ defaults:
   openai_models:
     - gpt-4o
     - gpt-4o-mini
+  crew: news
+  crews:
+    - news
+    - SEC
+  crew_output_dir: finmas_output
