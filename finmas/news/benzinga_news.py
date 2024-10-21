@@ -105,6 +105,8 @@ class BenzingaNewsFetcher(NewsFetcherBase):
     def get_benzinga_content_text(html_content: str, exclude_tables: bool = True) -> str:
         """Parses the HTML from a news content from Benzinga news source and returns the text.
 
+        This method extracts a clean text from the HTML content.
+
         Args:
             html_content: The HTML content of the news article.
             exclude_tables: Whether to exclude tables from the text. Defaults to True.

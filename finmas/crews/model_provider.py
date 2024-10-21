@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from finmas.constants import defaults
 from finmas.utils import get_environment_variable, get_valid_models
 
@@ -11,7 +14,12 @@ def validate_llm_info(llm_provider: str, llm_model: str) -> None:
         raise ValueError(f"Invalid LLM model: {llm_model}. Valid models are: {valid_models}")
 
 
-def get_crewai_llm_model(llm_provider: str, llm_model: str):
+def get_crewai_llm_model(
+    llm_provider: str,
+    llm_model: str,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+):
     validate_llm_info(llm_provider, llm_model)
     if llm_provider == "groq":
         config = {"api_key": get_environment_variable("GROQ_API_KEY")}
@@ -24,16 +32,24 @@ def get_crewai_llm_model(llm_provider: str, llm_model: str):
 
     return LLM(
         model=crewai_llm_model_name,
-        temperature=defaults["llm_temperature"],
-        max_tokens=defaults["llm_max_tokens"],
+        temperature=temperature or defaults["llm_temperature"],
+        max_tokens=max_tokens or defaults["llm_max_tokens"],
         **config,
     )
 
 
-def get_llama_index_llm(llm_provider: str, llm_model: str):
+def get_llama_index_llm(
+    llm_provider: str,
+    llm_model: str,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+):
     """Get a llama-index compatible LLM model"""
     validate_llm_info(llm_provider, llm_model)
-    config = dict(temperature=defaults["llm_temperature"], max_tokens=defaults["llm_max_tokens"])
+    config = dict(
+        temperature=temperature or defaults["llm_temperature"],
+        max_tokens=max_tokens or defaults["llm_max_tokens"],
+    )
     if llm_provider == "groq":
         from llama_index.llms.groq import Groq
 
@@ -48,3 +64,18 @@ def get_llama_index_llm(llm_provider: str, llm_model: str):
         from llama_index.llms.openai import OpenAI
 
         return OpenAI(model=llm_model, **config)
+
+
+def get_embedding_model(model_name: str | None = None):
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+    cache_dir = Path("embeddings").absolute()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    # Set environment variable for Hugging Face to use our cache directory
+    os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
+    return HuggingFaceEmbedding(
+        model_name=model_name or defaults["hf_embedding_model"],
+        device="cpu",
+        cache_folder=str(cache_dir),
+    )

@@ -1,13 +1,15 @@
-from typing import Optional, List
-from pydantic.v1 import BaseModel, Field
-from transformers import AutoTokenizer, AutoModel
-import torch
-import faiss
-import numpy as np
-from edgar import Company, set_identity
-import html2text
 import re
 from pathlib import Path
+from typing import List, Optional
+
+import faiss
+import html2text
+import numpy as np
+import torch
+from edgar import Company, set_identity
+from pydantic.v1 import BaseModel, Field
+from transformers import AutoModel, AutoTokenizer
+
 from finmas.constants import defaults
 
 # Set identity for SEC API access
@@ -82,6 +84,7 @@ class SECTools:
     def get_filing_content(self, ticker: str, filing_type: str) -> Optional[str]:
         """
         Fetches the latest 10-K or 10-Q filing content for the given stock ticker.
+        The functions downloads the filing as HTML and converts it to plain text.
 
         Args:
             ticker (str): The stock ticker symbol.

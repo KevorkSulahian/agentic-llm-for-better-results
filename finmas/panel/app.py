@@ -2,6 +2,7 @@ import datetime as dt
 import os
 import time
 from pathlib import Path
+from typing import Union
 
 import hvplot.pandas  # noqa: F401
 import pandas as pd
@@ -24,7 +25,6 @@ from finmas.panel.formatting import (
     ohlcv_config,
 )
 from finmas.utils import get_valid_models, to_datetime
-from typing import Union
 
 hvplot.extension("plotly")
 pn.extension(
@@ -44,6 +44,12 @@ class FinMAnalysis(pn.viewable.Viewer):
         width=100,
     )
     llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
+    embedding_model = pn.widgets.Select(
+        name="Embedding Model",
+        value=defaults["hf_embedding_model"],
+        options=defaults["hf_embedding_models"],
+        width=200,
+    )
     ticker_select = pn.widgets.Select(name="Ticker", width=100)
     start_picker = pn.widgets.DatetimeInput(
         name="Start",
@@ -85,6 +91,12 @@ class FinMAnalysis(pn.viewable.Viewer):
     time_elapsed: dict[str, float] = {}
 
     crew_select = pn.widgets.Select(name="Crew", width=100)
+    llm_temperature = pn.widgets.FloatInput(
+        name="Temperature", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
+    )
+    llm_max_tokens = pn.widgets.IntInput(
+        name="Max tokens", value=defaults["llm_max_tokens"], width=100
+    )
     kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
     crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
     crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
@@ -358,6 +370,14 @@ class FinMAnalysis(pn.viewable.Viewer):
         """
         with self.kickoff_crew_btn.param.update(loading=True):
             crew: Union[NewsAnalysisCrew, SECFilingCrew]
+            start = time.time()
+            model_config = dict(
+                llm_provider=self.llm_provider.value,
+                llm_model=self.llm_model.value,
+                embedding_model=self.embedding_model.value,
+                temperature=self.llm_temperature.value,
+                max_tokens=self.llm_max_tokens.value,
+            )
 
             if self.crew_select.value == "news":
                 if getattr(self, "news_records", None) is None:
@@ -368,16 +388,14 @@ class FinMAnalysis(pn.viewable.Viewer):
                 )
                 crew = NewsAnalysisCrew(
                     records=self.news_records,
-                    llm_provider=self.llm_provider.value,
-                    llm_model=self.llm_model.value,
+                    **model_config,
                 )
             elif self.crew_select.value == "SEC":
                 self.crew_usage_metrics.object = "Loading SEC filing data and performing analysis"
                 try:
                     crew = SECFilingCrew(
                         ticker=self.ticker_select.value,
-                        llm_provider=self.llm_provider.value,
-                        llm_model=self.llm_model.value,
+                        **model_config,
                     )
                 except Exception as e:
                     self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
@@ -395,19 +413,44 @@ class FinMAnalysis(pn.viewable.Viewer):
                 return
 
             # Display the results
-            self.crew_usage_metrics.object = get_usage_metrics_as_string(output.token_usage)
+            time_spent = f"Time spent: {time.time() - start:.1f} seconds"
+            usage_metrics = get_usage_metrics_as_string(output.token_usage)
+            self.crew_usage_metrics.object = usage_metrics + "\n" + time_spent
             timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = (
                 f"{self.ticker_select.value}_{self.crew_select.value}_analysis_{timestamp}.md"
             )
-            output_dir = Path(defaults["crew_output_dir"])
+            output_dir = Path(defaults["crew_output_dir"]) / self.crew_select.value
             output_dir.mkdir(parents=True, exist_ok=True)
+
+            output_metadata = (
+                self.get_crew_configuration_as_string() + "\n" + usage_metrics + "\n" + time_spent
+            )
+
             with open(output_dir / filename, "w") as f:
-                f.write(output.raw)
+                f.write(output_metadata + "\n\nCrew output:\n\n" + output.raw)
 
             self.crew_output_status.object = f"Output stored in {str(output_dir / filename)}"
             self.crew_output_status.alert_type = "success"
             self.crew_output.object = output.raw
+
+    def get_crew_configuration_as_string(self) -> str:
+        """Returns the configuration as a string"""
+
+        output = (
+            "Configuration:\n\n"
+            f"LLM: {self.llm_provider.value} / {self.llm_model.value}\n"
+            f"Temperature: {self.llm_temperature.value} Max tokens: {self.llm_max_tokens.value}\n"
+            f"Embedding Model: {self.embedding_model.value}\n"
+            f"Ticker: {self.ticker_select.value}\n"
+        )
+        if self.crew_select.value == "news":
+            output += (
+                f"News Source: {self.news_source.value}\n"
+                f"Date range: {self.news_start.value} - {self.news_end.value}\n"
+            )
+
+        return output
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -415,6 +458,7 @@ class FinMAnalysis(pn.viewable.Viewer):
                 pn.WidgetBox(
                     self.llm_provider,
                     self.llm_model,
+                    self.embedding_model,
                     pn.Row(self.ticker_select, self.freq_select),
                     pn.Row(self.start_picker, self.end_picker),
                     self.news_source,
@@ -466,25 +510,26 @@ class FinMAnalysis(pn.viewable.Viewer):
                     ),
                     ("Models", pn.Column(self.llm_models_tbl)),
                     (
-                        "Crews",
+                        "Crew Analysis",
                         pn.Row(
                             pn.Column(
-                                pn.pane.Markdown("## Crew Configuration"),
                                 pn.WidgetBox(
                                     self.crew_select,
+                                    self.llm_temperature,
+                                    self.llm_max_tokens,
                                     self.kickoff_crew_btn,
-                                    self.crew_usage_metrics,
                                     horizontal=True,
                                 ),
+                                self.crew_usage_metrics,
                                 pn.Column(
                                     pn.Card(
                                         self.crew_agents_config_md,
-                                        margin=10,
+                                        margin=5,
                                         title="Agents",
                                     ),
                                     pn.Card(
                                         self.crew_tasks_config_md,
-                                        margin=10,
+                                        margin=5,
                                         title="Tasks",
                                     ),
                                     width=600,

@@ -9,6 +9,9 @@ defaults:
   llm_temperature: 0.7
   llm_max_tokens: 1024
   hf_embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  hf_embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - sentence-transformers/all-MiniLM-L6-v2
   news_source: Benzinga
   fundamental_freq: Quarterly
   start_date: "2023-01-01"
@@ -32,5 +35,5 @@ defaults:
   crews:
     - news
     - SEC
-  crew_output_dir: finmas_output
+  crew_output_dir: output
   filings_dir: filings

@@ -1,29 +1,18 @@
-import os
-from pathlib import Path
-
 from crewai_tools import LlamaIndexTool
-from finmas.constants import defaults
-from finmas.crews.model_provider import get_llama_index_llm
-from finmas.sec.sec_tool import SECTools
+
+from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.sec.sec_parser import parse_sec_filing_to_documents
+from finmas.sec.sec_tool import SECTools
 
 
-def get_embedding_model():
-    """Get the embedding model for SEC filing analysis"""
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
-    cache_dir = Path("embeddings").absolute()
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    # Set environment variable for Hugging Face to use our cache directory
-    os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
-
-    return HuggingFaceEmbedding(
-        model_name=defaults["hf_embedding_model"], device="cpu", cache_folder=str(cache_dir)
-    )
-
-
-def get_sec_tool(ticker: str, llm_provider: str, llm_model: str):
+def get_sec_tool(
+    ticker: str,
+    llm_provider: str,
+    llm_model: str,
+    embedding_model: str,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+):
     """
     Fetch SEC filings for a ticker, prepare the embedding model, and initialize the LLM for analysis.
 
@@ -47,14 +36,19 @@ def get_sec_tool(ticker: str, llm_provider: str, llm_model: str):
     # Parse the filing content into a list of Document objects
     documents = parse_sec_filing_to_documents(filing_content, filing_type, ticker)
 
-    embed_model = get_embedding_model()
+    embed_model = get_embedding_model(embedding_model)
 
     from llama_index.core import VectorStoreIndex
 
     index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
     index.storage_context.persist(persist_dir="sec_storage")
 
-    llama_index_llm = get_llama_index_llm(llm_provider=llm_provider, llm_model=llm_model)
+    llama_index_llm = get_llama_index_llm(
+        llm_provider=llm_provider,
+        llm_model=llm_model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
 
     query_engine = index.as_query_engine(llm=llama_index_llm)
 

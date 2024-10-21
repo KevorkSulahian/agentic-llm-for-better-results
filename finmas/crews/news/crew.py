@@ -12,9 +12,26 @@ class NewsAnalysisCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, records: list[dict], llm_provider: str, llm_model: str):
-        self.crewai_llm = get_crewai_llm_model(llm_provider, llm_model)
-        self.llama_index_news_tool = get_news_tool(records, llm_provider, llm_model)
+    def __init__(
+        self,
+        records: list[dict],
+        llm_provider: str,
+        llm_model: str,
+        embedding_model: str,
+        temperature: float,
+        max_tokens: int,
+    ):
+        self.crewai_llm = get_crewai_llm_model(
+            llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
+        )
+        self.llama_index_news_tool = get_news_tool(
+            records,
+            llm_provider,
+            llm_model,
+            embedding_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
         super().__init__()
 
     @agent

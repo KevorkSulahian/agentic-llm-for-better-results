@@ -1,5 +1,6 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
+
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.sec.tools import get_sec_tool
 
@@ -11,9 +12,26 @@ class SECFilingCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, ticker: str, llm_provider: str, llm_model: str):
-        self.crewai_llm = get_crewai_llm_model(llm_provider, llm_model)
-        self.sec_tool = get_sec_tool(ticker, llm_provider, llm_model)
+    def __init__(
+        self,
+        ticker: str,
+        llm_provider: str,
+        llm_model: str,
+        embedding_model: str,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ):
+        self.crewai_llm = get_crewai_llm_model(
+            llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
+        )
+        self.sec_tool = get_sec_tool(
+            ticker,
+            llm_provider,
+            llm_model,
+            embedding_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
         super().__init__()
 
     @agent
