@@ -1,5 +1,5 @@
 Configuration:
-Ticker: NVDA
+Ticker: NVDA\
 News source: Benzinga
 Date range: 2024-10-07 - 2024-10-21
 LLM: groq/llama3-8b-8192

@@ -34,6 +34,6 @@ defaults:
   crew: news
   crews:
     - news
-    - SEC
+    - sec
   crew_output_dir: output
   filings_dir: filings

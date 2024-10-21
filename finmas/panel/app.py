@@ -390,7 +390,7 @@ class FinMAnalysis(pn.viewable.Viewer):
                     records=self.news_records,
                     **model_config,
                 )
-            elif self.crew_select.value == "SEC":
+            elif self.crew_select.value == "sec":
                 self.crew_usage_metrics.object = "Loading SEC filing data and performing analysis"
                 try:
                     crew = SECFilingCrew(
