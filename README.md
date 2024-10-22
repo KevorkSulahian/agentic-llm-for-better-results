@@ -6,13 +6,21 @@ This repo contains the code for WQU Capstone project where we investigate the us
 in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
 systems may perform on other financial tasks as well.
 
-![](assets/news_crew_sample_output.png)
+The following screenshots illustrate a news analysis crew output and the main dashboard.
+
+### News analysis
+
+![](assets/screenshots/finmas_news_analysis.png)
+
+### Main dashboard
+
+![](assets/screenshots/finmas_main_dashboard.png)
 
 ## Web app architecture
 
 The following diagram shows how the different components of the web app are connected together.
 
-![alt text](assets/finmas_architecture.png)
+![](assets/finmas_architecture.png)
 
 ## Usage
 
