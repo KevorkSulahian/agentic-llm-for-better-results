@@ -2,10 +2,10 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
+import torch
 import faiss
 import html2text
 import numpy as np
-import torch
 from edgar import Company, set_identity
 from pydantic.v1 import BaseModel, Field
 from transformers import AutoModel, AutoTokenizer
