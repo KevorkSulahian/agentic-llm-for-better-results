@@ -20,6 +20,7 @@ dependencies = [
   "edgartools>=2.34",
   "faiss-cpu>=1.9",
   "feedparser>=6.0.11",
+  "financedatabase>=2.2.2",
   "google-generativeai>=0.8.2",
   "great-tables>=0.11.1",
   "html-to-markdown>=1.1",

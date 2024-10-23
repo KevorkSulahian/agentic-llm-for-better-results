@@ -57,3 +57,26 @@ news_config = dict(
 )
 
 llm_models_config = dict(show_index=False, disabled=True)
+
+tickers_config = dict(
+    page_size=30,
+    pagination="local",
+    formatters={
+        "website": HTMLTemplateFormatter(
+            template=(
+                '<a href="<%= website %>" target="_blank"><i class="fas fa-external-link"></i></a>'
+            )
+        ),
+    },
+    header_filters={
+        "ticker": {"type": "input", "func": "like", "placeholder": "Ticker"},
+        "name": {"type": "input", "func": "like", "placeholder": "Name"},
+        "sector": {"type": "input", "func": "like", "placeholder": "Sector"},
+        "industry_group": {"type": "input", "func": "like", "placeholder": "Industry Group"},
+        "industry": {"type": "input", "func": "like", "placeholder": "Industry"},
+        "market": {"type": "input", "func": "like", "placeholder": "Market"},
+        "market_cap": {"type": "input", "func": "like", "placeholder": "Large"},
+    },
+    show_index=False,
+    disabled=True,
+)

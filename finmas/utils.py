@@ -2,6 +2,7 @@ import datetime as dt
 import os
 import re
 
+import financedatabase as fd
 import numpy as np
 import pandas as pd
 import requests
@@ -113,3 +114,31 @@ def get_openai_models() -> pd.DataFrame:
         }
     )
     return df
+
+
+@cache.memoize(expire=dt.timedelta(days=1).total_seconds())
+def get_wikipedia_sp500_tickers():
+    """Gets a DataFrame of S&P500 tickers from Wikipedia"""
+    df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
+    df.columns = df.columns.str.lower().str.replace(" ", "_")
+    df = df.set_index("symbol")
+    return df
+
+
+@cache.memoize(expire=dt.timedelta(days=1).total_seconds())
+def get_sp500_tickers_df():
+    """Gets a DataFrame of S&P500 tickers with info from Wikipedia and FinanceDatabase"""
+    equities_df = fd.Equities().select()
+    sp500 = get_wikipedia_sp500_tickers()
+    df = sp500.join(equities_df, how="inner")
+    df.index.name = "ticker"
+    TICKER_COLS = [
+        "name",
+        "market_cap",
+        "sector",
+        "industry_group",
+        "industry",
+        "market",
+        "website",
+    ]
+    return df[TICKER_COLS].reset_index()

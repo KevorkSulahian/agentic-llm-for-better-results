@@ -23,8 +23,9 @@ from finmas.panel.formatting import (
     llm_models_config,
     news_config,
     ohlcv_config,
+    tickers_config,
 )
-from finmas.utils import get_valid_models, to_datetime
+from finmas.utils import get_sp500_tickers_df, get_valid_models, to_datetime
 
 hvplot.extension("plotly")
 pn.extension(
@@ -37,7 +38,7 @@ pn.extension(
 load_dotenv(find_dotenv())
 
 
-class FinMAnalysis(pn.viewable.Viewer):
+class FinMAS(pn.viewable.Viewer):
     llm_provider = pn.widgets.Select(
         name="LLM Provider",
         options=defaults["llm_providers"],
@@ -50,7 +51,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         options=defaults["hf_embedding_models"],
         width=200,
     )
-    ticker_select = pn.widgets.Select(name="Ticker", width=100)
+    ticker_select = pn.widgets.Select(name="Ticker", disabled=True, width=100)
     start_picker = pn.widgets.DatetimeInput(
         name="Start",
         format="%Y-%m-%d",
@@ -115,7 +116,7 @@ class FinMAnalysis(pn.viewable.Viewer):
 
         # Ticker
         self.ticker_select.value = defaults["tickerid"]
-        self.ticker_select.options = defaults["tickerids"]
+        self.set_tickers_tbl()
 
         # News
         self.news_source.options = [defaults["news_source"]]
@@ -143,6 +144,21 @@ class FinMAnalysis(pn.viewable.Viewer):
         self.crew_agents_config_md.object = get_yaml_config_as_markdown(config_path, "agents")
         self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks")
 
+    def set_tickers_tbl(self):
+        """Set the tickers table"""
+        df = get_sp500_tickers_df()
+        selection = df.index[df["ticker"] == self.ticker_select.value].tolist()
+        self.tickers_tbl = pn.widgets.Tabulator(
+            df, on_click=self.handle_tickers_tbl_click, selection=selection, **tickers_config
+        )
+        self.ticker_select.options = df["ticker"].tolist()
+
+    def handle_tickers_tbl_click(self, event):
+        """Callback for when a row in the tickers table is clicked"""
+        tickerid = self.tickers_tbl.value.iloc[event.row]["ticker"]
+        if self.ticker_select.value != tickerid:
+            self.ticker_select.value = tickerid
+
     def update_llm_models_tbl(self, event):
         """
         Updates the LLM models table if the LLM provider have changed.
@@ -151,7 +167,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         """
         df = get_valid_models(self.llm_provider.value)
 
-        if event is None:
+        if getattr(self, "llm_models_tbl", None) is None:
             # Initialize the models table
             selection = df.index[df["id"] == self.llm_model.value].tolist()
             self.llm_models_tbl = pn.widgets.Tabulator(
@@ -199,6 +215,7 @@ class FinMAnalysis(pn.viewable.Viewer):
         return pn.pane.Alert(message, alert_type=alert_type)
 
     def fetch_price_data(self, event) -> None:
+        """Fetch price data from Yahoo Finance"""
         df: pd.DataFrame = yf.download(
             self.ticker_select.value,
             start=self.start_picker.value,
@@ -508,6 +525,16 @@ class FinMAnalysis(pn.viewable.Viewer):
                             pn.Row(pn.bind(self.get_news_tbl, update_counter=self.update_counter)),
                         ),
                     ),
+                    (
+                        "Tickers",
+                        pn.Column(
+                            pn.pane.Str(
+                                "Select a ticker from S&P500. "
+                                "Use the filters to explore and find the desired ticker."
+                            ),
+                            self.tickers_tbl,
+                        ),
+                    ),
                     ("Models", pn.Column(self.llm_models_tbl)),
                     (
                         "Crew Analysis",
@@ -545,4 +572,4 @@ class FinMAnalysis(pn.viewable.Viewer):
 
 
 if pn.state.served:
-    FinMAnalysis().servable(title="FinMAS - Financial Multi-Agent System")
+    FinMAS().servable(title="FinMAS - Financial Multi-Agent System")

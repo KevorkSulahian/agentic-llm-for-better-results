@@ -16,18 +16,6 @@ defaults:
   fundamental_freq: Quarterly
   start_date: "2023-01-01"
   tickerid: NVDA
-  tickerids:
-    - AMZN
-    - AAPL
-    - NVDA
-    - GOOGL
-    - WMT
-    - MSFT
-    - TSLA
-    - JPM
-    - BAC
-    - WFC
-    - XOM
   openai_models:
     - gpt-4o
     - gpt-4o-mini
