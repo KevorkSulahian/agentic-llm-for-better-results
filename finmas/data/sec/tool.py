@@ -5,6 +5,8 @@ from typing import List, Optional
 import html2text
 import numpy as np
 import torch
+from datamule import parse_textual_filing
+from datamule.filing_viewer.filing_viewer import json_to_html
 from edgar import Company, set_identity
 from pydantic.v1 import BaseModel, Field
 from transformers import AutoModel, AutoTokenizer
@@ -82,13 +84,16 @@ class SECSemanticSearchTool:
             output_file = filings_dir / filename
             if not output_file.exists():
                 filing.document.download(path=filings_dir)
-            return self.convert_html_to_text(output_file)
+
+            json_content = parse_textual_filing(filing.document.url, return_type="json")
+            html_content = json_to_html(json_content)
+            return self.convert_html_to_text(html_content)
         except Exception as e:
             print(f"Error fetching {filing_type} URL: {e}")
 
         return None
 
-    def convert_html_to_text(self, file_path: str) -> str:
+    def convert_html_to_text(self, html_content: str) -> str:
         """
         Converts the HTML content of the SEC filing into plain text.
 
@@ -97,8 +102,8 @@ class SECSemanticSearchTool:
         """
         h = html2text.HTML2Text()
         h.ignore_links = False
-        with open(file_path, "r", encoding="utf-8") as html_file:
-            html_content = html_file.read()
+        h.ignore_tables = False
+
         return h.handle(html_content)
 
     def extract_key_metrics(self, content: str) -> str:
