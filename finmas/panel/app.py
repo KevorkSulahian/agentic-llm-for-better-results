@@ -17,11 +17,13 @@ from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
 from finmas.data import get_income_statement, get_price_data
 from finmas.data.news import get_news_fetcher
+from finmas.data.sec.filings import filings_to_df, get_sec_filings
 from finmas.panel.formatting import (
     income_statement_config,
     llm_models_config,
     news_config,
     ohlcv_config,
+    sec_filings_config,
     tickers_config,
 )
 from finmas.utils.common import get_tickers_df, get_valid_models, to_datetime
@@ -208,6 +210,8 @@ class FinMAS(pn.viewable.Viewer):
             else:
                 self.news_tbl = None
 
+            self.fetch_sec_filings(event)
+
             self.time_elapsed["fetch_data"] = round(time.time() - start, 1)
             self.update_counter.value += 1  # This trigges updates of plots and tables widgets
 
@@ -279,6 +283,15 @@ class FinMAS(pn.viewable.Viewer):
         elif isinstance(self.news_tbl, pn.widgets.Tabulator):
             self.news_tbl.value = df
 
+    def fetch_sec_filings(self, event) -> None:
+        """Fetch SEC filings for the selected ticker"""
+        self.sec_filings = get_sec_filings(self.ticker_select.value)
+        df = filings_to_df(self.sec_filings)
+        if getattr(self, "sec_filings_tbl", None) is None:
+            self.sec_filings_tbl = pn.widgets.Tabulator(df, **sec_filings_config)
+        elif isinstance(self.sec_filings_tbl, pn.widgets.Tabulator):
+            self.sec_filings_tbl.value = df
+
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
         """Get the news content as HTML"""
@@ -299,6 +312,12 @@ class FinMAS(pn.viewable.Viewer):
         if getattr(self, "news_tbl", None) is None:
             return pn.pane.Markdown("No News data")
         return self.news_tbl
+
+    def get_sec_filings_tbl(self, *args, **kwargs):
+        """Get the SEC filings table"""
+        if getattr(self, "sec_filings_tbl", None) is None:
+            return pn.pane.Markdown("No SEC Filings data")
+        return self.sec_filings_tbl
 
     def get_ta_plot(self, *args, **kwargs) -> go.Figure:
         """Get the plot for Technical analysis"""
@@ -529,6 +548,12 @@ class FinMAS(pn.viewable.Viewer):
                         ),
                     ),
                     ("Models", pn.Column(self.llm_models_tbl)),
+                    (
+                        "SEC Filings",
+                        pn.Column(
+                            pn.bind(self.get_sec_filings_tbl, update_counter=self.update_counter)
+                        ),
+                    ),
                     (
                         "Crew Analysis",
                         pn.Row(

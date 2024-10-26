@@ -1,8 +1,9 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
+from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.sec.tools import get_sec_tool
+from finmas.crews.sec.tools import get_sec_query_engine
 
 
 @CrewBase
@@ -24,13 +25,18 @@ class SECFilingCrew:
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
-        self.sec_tool = get_sec_tool(
+        self.sec_query_engine = get_sec_query_engine(
             ticker,
             llm_provider,
             llm_model,
             embedding_model,
             temperature=temperature,
             max_tokens=max_tokens,
+        )
+        self.sec_tool = LlamaIndexTool.from_query_engine(
+            self.sec_query_engine,
+            name="SEC Filing Query Tool",
+            description="Use this tool to search and analyze SEC filings",
         )
         super().__init__()
 

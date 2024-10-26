@@ -80,3 +80,26 @@ tickers_config = dict(
     show_index=False,
     disabled=True,
 )
+
+sec_filings_config = dict(
+    page_size=10,
+    pagination="local",
+    # formatters={"link": {"type": "link", "target": "_blank"}},
+    formatters={
+        "link": HTMLTemplateFormatter(
+            template=(
+                '<a href="<%= link %>" target="_blank"><i class="fas fa-external-link"></i></a>'
+            )
+        ),
+    },
+    header_filters={
+        "form": {"type": "input", "func": "like", "placeholder": "10-Q"},
+        "filing_date": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
+        "reportDate": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
+    },
+    hidden_columns=["filing"],
+    # max_width=1000,
+    layout="fit_data_fill",
+    show_index=False,
+    disabled=True,
+)

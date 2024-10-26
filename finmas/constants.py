@@ -23,6 +23,15 @@ MARKET_CAP_MAP = {
     "Nano Cap": 0,
 }
 
+# SEC Filings Table
+SEC_FILINGS_COLS = [
+    "filing_date",
+    "reportDate",
+    "form",
+    "link",
+    "filing",
+]
+
 with open(CONFIG_FILE, "r") as c:
     config = yaml.safe_load(c)
 

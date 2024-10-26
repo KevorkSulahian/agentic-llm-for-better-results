@@ -2,10 +2,9 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
-import torch
-import faiss
 import html2text
 import numpy as np
+import torch
 from edgar import Company, set_identity
 from pydantic.v1 import BaseModel, Field
 from transformers import AutoModel, AutoTokenizer
@@ -22,7 +21,7 @@ class SECFilingSearchSchema(BaseModel):
     ticker: str = Field(..., description="Mandatory valid stock ticker (e.g., 'NVDA').")
 
 
-class SECTools:
+class SECSemanticSearchTool:
     """A tool to perform semantic searches in 10-K and 10-Q SEC filings for a specified company."""
 
     predefined_metrics = [
@@ -39,7 +38,7 @@ class SECTools:
         Initializes the SEC tools for retrieving and searching through SEC filings.
 
         Args:
-            model_name (str): The HuggingFace model name for generating text embeddings.
+            model_name: The HuggingFace model name for generating text embeddings.
         """
         # HF tokenizer and model for embeddings
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -47,37 +46,21 @@ class SECTools:
 
         # FAISS index to store
         # and retrieve embeddings
-        self.index = faiss.IndexFlatL2(768)
+        from faiss import IndexFlatL2
 
-    def search_10q(self, stock: str) -> str:
+        self.index = IndexFlatL2(768)
+
+    def search_filing(self, stock: str, filing_type: str) -> str:
         """
-        Automatically extract key financial metrics from the latest 10-Q filing for a given stock ticker.
+        Automatically extract summary for key financial metrics from
+        the latest filing for a given stock ticker.
 
         Args:
-            stock (str): The stock ticker symbol (e.g., 'AAPL').
-
-        Returns:
-            str: A structured summary of key financial metrics from the filing.
+            stock: The stock ticker symbol (e.g., 'AAPL').
         """
-        content = self.get_filing_content(stock, "10-Q")
+        content = self.get_filing_content(stock, filing_type=filing_type)
         if not content:
-            return f"Sorry, I couldn't find any 10-Q filings for {stock}."
-
-        return self.extract_key_metrics(content)
-
-    def search_10k(self, stock: str) -> str:
-        """
-        Automatically extract key financial metrics from the latest 10-K filing for a given stock ticker.
-
-        Args:
-            stock (str): The stock ticker symbol (e.g., 'AAPL').
-
-        Returns:
-            str: A structured summary of key financial metrics from the filing.
-        """
-        content = self.get_filing_content(stock, "10-K")
-        if not content:
-            return f"Sorry, I couldn't find any 10-K filings for {stock}."
+            return f"Sorry, I couldn't find any {filing_type} filings for {stock}."
 
         return self.extract_key_metrics(content)
 
@@ -87,23 +70,19 @@ class SECTools:
         The functions downloads the filing as HTML and converts it to plain text.
 
         Args:
-            ticker (str): The stock ticker symbol.
-            filing_type (str): The type of filing (e.g., '10-K' or '10-Q').
-
-        Returns:
-            Optional[str]: The content of the filing as a plain text string, or None if not found.
+            ticker: The stock ticker symbol.
+            filing_type: The type of filing (e.g., '10-K' or '10-Q').
         """
         try:
             filings_dir = Path(defaults["filings_dir"]) / ticker / filing_type
             filings_dir.mkdir(parents=True, exist_ok=True)
-            filings = Company(ticker).get_filings(form=filing_type).latest(1)
+            filing = Company(ticker).get_filings(form=filing_type).latest(1)
 
-            for filing in [filings]:
-                filename = filing.document.model_dump().get("document")
-                output_file = filings_dir / filename
-                if not output_file.exists():
-                    filing.document.download(path=filings_dir)
-                return self.convert_html_to_text(output_file)
+            filename = filing.document.document
+            output_file = filings_dir / filename
+            if not output_file.exists():
+                filing.document.download(path=filings_dir)
+            return self.convert_html_to_text(output_file)
         except Exception as e:
             print(f"Error fetching {filing_type} URL: {e}")
 
@@ -114,10 +93,7 @@ class SECTools:
         Converts the HTML content of the SEC filing into plain text.
 
         Args:
-            file_path (str): The file path of the downloaded SEC filing.
-
-        Returns:
-            str: The plain text representation of the filing.
+            file_path: The file path of the downloaded SEC filing.
         """
         h = html2text.HTML2Text()
         h.ignore_links = False
@@ -127,13 +103,11 @@ class SECTools:
 
     def extract_key_metrics(self, content: str) -> str:
         """
-        Automatically extract predefined key financial metrics from the filing content.
+        Automatically extract a structured summary for each
+        predefined key financial metrics from the filing content.
 
         Args:
-            content (str): The plain text content of the filing.
-
-        Returns:
-            str: A structured report summarizing the extracted key metrics.
+            content: The plain text content of the filing.
         """
         results = []
         for metric in self.predefined_metrics:
@@ -144,14 +118,11 @@ class SECTools:
 
     def embedding_search(self, content: str, query: str) -> str:
         """
-        Perform an embedding-based search using FAISS to retrieve relevant sections of the content.
+        Perform an embedding-based search using FAISS to retrieve most relevant sections of the content.
 
         Args:
-            content (str): The plain text content of the filing.
-            query (str): The search query.
-
-        Returns:
-            str: The most relevant sections of the content.
+            content: The plain text content of the filing.
+            query: The search query.
         """
         chunks = self.chunk_text(content, chunk_size=1000, overlap=100)
         chunk_embeddings = [self.get_embedding(chunk) for chunk in chunks]
@@ -162,7 +133,9 @@ class SECTools:
         embedding_dim = chunk_embeddings_np.shape[1]
 
         # Initialize FAISS index with the correct embedding size
-        self.index = faiss.IndexFlatL2(embedding_dim)
+        from faiss import IndexFlatL2
+
+        self.index = IndexFlatL2(embedding_dim)
 
         # Eembeddings -> FAISS index
         self.index.add(chunk_embeddings_np)
@@ -176,15 +149,12 @@ class SECTools:
 
     def chunk_text(self, text: str, chunk_size: int = 1000, overlap: int = 100) -> List[str]:
         """
-        Splits the text into chunks with a defined overlap for better context retention.
+        Splits the text into a list of chunks with a defined overlap for better context retention.
 
         Args:
-            text (str): The input text to be chunked.
-            chunk_size (int, optional): The size of each chunk in characters. Defaults to 1000.
-            overlap (int, optional): The number of overlapping characters between chunks. Defaults to 100.
-
-        Returns:
-            List[str]: A list of text chunks.
+            text: The input text to be chunked.
+            chunk_size: The size of each chunk in characters. Defaults to 1000.
+            overlap: The number of overlapping characters between chunks. Defaults to 100.
         """
         sentences = re.split(r"(?<=[.!?]) +", text)
         chunks, chunk = [], []
@@ -203,13 +173,10 @@ class SECTools:
 
     def get_embedding(self, text: str) -> np.ndarray:
         """
-        Generate the embedding for a given text using a pre-trained HuggingFace model.
+        Generate the embedding vector for a given text using a pre-trained HuggingFace model.
 
         Args:
-            text (str): The input text to generate embeddings for.
-
-        Returns:
-            np.ndarray: A NumPy array representing the text embedding.
+            text: The input text to generate embeddings for.
         """
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
         with torch.no_grad():

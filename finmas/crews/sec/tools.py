@@ -1,11 +1,9 @@
-from crewai_tools import LlamaIndexTool
-
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
-from finmas.data.sec.sec_parser import parse_sec_filing_to_documents
-from finmas.data.sec.sec_tool import SECTools
+from finmas.data.sec.parser import parse_sec_filing_to_documents
+from finmas.data.sec.tool import SECSemanticSearchTool
 
 
-def get_sec_tool(
+def get_sec_query_engine(
     ticker: str,
     llm_provider: str,
     llm_model: str,
@@ -24,14 +22,14 @@ def get_sec_tool(
     Returns:
         LlamaIndexTool: A tool for querying SEC filings
     """
-    sec_tool = SECTools()
+    sec_tool = SECSemanticSearchTool()
 
     # Try 10-Q, otherwise fall back to 10-K
-    filing_content = sec_tool.search_10q(ticker)
     filing_type = "10-Q"
+    filing_content = sec_tool.search_filing(ticker, filing_type=filing_type)
     if "couldn't find any 10-Q filings" in filing_content:
-        filing_content = sec_tool.search_10k(ticker)
         filing_type = "10-K"
+        filing_content = sec_tool.search_filing(ticker, filing_type=filing_type)
 
     # Parse the filing content into a list of Document objects
     documents = parse_sec_filing_to_documents(filing_content, filing_type, ticker)
@@ -52,8 +50,4 @@ def get_sec_tool(
 
     query_engine = index.as_query_engine(llm=llama_index_llm)
 
-    return LlamaIndexTool.from_query_engine(
-        query_engine,
-        name="SEC Filing Query Tool",
-        description="Use this tool to search and analyze SEC filings",
-    )
+    return query_engine
