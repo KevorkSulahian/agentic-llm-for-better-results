@@ -1,6 +1,6 @@
-from finmas.news.benzinga_news import BenzingaNewsFetcher
-from finmas.news.news_fetcher import NewsFetcherBase
-from finmas.news.yahoo_news import YahooFinanceNewsFetcher
+from finmas.data.news.benzinga_news import BenzingaNewsFetcher
+from finmas.data.news.news_fetcher import NewsFetcherBase
+from finmas.data.news.yahoo_news import YahooFinanceNewsFetcher
 
 
 def get_news_fetcher(source: str) -> NewsFetcherBase:

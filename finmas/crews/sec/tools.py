@@ -1,8 +1,8 @@
 from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
-from finmas.sec.sec_parser import parse_sec_filing_to_documents
-from finmas.sec.sec_tool import SECTools
+from finmas.data.sec.sec_parser import parse_sec_filing_to_documents
+from finmas.data.sec.sec_tool import SECTools
 
 
 def get_sec_tool(

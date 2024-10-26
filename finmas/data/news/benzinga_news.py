@@ -9,8 +9,8 @@ from alpaca.data.requests import NewsRequest
 from bs4 import BeautifulSoup
 from html_to_markdown import convert_to_markdown
 
-from finmas.news.news_fetcher import NewsFetcherBase
 from finmas.cache_config import cache
+from finmas.data.news.news_fetcher import NewsFetcherBase
 
 BENZINGA_NEWS_LIMIT = 50
 

@@ -1,7 +1,9 @@
-from finmas.news.news_fetcher import NewsFetcherBase
 import datetime as dt
-import feedparser
 import time
+
+import feedparser
+
+from finmas.data.news.news_fetcher import NewsFetcherBase
 
 
 class YahooFinanceNewsFetcher(NewsFetcherBase):

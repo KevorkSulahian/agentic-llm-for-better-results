@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from finmas.cache_config import cache
-from finmas.constants import defaults
+from finmas.constants import MARKET_CAP_MAP, TICKER_COLS, defaults
 
 HF_ACTIVE_MODELS_URL = (
     "https://huggingface.co/models?inference=warm&pipeline_tag=text-generation&sort=trending"
@@ -117,7 +117,7 @@ def get_openai_models() -> pd.DataFrame:
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
-def get_wikipedia_sp500_tickers():
+def get_wikipedia_sp500_tickers() -> pd.DataFrame:
     """Gets a DataFrame of S&P500 tickers from Wikipedia"""
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
     df.columns = df.columns.str.lower().str.replace(" ", "_")
@@ -126,19 +126,24 @@ def get_wikipedia_sp500_tickers():
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
-def get_sp500_tickers_df():
+def get_tickers_df(sp500: bool = False):
     """Gets a DataFrame of S&P500 tickers with info from Wikipedia and FinanceDatabase"""
     equities_df = fd.Equities().select()
-    sp500 = get_wikipedia_sp500_tickers()
-    df = sp500.join(equities_df, how="inner")
+    if sp500:
+        sp500_df = get_wikipedia_sp500_tickers()
+        df = sp500_df.join(equities_df, how="inner")
+    else:
+        print("Using FinanceDatabase")
+        # There are multiple duplicates in the FinanceDatabase. Keep the first.
+        df = equities_df.drop_duplicates(subset=["name"])
+        df = df.dropna(subset=["market", "market_cap"], how="any")
+        df = df[df["market"].str.contains("NASDAQ|New York")]
+        # Filter out tickers according to tickers_market_cap_exclude configuration
+        df = df[~df["market_cap"].str.contains("|".join(defaults["tickers_market_cap_exclude"]))]
+
     df.index.name = "ticker"
-    TICKER_COLS = [
-        "name",
-        "market_cap",
-        "sector",
-        "industry_group",
-        "industry",
-        "market",
-        "website",
-    ]
-    return df[TICKER_COLS].reset_index()
+    df = df[TICKER_COLS].reset_index()
+
+    df["market_cap_sort"] = df["market_cap"].map(MARKET_CAP_MAP)
+    df = df.sort_values(by=["market_cap_sort", "ticker"], ascending=[False, True])
+    return df.drop(columns=["market_cap_sort"])

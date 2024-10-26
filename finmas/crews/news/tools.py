@@ -1,7 +1,7 @@
 from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
-from finmas.news.news_fetcher import parse_news_to_documents
+from finmas.data.news.news_fetcher import parse_news_to_documents
 
 
 def get_news_tool(

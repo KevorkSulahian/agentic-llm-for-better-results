@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from finmas.constants import defaults
-from finmas.utils import get_environment_variable, get_valid_models
+from finmas.utils.common import get_environment_variable, get_valid_models
 
 
 def validate_llm_info(llm_provider: str, llm_model: str) -> None:

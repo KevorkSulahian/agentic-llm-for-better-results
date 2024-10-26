@@ -8,8 +8,6 @@ import hvplot.pandas  # noqa: F401
 import pandas as pd
 import panel as pn
 import plotly.graph_objects as go
-import yfinance as yf
-from alpha_vantage.fundamentaldata import FundamentalData
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
@@ -17,7 +15,8 @@ from finmas.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.crews.news.crew import NewsAnalysisCrew
 from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
-from finmas.news import get_news_fetcher
+from finmas.data import get_income_statement, get_price_data
+from finmas.data.news import get_news_fetcher
 from finmas.panel.formatting import (
     income_statement_config,
     llm_models_config,
@@ -25,7 +24,7 @@ from finmas.panel.formatting import (
     ohlcv_config,
     tickers_config,
 )
-from finmas.utils import get_sp500_tickers_df, get_valid_models, to_datetime
+from finmas.utils.common import get_tickers_df, get_valid_models, to_datetime
 
 hvplot.extension("plotly")
 pn.extension(
@@ -85,6 +84,9 @@ class FinMAS(pn.viewable.Viewer):
     )
     include_fundamental_data = pn.widgets.Checkbox(name="Include Fundamental Data", value=False)
     include_news = pn.widgets.Checkbox(name="Include News", value=False)
+    only_sp500_tickers = pn.widgets.Checkbox(
+        name="SP500 Tickers", value=defaults["only_sp500_tickers"]
+    )
 
     update_counter = pn.widgets.IntInput(value=0)
 
@@ -116,7 +118,8 @@ class FinMAS(pn.viewable.Viewer):
 
         # Ticker
         self.ticker_select.value = defaults["tickerid"]
-        self.set_tickers_tbl()
+        self.update_tickers_tbl(None)
+        self.only_sp500_tickers.param.watch(self.update_tickers_tbl, "value")
 
         # News
         self.news_source.options = [defaults["news_source"]]
@@ -144,13 +147,16 @@ class FinMAS(pn.viewable.Viewer):
         self.crew_agents_config_md.object = get_yaml_config_as_markdown(config_path, "agents")
         self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks")
 
-    def set_tickers_tbl(self):
+    def update_tickers_tbl(self, event):
         """Set the tickers table"""
-        df = get_sp500_tickers_df()
+        df = get_tickers_df(sp500=self.only_sp500_tickers.value)
         selection = df.index[df["ticker"] == self.ticker_select.value].tolist()
-        self.tickers_tbl = pn.widgets.Tabulator(
-            df, on_click=self.handle_tickers_tbl_click, selection=selection, **tickers_config
-        )
+        if getattr(self, "tickers_tbl", None) is None:
+            self.tickers_tbl = pn.widgets.Tabulator(
+                df, on_click=self.handle_tickers_tbl_click, selection=selection, **tickers_config
+            )
+        else:
+            self.tickers_tbl.value = df
         self.ticker_select.options = df["ticker"].tolist()
 
     def handle_tickers_tbl_click(self, event):
@@ -216,14 +222,10 @@ class FinMAS(pn.viewable.Viewer):
 
     def fetch_price_data(self, event) -> None:
         """Fetch price data from Yahoo Finance"""
-        df: pd.DataFrame = yf.download(
-            self.ticker_select.value,
+        df = get_price_data(
+            ticker=self.ticker_select.value,
             start=self.start_picker.value,
             end=self.end_picker.value,
-            interval="1d",
-            auto_adjust=True,
-            threads=True,
-            progress=False,
         )
         df.reset_index(inplace=True)
         df.columns = df.columns.str.lower()
@@ -235,20 +237,9 @@ class FinMAS(pn.viewable.Viewer):
 
     def fetch_fundamental_data(self, event) -> None:
         """Fetch fundamental data"""
-        if os.getenv("ALPHAVANTAGE_API_KEY") is None:
-            return
-        fundamentals = FundamentalData(output_format="pandas")
-
-        if self.freq_select.value == "Quarterly":
-            data_func = fundamentals.get_income_statement_quarterly
-        else:
-            data_func = fundamentals.get_income_statement_annual
-
-        try:
-            income_statement: pd.DataFrame = data_func(self.ticker_select.value)[0]
-        except Exception as e:
-            print(e)
-            return
+        income_statement = get_income_statement(
+            ticker=self.ticker_select.value, freq=self.freq_select.value
+        )
 
         income_statement.set_index("fiscalDateEnding", inplace=True)
         income_statement.index = pd.to_datetime(income_statement.index)
@@ -485,6 +476,7 @@ class FinMAS(pn.viewable.Viewer):
                     self.fetch_data_btn,
                 ),
                 pn.bind(self._data_alert_box, update_counter=self.update_counter),
+                pn.WidgetBox("## Config", self.only_sp500_tickers),
                 width=300,
             ),
             pn.Column(
@@ -528,9 +520,10 @@ class FinMAS(pn.viewable.Viewer):
                     (
                         "Tickers",
                         pn.Column(
-                            pn.pane.Str(
-                                "Select a ticker from S&P500. "
-                                "Use the filters to explore and find the desired ticker."
+                            pn.pane.Markdown(
+                                "Select a ticker. "
+                                "Use the filters to explore and find the desired ticker.",
+                                margin=0,
                             ),
                             self.tickers_tbl,
                         ),

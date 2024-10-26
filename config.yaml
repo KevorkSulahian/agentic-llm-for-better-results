@@ -16,6 +16,10 @@ defaults:
   fundamental_freq: Quarterly
   start_date: "2023-01-01"
   tickerid: NVDA
+  tickers_market_cap_exclude:
+    - Micro
+    - Nano
+  only_sp500_tickers: False
   openai_models:
     - gpt-4o
     - gpt-4o-mini
