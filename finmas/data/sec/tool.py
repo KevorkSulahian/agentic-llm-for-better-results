@@ -1,47 +1,41 @@
 import re
-from pathlib import Path
-from typing import List, Optional
+from typing import List
 
-import html2text
 import numpy as np
 import torch
-from datamule import parse_textual_filing
-from datamule.filing_viewer.filing_viewer import json_to_html
-from edgar import Company, set_identity
-from pydantic.v1 import BaseModel, Field
 from transformers import AutoModel, AutoTokenizer
 
 from finmas.constants import defaults
 
-# Set identity for SEC API access
-set_identity("John Doe john.doe@example.com")
-
-
-class SECFilingSearchSchema(BaseModel):
-    """Input schema for SEC filings search."""
-
-    ticker: str = Field(..., description="Mandatory valid stock ticker (e.g., 'NVDA').")
+DEFAULT_CHUNK_SIZE = 1000
+DEFAULT_OVERLAP = 100
+DEFAULT_TOP_K = 3
 
 
 class SECSemanticSearchTool:
-    """A tool to perform semantic searches in 10-K and 10-Q SEC filings for a specified company."""
+    """A tool to extract key ."""
 
-    predefined_metrics = [
-        "Total revenue",
-        "Net income",
-        "Operating expenses",
-        "Risk factors",
-        "Cash flow",
-        "Management's discussion",
-    ]
-
-    def __init__(self, model_name: str = defaults["hf_embedding_model"]):
+    def __init__(
+        self,
+        model_name: str = defaults["hf_embedding_model_sec"],
+        predefined_metrics: list[str] | None = None,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        overlap: int = DEFAULT_OVERLAP,
+        top_k: int = DEFAULT_TOP_K,
+    ):
         """
         Initializes the SEC tools for retrieving and searching through SEC filings.
 
         Args:
             model_name: The HuggingFace model name for generating text embeddings.
         """
+        self.predefined_metrics = (
+            predefined_metrics or defaults["sec_filing_key_metrics_for_compression"]
+        )
+        self.chunk_size = chunk_size
+        self.overlap = overlap
+        self.top_k = top_k
+
         # HF tokenizer and model for embeddings
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name)
@@ -51,60 +45,6 @@ class SECSemanticSearchTool:
         from faiss import IndexFlatL2
 
         self.index = IndexFlatL2(768)
-
-    def search_filing(self, stock: str, filing_type: str) -> str:
-        """
-        Automatically extract summary for key financial metrics from
-        the latest filing for a given stock ticker.
-
-        Args:
-            stock: The stock ticker symbol (e.g., 'AAPL').
-        """
-        content = self.get_filing_content(stock, filing_type=filing_type)
-        if not content:
-            return f"Sorry, I couldn't find any {filing_type} filings for {stock}."
-
-        return self.extract_key_metrics(content)
-
-    def get_filing_content(self, ticker: str, filing_type: str) -> Optional[str]:
-        """
-        Fetches the latest 10-K or 10-Q filing content for the given stock ticker.
-        The functions downloads the filing as HTML and converts it to plain text.
-
-        Args:
-            ticker: The stock ticker symbol.
-            filing_type: The type of filing (e.g., '10-K' or '10-Q').
-        """
-        try:
-            filings_dir = Path(defaults["filings_dir"]) / ticker / filing_type
-            filings_dir.mkdir(parents=True, exist_ok=True)
-            filing = Company(ticker).get_filings(form=filing_type).latest(1)
-
-            filename = filing.document.document
-            output_file = filings_dir / filename
-            if not output_file.exists():
-                filing.document.download(path=filings_dir)
-
-            json_content = parse_textual_filing(filing.document.url, return_type="json")
-            html_content = json_to_html(json_content)
-            return self.convert_html_to_text(html_content)
-        except Exception as e:
-            print(f"Error fetching {filing_type} URL: {e}")
-
-        return None
-
-    def convert_html_to_text(self, html_content: str) -> str:
-        """
-        Converts the HTML content of the SEC filing into plain text.
-
-        Args:
-            file_path: The file path of the downloaded SEC filing.
-        """
-        h = html2text.HTML2Text()
-        h.ignore_links = False
-        h.ignore_tables = False
-
-        return h.handle(html_content)
 
     def extract_key_metrics(self, content: str) -> str:
         """
@@ -129,7 +69,7 @@ class SECSemanticSearchTool:
             content: The plain text content of the filing.
             query: The search query.
         """
-        chunks = self.chunk_text(content, chunk_size=1000, overlap=100)
+        chunks = self.chunk_text(content, chunk_size=self.chunk_size, overlap=self.overlap)
         chunk_embeddings = [self.get_embedding(chunk) for chunk in chunks]
 
         chunk_embeddings_np = np.vstack(chunk_embeddings)
@@ -147,12 +87,14 @@ class SECSemanticSearchTool:
 
         query_embedding = self.get_embedding(query)
         # Top 3 results
-        D, indices = self.index.search(np.array([query_embedding]), k=3)
+        D, indices = self.index.search(np.array([query_embedding]), k=self.top_k)
 
         relevant_chunks = [chunks[i] for i in indices[0]]
         return "\n\n".join(relevant_chunks)
 
-    def chunk_text(self, text: str, chunk_size: int = 1000, overlap: int = 100) -> List[str]:
+    def chunk_text(
+        self, text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, overlap: int = DEFAULT_OVERLAP
+    ) -> List[str]:
         """
         Splits the text into a list of chunks with a defined overlap for better context retention.
 

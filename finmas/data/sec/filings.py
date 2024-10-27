@@ -12,9 +12,9 @@ set_identity("John Doe john.doe@example.com")
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
-def get_sec_filings(ticker: str, latest: int = 10) -> EntityFilings:
+def get_sec_filings(ticker: str, filing_types: list[str], latest: int = 10) -> EntityFilings:
     """Use edgartools to get the latest SEC filings"""
-    return Company(ticker).get_filings(form=["10-K", "10-Q"]).latest(latest)
+    return Company(ticker).get_filings(form=filing_types).latest(latest)
 
 
 def filings_to_df(filings: EntityFilings) -> pd.DataFrame:

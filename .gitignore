@@ -6,6 +6,7 @@ uv.lock
 
 # Embedding model
 embeddings/
+embedding_model/
 
 # Vector Store Index storage
 storage/
@@ -16,6 +17,10 @@ news_crew.log
 sec_crew.log
 
 .finmas_cache/
+
+# Data
+filings/
+*.htm
 
 ### JupyterNotebooks ###
 

@@ -19,6 +19,9 @@ class SECFilingCrew:
         llm_provider: str,
         llm_model: str,
         embedding_model: str,
+        filing_url: str | None = None,
+        filing_types: list[str] | None = None,
+        compress_filing: bool = False,
         temperature: float | None = None,
         max_tokens: int | None = None,
     ):
@@ -30,6 +33,9 @@ class SECFilingCrew:
             llm_provider,
             llm_model,
             embedding_model,
+            filing_url=filing_url,
+            filing_types=filing_types,
+            compress_filing=compress_filing,
             temperature=temperature,
             max_tokens=max_tokens,
         )

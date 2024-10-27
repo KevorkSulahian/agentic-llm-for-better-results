@@ -6,12 +6,16 @@ defaults:
     - openai
     - huggingface
   llm_model: llama3-8b-8192
-  llm_temperature: 0.7
+  llm_temperature: 0.0
   llm_max_tokens: 1024
-  hf_embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  hf_embedding_model_news: BAAI/bge-small-en-v1.5
+  hf_embedding_model_sec: sentence-transformers/all-MiniLM-L6-v2
   hf_embedding_models:
     - BAAI/bge-small-en-v1.5
     - sentence-transformers/all-MiniLM-L6-v2
+    - sentence-transformers/all-mpnet-base-v2
+    - nomic-ai/nomic-embed-text-v1.5
+    - BAAI/bge-large-en-v1.5
   news_source: Benzinga
   fundamental_freq: Quarterly
   start_date: "2023-01-01"
@@ -29,3 +33,12 @@ defaults:
     - sec
   crew_output_dir: output
   filings_dir: filings
+  logs_dir: logs
+  sec_filing_index_dir: sec_filing_index
+  sec_filing_key_metrics_for_compression:
+    - Total revenue
+    - Net income
+    - Operating expenses
+    - Risk factors
+    - Cash flow
+    - Management's discussion

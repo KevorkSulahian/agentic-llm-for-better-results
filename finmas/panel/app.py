@@ -46,11 +46,17 @@ class FinMAS(pn.viewable.Viewer):
         width=100,
     )
     llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
-    embedding_model = pn.widgets.Select(
-        name="Embedding Model",
-        value=defaults["hf_embedding_model"],
+    embedding_model_news = pn.widgets.Select(
+        name="Embedding Model News",
+        value=defaults["hf_embedding_model_news"],
         options=defaults["hf_embedding_models"],
-        width=200,
+        width=250,
+    )
+    embedding_model_sec = pn.widgets.Select(
+        name="Embedding Model SEC",
+        value=defaults["hf_embedding_model_sec"],
+        options=defaults["hf_embedding_models"],
+        width=250,
     )
     ticker_select = pn.widgets.Select(name="Ticker", disabled=True, width=100)
     start_picker = pn.widgets.DatetimeInput(
@@ -102,6 +108,11 @@ class FinMAS(pn.viewable.Viewer):
     llm_max_tokens = pn.widgets.IntInput(
         name="Max tokens", value=defaults["llm_max_tokens"], width=100
     )
+    compress_sec_filing = pn.widgets.Checkbox(name="Compress SEC Filing", value=False)
+    filing_types = pn.widgets.MultiChoice(
+        name="Filing Types", options=["10-K", "10-Q"], value=["10-K", "10-Q"], width=200
+    )
+    sec_filing_url = None
     kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
     crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
     crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
@@ -142,6 +153,9 @@ class FinMAS(pn.viewable.Viewer):
             about = f.read()
 
         self.about_md = pn.pane.Markdown(about)
+
+        # SEC Filings
+        self.fetch_sec_filings(None)
 
     def update_crew_config_markdown(self, event):
         """Update the crew configuration markdown"""
@@ -232,6 +246,8 @@ class FinMAS(pn.viewable.Viewer):
             end=self.end_picker.value,
         )
         df.reset_index(inplace=True)
+        if df.columns.nlevels > 1:
+            df.columns = df.columns.get_level_values(0)
         df.columns = df.columns.str.lower()
 
         if getattr(self, "ohlcv_tbl", None) is None:
@@ -285,12 +301,22 @@ class FinMAS(pn.viewable.Viewer):
 
     def fetch_sec_filings(self, event) -> None:
         """Fetch SEC filings for the selected ticker"""
-        self.sec_filings = get_sec_filings(self.ticker_select.value)
+        self.sec_filings = get_sec_filings(
+            self.ticker_select.value, filing_types=self.filing_types.value
+        )
         df = filings_to_df(self.sec_filings)
         if getattr(self, "sec_filings_tbl", None) is None:
-            self.sec_filings_tbl = pn.widgets.Tabulator(df, **sec_filings_config)
+            self.sec_filings_tbl = pn.widgets.Tabulator(
+                df, on_click=self.handle_sec_filings_tbl_click, **sec_filings_config
+            )
         elif isinstance(self.sec_filings_tbl, pn.widgets.Tabulator):
             self.sec_filings_tbl.value = df
+        self.sec_filings_tbl.selection = [0]
+        self.sec_filing_url = df.iloc[0]["link"]
+
+    def handle_sec_filings_tbl_click(self, event):
+        """Callback for when a row in SEC filings table is clicked"""
+        self.sec_filing_url = self.sec_filings_tbl.value.iloc[event.row]["link"]
 
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
@@ -401,7 +427,6 @@ class FinMAS(pn.viewable.Viewer):
             model_config = dict(
                 llm_provider=self.llm_provider.value,
                 llm_model=self.llm_model.value,
-                embedding_model=self.embedding_model.value,
                 temperature=self.llm_temperature.value,
                 max_tokens=self.llm_max_tokens.value,
             )
@@ -415,6 +440,7 @@ class FinMAS(pn.viewable.Viewer):
                 )
                 crew = NewsAnalysisCrew(
                     records=self.news_records,
+                    embedding_model=self.embedding_model_news.value,
                     **model_config,
                 )
             elif self.crew_select.value == "sec":
@@ -422,6 +448,10 @@ class FinMAS(pn.viewable.Viewer):
                 try:
                     crew = SECFilingCrew(
                         ticker=self.ticker_select.value,
+                        embedding_model=self.embedding_model_sec.value,
+                        filing_url=self.sec_filing_url,
+                        filing_types=self.filing_types.value,
+                        compress_filing=self.compress_sec_filing.value,
                         **model_config,
                     )
                 except Exception as e:
@@ -464,11 +494,17 @@ class FinMAS(pn.viewable.Viewer):
     def get_crew_configuration_as_string(self) -> str:
         """Returns the configuration as a string"""
 
+        embedding_model = (
+            self.embedding_model_news.value
+            if self.crew_select.value == "news"
+            else self.embedding_model_sec.value
+        )
+
         output = (
             "Configuration:\n\n"
             f"LLM: {self.llm_provider.value} / {self.llm_model.value}\n"
             f"Temperature: {self.llm_temperature.value} Max tokens: {self.llm_max_tokens.value}\n"
-            f"Embedding Model: {self.embedding_model.value}\n"
+            f"Embedding Model: {embedding_model}\n"
             f"Ticker: {self.ticker_select.value}\n"
         )
         if self.crew_select.value == "news":
@@ -485,7 +521,8 @@ class FinMAS(pn.viewable.Viewer):
                 pn.WidgetBox(
                     self.llm_provider,
                     self.llm_model,
-                    self.embedding_model,
+                    self.embedding_model_news,
+                    self.embedding_model_sec,
                     pn.Row(self.ticker_select, self.freq_select),
                     pn.Row(self.start_picker, self.end_picker),
                     self.news_source,
@@ -495,7 +532,7 @@ class FinMAS(pn.viewable.Viewer):
                     self.fetch_data_btn,
                 ),
                 pn.bind(self._data_alert_box, update_counter=self.update_counter),
-                pn.WidgetBox("## Config", self.only_sp500_tickers),
+                pn.WidgetBox("## Config", self.only_sp500_tickers, self.filing_types),
                 width=300,
             ),
             pn.Column(
@@ -559,11 +596,13 @@ class FinMAS(pn.viewable.Viewer):
                         pn.Row(
                             pn.Column(
                                 pn.WidgetBox(
-                                    self.crew_select,
-                                    self.llm_temperature,
-                                    self.llm_max_tokens,
-                                    self.kickoff_crew_btn,
-                                    horizontal=True,
+                                    pn.Row(
+                                        self.crew_select,
+                                        self.llm_temperature,
+                                        self.llm_max_tokens,
+                                        self.kickoff_crew_btn,
+                                    ),
+                                    pn.Row(self.compress_sec_filing),
                                 ),
                                 self.crew_usage_metrics,
                                 pn.Column(
