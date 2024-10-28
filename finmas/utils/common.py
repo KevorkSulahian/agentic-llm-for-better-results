@@ -16,6 +16,12 @@ HF_ACTIVE_MODELS_URL = (
 )
 
 
+def format_time_spent(seconds: float):
+    """Format the time spent in a human-readable way"""
+    minutes, seconds = divmod(seconds, 60)
+    return f"{int(minutes)}m {int(seconds)}s"
+
+
 def to_datetime(date: dt.date):
     if isinstance(date, dt.date):
         return dt.datetime.combine(date, dt.time(0))

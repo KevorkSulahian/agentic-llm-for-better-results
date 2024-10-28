@@ -6,11 +6,12 @@ uv.lock
 
 # Embedding model
 embeddings/
-embedding_model/
+embedding_models/
 
 # Vector Store Index storage
 storage/
 sec_storage/
+sec_filing_index/
 
 # Crew Logs
 news_crew.log

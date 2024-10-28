@@ -1,16 +1,18 @@
-from crewai_tools import LlamaIndexTool
+import time
 
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
+from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.news.news_fetcher import parse_news_to_documents
 
 
-def get_news_tool(
+def get_news_query_engine(
     records: list[dict],
     llm_provider: str,
     llm_model: str,
     embedding_model: str,
     temperature: float | None = None,
     max_tokens: int | None = None,
+    similarity_top_k: int | None = None,
 ):
     print("Loading embedding model, creating vector store index and loading LLM model")
 
@@ -18,10 +20,21 @@ def get_news_tool(
 
     embed_model = get_embedding_model(embedding_model)
 
-    from llama_index.core import VectorStoreIndex
+    from llama_index.core import Settings, VectorStoreIndex
 
+    start = time.time()
     index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
     index.storage_context.persist(persist_dir="storage")
+
+    text_length = sum([len(doc.text) for doc in documents])
+
+    metrics = IndexCreationMetrics(
+        time_spent=round(time.time() - start, 2),
+        num_nodes=len(index.index_struct.nodes_dict.keys()),
+        text_length=text_length,
+        chunk_size=Settings.chunk_size,
+        chunk_overlap=Settings.chunk_overlap,
+    )
 
     llama_index_llm = get_llama_index_llm(
         llm_provider=llm_provider,
@@ -29,8 +42,6 @@ def get_news_tool(
         temperature=temperature,
         max_tokens=max_tokens,
     )
-    query_engine = index.as_query_engine(llm=llama_index_llm)
+    query_engine = index.as_query_engine(llm=llama_index_llm, similarity_top_k=similarity_top_k)
 
-    return LlamaIndexTool.from_query_engine(
-        query_engine, name="News Query Tool", description="Use this tool to lookup the latest news"
-    )
+    return (query_engine, metrics)

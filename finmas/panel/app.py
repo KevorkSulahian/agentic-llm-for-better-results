@@ -26,7 +26,7 @@ from finmas.panel.formatting import (
     sec_filings_config,
     tickers_config,
 )
-from finmas.utils.common import get_tickers_df, get_valid_models, to_datetime
+from finmas.utils.common import format_time_spent, get_tickers_df, get_valid_models, to_datetime
 
 hvplot.extension("plotly")
 pn.extension(
@@ -103,16 +103,24 @@ class FinMAS(pn.viewable.Viewer):
 
     crew_select = pn.widgets.Select(name="Crew", width=100)
     llm_temperature = pn.widgets.FloatInput(
-        name="Temperature", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
+        name="LLM Temp.", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
     )
     llm_max_tokens = pn.widgets.IntInput(
         name="Max tokens", value=defaults["llm_max_tokens"], width=100
     )
-    compress_sec_filing = pn.widgets.Checkbox(name="Compress SEC Filing", value=False)
-    filing_types = pn.widgets.MultiChoice(
-        name="Filing Types", options=["10-K", "10-Q"], value=["10-K", "10-Q"], width=200
+    similarity_top_k = pn.widgets.IntInput(
+        name="Similarity Top K", value=defaults["similarity_top_k"], width=100
     )
-    sec_filing_url = None
+    compress_sec_filing = pn.widgets.Checkbox(
+        name="Compress SEC Filing", value=False, align="center"
+    )
+    filing_types = pn.widgets.MultiChoice(
+        name="Filing Types",
+        options=defaults["sec_filing_types"],
+        value=defaults["sec_filing_types"],
+        width=200,
+    )
+    sec_accession_number = None
     kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
     crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
     crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
@@ -312,11 +320,11 @@ class FinMAS(pn.viewable.Viewer):
         elif isinstance(self.sec_filings_tbl, pn.widgets.Tabulator):
             self.sec_filings_tbl.value = df
         self.sec_filings_tbl.selection = [0]
-        self.sec_filing_url = df.iloc[0]["link"]
+        self.sec_accession_number = df.iloc[0]["accession_number"]
 
     def handle_sec_filings_tbl_click(self, event):
         """Callback for when a row in SEC filings table is clicked"""
-        self.sec_filing_url = self.sec_filings_tbl.value.iloc[event.row]["link"]
+        self.sec_accession_number = self.sec_filings_tbl.value.iloc[event.row]["accession_number"]
 
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
@@ -429,6 +437,7 @@ class FinMAS(pn.viewable.Viewer):
                 llm_model=self.llm_model.value,
                 temperature=self.llm_temperature.value,
                 max_tokens=self.llm_max_tokens.value,
+                similarity_top_k=self.similarity_top_k.value,
             )
 
             if self.crew_select.value == "news":
@@ -449,7 +458,7 @@ class FinMAS(pn.viewable.Viewer):
                     crew = SECFilingCrew(
                         ticker=self.ticker_select.value,
                         embedding_model=self.embedding_model_sec.value,
-                        filing_url=self.sec_filing_url,
+                        accession_number=self.sec_accession_number,
                         filing_types=self.filing_types.value,
                         compress_filing=self.compress_sec_filing.value,
                         **model_config,
@@ -459,9 +468,16 @@ class FinMAS(pn.viewable.Viewer):
                     self.crew_output_status.alert_type = "danger"
                     return
 
-            inputs = {"ticker": self.ticker_select.value}
-            self.crew_usage_metrics.object = "Started crew..."
+            if hasattr(crew, "index_creation_metrics"):
+                index_creation_metrics_message = (
+                    "Index creation metrics:  \n" + crew.index_creation_metrics.markdown() + "\n\n"
+                )
+            else:
+                index_creation_metrics_message = ""
 
+            self.crew_usage_metrics.object = index_creation_metrics_message + "Started crew..."
+
+            inputs = {"ticker": self.ticker_select.value}
             try:
                 output = crew.crew().kickoff(inputs=inputs)
             except Exception as e:
@@ -470,9 +486,16 @@ class FinMAS(pn.viewable.Viewer):
                 return
 
             # Display the results
-            time_spent = f"Time spent: {time.time() - start:.1f} seconds"
+            time_spent = f"Time spent: {format_time_spent(time.time() - start)}"
             usage_metrics = get_usage_metrics_as_string(output.token_usage)
-            self.crew_usage_metrics.object = usage_metrics + "\n" + time_spent
+            self.crew_usage_metrics.object = (
+                index_creation_metrics_message
+                + "Crew usage metrics:  \n"
+                + usage_metrics
+                + "\n"
+                + time_spent
+            )
+
             timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = (
                 f"{self.ticker_select.value}_{self.crew_select.value}_analysis_{timestamp}.md"
@@ -602,7 +625,7 @@ class FinMAS(pn.viewable.Viewer):
                                         self.llm_max_tokens,
                                         self.kickoff_crew_btn,
                                     ),
-                                    pn.Row(self.compress_sec_filing),
+                                    pn.Row(self.similarity_top_k, self.compress_sec_filing),
                                 ),
                                 self.crew_usage_metrics,
                                 pn.Column(

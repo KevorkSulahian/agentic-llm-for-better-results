@@ -29,6 +29,7 @@ SEC_FILINGS_COLS = [
     "reportDate",
     "form",
     "link",
+    "accession_number",
 ]
 
 with open(CONFIG_FILE, "r") as c:

@@ -69,7 +69,7 @@ def get_llama_index_llm(
 def get_embedding_model(model_name: str | None = None):
     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-    cache_dir = Path("embeddings").absolute()
+    cache_dir = Path(defaults["embedding_models_dir"]).absolute()
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     # Set environment variable for Hugging Face to use our cache directory

@@ -1,8 +1,9 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
+from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.news.tools import get_news_tool
+from finmas.crews.news.tools import get_news_query_engine
 
 
 @CrewBase
@@ -18,19 +19,26 @@ class NewsAnalysisCrew:
         llm_provider: str,
         llm_model: str,
         embedding_model: str,
-        temperature: float,
-        max_tokens: int,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        similarity_top_k: int | None = None,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
-        self.llama_index_news_tool = get_news_tool(
+        self.news_query_engine, self.index_creation_metrics = get_news_query_engine(
             records,
             llm_provider,
             llm_model,
             embedding_model,
             temperature=temperature,
             max_tokens=max_tokens,
+            similarity_top_k=similarity_top_k,
+        )
+        self.llama_index_news_tool = LlamaIndexTool.from_query_engine(
+            self.news_query_engine,
+            name="News Query Tool",
+            description="Use this tool to lookup the latest news",
         )
         super().__init__()
 

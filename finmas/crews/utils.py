@@ -1,6 +1,27 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+
+from finmas.utils.common import format_time_spent
+
+
+@dataclass
+class IndexCreationMetrics:
+    time_spent: float
+    num_nodes: int
+    text_length: int
+    chunk_size: int
+    chunk_overlap: int
+
+    def markdown(self) -> str:
+        return (
+            f"Time spent: {format_time_spent(self.time_spent)}  \n"
+            f"Number of nodes: {self.num_nodes}  \n"
+            f"Text length: {self.text_length}  \n"
+            f"Chunk size: {self.chunk_size} tokens  \n"
+            f"Chunk overlap: {self.chunk_overlap} tokens"
+        )
 
 
 def get_yaml_config_as_markdown(config_path: Path, config_file: str):

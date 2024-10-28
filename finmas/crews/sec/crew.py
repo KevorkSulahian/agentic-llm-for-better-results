@@ -19,25 +19,27 @@ class SECFilingCrew:
         llm_provider: str,
         llm_model: str,
         embedding_model: str,
-        filing_url: str | None = None,
+        accession_number: str | None = None,
         filing_types: list[str] | None = None,
         compress_filing: bool = False,
         temperature: float | None = None,
         max_tokens: int | None = None,
+        similarity_top_k: int | None = None,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
-        self.sec_query_engine = get_sec_query_engine(
+        self.sec_query_engine, self.index_creation_metrics = get_sec_query_engine(
             ticker,
             llm_provider,
             llm_model,
             embedding_model,
-            filing_url=filing_url,
+            accession_number=accession_number,
             filing_types=filing_types,
             compress_filing=compress_filing,
             temperature=temperature,
             max_tokens=max_tokens,
+            similarity_top_k=similarity_top_k,
         )
         self.sec_tool = LlamaIndexTool.from_query_engine(
             self.sec_query_engine,

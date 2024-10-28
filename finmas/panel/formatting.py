@@ -97,6 +97,7 @@ sec_filings_config = dict(
         "filing_date": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
         "reportDate": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
     },
+    hidden_columns=["accession_number"],
     # max_width=1000,
     layout="fit_data_fill",
     show_index=False,
