@@ -51,11 +51,16 @@ dependencies = [
   "seaborn>=0.13.2",
   "sentence-transformers>=3.1.1",
   "tabulate>=0.9",
-  "torch>=2.4.1",
+  "torch==2.5.1+cpu",
   "tqdm>=4.66.5",
   "transformers>=4.44.2",
   "typer>=0.12.5",
   "yfinance>=0.2.43",
+]
+
+optional-dependencies.docs = [
+  "mkdocs>=1.6.1",
+  "mkdocs-material>=9.5.42",
 ]
 
 [tool.ruff]
@@ -75,3 +80,11 @@ dev-dependencies = [
   "pandas-stubs>=2.2.3.241009",
   "pre-commit>=3.8.0",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
