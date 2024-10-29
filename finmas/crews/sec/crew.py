@@ -4,6 +4,7 @@ from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.sec.tools import get_sec_query_engine
+from edgar import Filing
 
 
 @CrewBase
@@ -19,8 +20,7 @@ class SECFilingCrew:
         llm_provider: str,
         llm_model: str,
         embedding_model: str,
-        accession_number: str | None = None,
-        filing_types: list[str] | None = None,
+        filing: Filing,
         compress_filing: bool = False,
         temperature: float | None = None,
         max_tokens: int | None = None,
@@ -34,8 +34,7 @@ class SECFilingCrew:
             llm_provider,
             llm_model,
             embedding_model,
-            accession_number=accession_number,
-            filing_types=filing_types,
+            filing=filing,
             compress_filing=compress_filing,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -43,8 +42,8 @@ class SECFilingCrew:
         )
         self.sec_tool = LlamaIndexTool.from_query_engine(
             self.sec_query_engine,
-            name="SEC Filing Query Tool",
-            description="Use this tool to search and analyze SEC filings",
+            name=f"{filing.form} SEC Filing Query Tool for {ticker}",
+            description=f"Use this tool to search and analyze the the {filing.form} SEC filing",
         )
         super().__init__()
 
@@ -81,18 +80,21 @@ class SECFilingCrew:
     def sec_filing_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_analysis_task"],  # type: ignore
+            async_execution=True,
         )
 
     @task
     def sec_filing_sentiment_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_sentiment_task"],  # type: ignore
+            async_execution=True,
         )
 
     @task
     def sec_filing_summary_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_summary_task"],  # type: ignore
+            context=[self.sec_filing_analysis_task(), self.sec_filing_sentiment_task()],
         )
 
     @crew

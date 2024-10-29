@@ -4,7 +4,7 @@ from pathlib import Path
 import html2text
 from datamule import parse_textual_filing
 from datamule.filing_viewer.filing_viewer import json_to_html
-from edgar import Company, set_identity
+from edgar import Filing, set_identity
 
 from finmas.constants import defaults
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
@@ -14,9 +14,7 @@ from finmas.data.sec.tool import SECSemanticSearchTool
 set_identity("John Doe john.doe@example.com")
 
 
-def get_sec_filing_as_text_content(
-    ticker: str, accession_number: str | None = None, filing_types: list[str] | None = None
-) -> str:
+def get_sec_filing_as_text_content(ticker: str, filing: Filing) -> str:
     """Fetch the SEC filing as text content. Either from accession number or the latest filing among
     the filing types specified.
 
@@ -29,16 +27,8 @@ def get_sec_filing_as_text_content(
 
     Args:
         ticker: Ticker for company
-        accession_number: The accession number for filing. Defaults to None.
-        filing_types: List of filing types to consider. Defaults to None.
+        filing: The SEC filing object for parsing.
     """
-    filing_types = filing_types or defaults["sec_filing_types"]
-    if accession_number is None:
-        filing = Company(ticker).get_filings(form=filing_types).latest(1)
-    else:
-        filings = Company(ticker).get_filings(form=filing_types).latest(15)
-        filing = filings.get(accession_number)
-
     filing_type = filing.form
     filings_dir = Path(defaults["filings_dir"]) / ticker / filing_type
     filings_dir.mkdir(parents=True, exist_ok=True)
@@ -69,8 +59,7 @@ def get_sec_query_engine(
     llm_provider: str,
     llm_model: str,
     embedding_model: str,
-    accession_number: str | None = None,
-    filing_types: list[str] | None = None,
+    filing: Filing,
     compress_filing: bool = False,
     temperature: float | None = None,
     max_tokens: int | None = None,
@@ -92,16 +81,12 @@ def get_sec_query_engine(
         llm_provider: LLM provider (e.g., 'groq', 'openai')
         llm_model: LLM model name
         embedding_model: Embedding model name
-        accession_number: The accession number for filing. Defaults to None.
-        filing_types: List of SEC filing types to fetch (e.g., ['10-K', '10-Q'])
         compress_filing: Whether to compress the filing content. Default is False.
         temperature: Temperature for the LLM
         max_tokens: Maximum number of tokens for the LLM
     """
 
-    text_content = get_sec_filing_as_text_content(
-        ticker=ticker, accession_number=accession_number, filing_types=filing_types
-    )
+    text_content = get_sec_filing_as_text_content(ticker=ticker, filing=filing)
 
     if compress_filing:
         sec_tool = SECSemanticSearchTool(model_name=embedding_model)
@@ -109,7 +94,7 @@ def get_sec_query_engine(
 
     from llama_index.core import Document
 
-    documents = [Document(text=text_content)]
+    documents = [Document(text=text_content, metadata={"SEC Filing Form": filing.form})]
 
     embed_model = get_embedding_model(embedding_model)
 

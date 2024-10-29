@@ -120,7 +120,6 @@ class FinMAS(pn.viewable.Viewer):
         value=defaults["sec_filing_types"],
         width=200,
     )
-    sec_accession_number = None
     kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
     crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
     crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
@@ -320,11 +319,13 @@ class FinMAS(pn.viewable.Viewer):
         elif isinstance(self.sec_filings_tbl, pn.widgets.Tabulator):
             self.sec_filings_tbl.value = df
         self.sec_filings_tbl.selection = [0]
-        self.sec_accession_number = df.iloc[0]["accession_number"]
+        self.sec_filing = self.sec_filings.get(df.iloc[0]["accession_number"])
 
     def handle_sec_filings_tbl_click(self, event):
         """Callback for when a row in SEC filings table is clicked"""
-        self.sec_accession_number = self.sec_filings_tbl.value.iloc[event.row]["accession_number"]
+        self.sec_filing = self.sec_filings.get(
+            self.sec_filings_tbl.value.iloc[event.row]["accession_number"]
+        )
 
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
@@ -458,8 +459,7 @@ class FinMAS(pn.viewable.Viewer):
                     crew = SECFilingCrew(
                         ticker=self.ticker_select.value,
                         embedding_model=self.embedding_model_sec.value,
-                        accession_number=self.sec_accession_number,
-                        filing_types=self.filing_types.value,
+                        filing=self.sec_filing,
                         compress_filing=self.compress_sec_filing.value,
                         **model_config,
                     )
@@ -477,11 +477,13 @@ class FinMAS(pn.viewable.Viewer):
 
             self.crew_usage_metrics.object = index_creation_metrics_message + "Started crew..."
 
-            inputs = {"ticker": self.ticker_select.value}
+            inputs = {"ticker": self.ticker_select.value, "form": self.sec_filing.form}
             try:
                 output = crew.crew().kickoff(inputs=inputs)
             except Exception as e:
-                self.crew_output_status.object = str(e)
+                self.crew_output_status.object = (
+                    "The crew failed with the following error:  \n" + str(e)
+                )
                 self.crew_output_status.alert_type = "danger"
                 return
 
@@ -527,7 +529,7 @@ class FinMAS(pn.viewable.Viewer):
             "Configuration:\n\n"
             f"LLM: {self.llm_provider.value} / {self.llm_model.value}\n"
             f"Temperature: {self.llm_temperature.value} Max tokens: {self.llm_max_tokens.value}\n"
-            f"Embedding Model: {embedding_model}\n"
+            f"Embedding Model: {embedding_model} similarity_top_k: {self.similarity_top_k.value}\n"
             f"Ticker: {self.ticker_select.value}\n"
         )
         if self.crew_select.value == "news":

@@ -25,6 +25,8 @@ def get_crewai_llm_model(
         config = {"api_key": get_environment_variable("GROQ_API_KEY")}
     elif llm_provider == "huggingface":
         config = {"token": get_environment_variable("HF_TOKEN")}
+    elif llm_provider == "openai":
+        config = {"api_key": get_environment_variable("OPENAI_API_KEY")}
 
     crewai_llm_model_name = f"{llm_provider}/{llm_model}" if llm_provider != "openai" else llm_model
 

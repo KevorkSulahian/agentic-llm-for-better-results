@@ -7,8 +7,8 @@ defaults:
     - huggingface
   llm_model: llama3-8b-8192
   openai_models:
-    - gpt-4o
     - gpt-4o-mini
+    - gpt-4o
   llm_temperature: 0.0
   llm_max_tokens: 1024
   hf_embedding_model_news: BAAI/bge-small-en-v1.5
@@ -19,6 +19,7 @@ defaults:
     - sentence-transformers/all-mpnet-base-v2
     - nomic-ai/nomic-embed-text-v1.5
     - BAAI/bge-large-en-v1.5
+    - FinLang/investopedia_embedding
   similarity_top_k: 3
   news_source: Benzinga
   fundamental_freq: Quarterly
