@@ -1,21 +1,33 @@
 sec_filing_analysis_task:
   description: >
-    Create an analysis report for the SEC filings (10-K or 10-Q) for the company {ticker}.
+    Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool. Extract information
+    about the growth in key market segments, and key developments. Focus on key sections like Management's Discussion and analysis
+    and Risk Factors. Include information about any key products and forward-looking statements from management.
+
   expected_output: >
-    A report that includes key financial metrics, risks, and operational updates based on the latest SEC filings.
+    The final answer should be a report that includes information about market segments, management discussion,
+    risk factors and key developments.
+
   agent: sec_filing_analyzer
 
 sec_filing_sentiment_task:
   description: >
-    Create a sentiment analysis report for the company's SEC filings (10-K or 10-Q).
+    Create a sentiment analysis report for the stock ticker {ticker} {form} SEC filing from the management discussion and analysis section.
+    Only use your assigned tool.
+
   expected_output: >
-    A sentiment analysis report that highlights the tone and sentiment expressed in the management discussion and analysis section.
+    A sentiment analysis report that highlights the tone and sentiment from the extracted text.
+    Include a couple of examples of sentence to illustrate the sentiment.
+
   agent: sec_filing_sentiment_analyzer
 
 sec_filing_summary_task:
   description: >
-    Create a summary report for the company's SEC filings (10-K or 10-Q).
-    Include key financial insights, sentiment, and operational highlights.
+    Create a summary report for the stock ticker {ticker} {form} SEC filing.
+    Include key insights extracted from the SEC filing with key market segments, key developments and information
+    from Management's Discussion and analysis.
+
   expected_output: >
-    A concise summary report that provides key financial metrics, major updates, and an overall assessment.
+    A concise summary report that provides key information and sentiment analysis from the SEC filing.
+
   agent: sec_filing_summarizer
