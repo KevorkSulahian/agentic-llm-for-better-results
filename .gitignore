@@ -23,6 +23,9 @@ sec_crew.log
 filings/
 *.htm
 
+# Docs
+site/
+
 ### JupyterNotebooks ###
 
 .ipynb_checkpoints

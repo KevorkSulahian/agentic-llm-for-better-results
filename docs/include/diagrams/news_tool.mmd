@@ -1,0 +1,9 @@
+---
+config:
+  look: classic
+  theme: mc
+---
+flowchart LR
+    news["News source"] --> embeddings["Generate embeddings"]
+    embeddings --> vectordb["Vector database"]
+    vectordb --> llm["Connect LLM"]
