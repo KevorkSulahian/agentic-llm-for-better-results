@@ -1,8 +1,8 @@
 site_name: FinMAS - Financial Analysis Multi-agent System
 site_url: https://KevorkSulahian.github.io/agentic-llm-for-better-results
-docs_dir: docs
-repo_name: agentic-llm-for-better-results
+docs_dir: docs/
 repo_url: https://github.com/KevorkSulahian/agentic-llm-for-better-results
+edit_uri: edit/main/docs/
 
 nav:
   - Home: index.md
@@ -13,10 +13,14 @@ nav:
   - Components:
       - components/index.md
       - Crews: components/crews.md
-      - Data: components/data.md
       - Packages: components/packages.md
       - LLM Models: components/llm_models.md
       - Embedding Models: components/embedding_models.md
+  - Data:
+      - data/index.md
+      - SEC Filings: data/sec_filings.md
+      - News: data/news.md
+      - Fundamentals: data/fundamentals.md
   - Development: development.md
 
 theme:
@@ -30,6 +34,8 @@ theme:
     - navigation.top
     - search.highlight
     - search.suggest
+    - content.action.edit
+    - content.action.view
 
 markdown_extensions:
   - pymdownx.superfences:

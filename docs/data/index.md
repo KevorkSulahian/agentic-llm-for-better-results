@@ -11,7 +11,3 @@ be done by editing the `.env` file in the root folder.
 |                                   | SEC / Edgar   | Filings          |                                         |
 | <i class="fa-solid fa-check"></i> | Benzinga      | News             | Requires registration of Alpaca account |
 | <i class="fa-solid fa-check"></i> | Alpha Vantage | Fundamental data | Limited to 25 calls per day.            |
-
-## Benzinga News
-
-## SEC Filings
