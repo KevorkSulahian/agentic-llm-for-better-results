@@ -68,7 +68,7 @@ def get_llama_index_llm(
         return OpenAI(model=llm_model, **config)
 
 
-def get_embedding_model(model_name: str | None = None):
+def get_hf_embedding_model(model_name: str | None = None):
     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
     cache_dir = Path(defaults["embedding_models_dir"]).absolute()

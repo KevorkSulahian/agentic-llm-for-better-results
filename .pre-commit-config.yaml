@@ -5,7 +5,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        args: [--markdown-linebreak-ext=md]
+        exclude: \.md$
       - id: end-of-file-fixer
       - id: check-yaml
         exclude: "^mkdocs\\.yml$"
@@ -66,3 +66,9 @@ repos:
           - mdformat-black
           - mdformat-mkdocs
           - mdformat-frontmatter
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.0
+    hooks:
+      - id: nbstripout
+        files: ^notebooks/

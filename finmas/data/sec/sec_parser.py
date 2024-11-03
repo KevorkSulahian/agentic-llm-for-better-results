@@ -16,7 +16,7 @@ set_identity("John Doe john.doe@example.com")
 logger = logging.getLogger(__name__)
 
 SECTION_FILENAME_MAP = {
-    "mda": "Discussion and Analysis",
+    "mda": "Management's Discussion and Analysis",
     "risk_factors": "Risk Factors",
 }
 
@@ -149,13 +149,7 @@ class SECFilingParser:
         for tag in soup.find_all(True):
             del tag["style"]
 
-        # Fix for NVDA filings where there is a Table of Contents link in the text
-        # for tag in soup.find_all(lambda tag: tag.name in ["div", "p"] and tag.find("a", string="Table of Contents")):
-        #     a_tag = tag.find("a", string="Table of Contents")
-        #     # Replace content with TOC text
-        #     if a_tag:
-        #         a_tag.string = "TOC"
-
+        # Find the tag that represents the heading for the table of contents
         toc_div = soup.find(
             lambda tag: tag.name in ["div", "p", "span"]
             and tag.text.strip() in ["TABLE OF CONTENTS", "INDEX", "Table of Contents"]
@@ -282,8 +276,8 @@ class SECFilingParser:
                 suffix = key
                 break
 
-        filename = self.filing_markdown_path.stem + f"_{suffix}.md"
-        filing_markdown_section_path = self.filing_markdown_path.with_name(filename)
+        filename = self.filing_html_path.stem + f"_{suffix}.md"
+        filing_markdown_section_path = self.filing_html_path.with_name(filename)
         filing_markdown_section_path.write_text(section_text, encoding="utf-8")
         logger.info(f"Section stored as Markdown at: {filing_markdown_section_path}")
         logger.info(f"Time spent to extract section: {time.time() - start:.1f} seconds")

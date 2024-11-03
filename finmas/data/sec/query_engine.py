@@ -7,10 +7,10 @@ from datamule.filing_viewer.filing_viewer import json_to_html
 from edgar import Filing, set_identity
 
 from finmas.constants import defaults
-from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
+from finmas.crews.model_provider import get_hf_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
+from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP, SECFilingParser
 from finmas.data.sec.tool import SECSemanticSearchTool
-from finmas.data.sec.sec_parser import SECFilingParser, SECTION_FILENAME_MAP
 
 set_identity("John Doe john.doe@example.com")
 
@@ -145,12 +145,15 @@ def get_sec_query_engine(
     if method.startswith("section"):
         document.metadata["Section"] = SECTION_FILENAME_MAP[method.split(":")[1]]
 
-    embed_model = get_embedding_model(embedding_model)
+    vector_store_index_kwargs = {}
+    if llm_provider != "openai":
+        # If openai is not used, then fetch a HuggingFace embedding model
+        vector_store_index_kwargs["embed_model"] = get_hf_embedding_model(embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
 
     start = time.time()
-    index = VectorStoreIndex.from_documents([document], embed_model=embed_model)
+    index = VectorStoreIndex.from_documents([document], **vector_store_index_kwargs)
     index.storage_context.persist(persist_dir=defaults["sec_filing_index_dir"])
 
     metrics = IndexCreationMetrics(

@@ -40,12 +40,12 @@ class CrewConfiguration:
 
     def markdown(self) -> str:
         return (
-            "Configuration:\n\n"
-            f"Crew Name: {self.name}\n"
-            f"LLM: {self.llm_provider} / {self.llm_model}\n"
-            f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}\n"
-            f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}\n"
-            f"Ticker: {self.ticker}\n"
+            "Configuration:  \n\n"
+            f"Crew Name: {self.name}  \n"
+            f"LLM: {self.llm_provider} / {self.llm_model}  \n"
+            f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}  \n"
+            f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
+            f"Ticker: {self.ticker}  \n"
         )
 
 
@@ -103,7 +103,7 @@ def get_usage_metrics_as_string(usage_metrics: UsageMetrics) -> str:
     """Returns a string representation of the usage metrics."""
     output = (
         f"Total tokens: {usage_metrics.total_tokens} "
-        f"Prompt tokens: {usage_metrics.prompt_tokens}\n"
+        f"Prompt tokens: {usage_metrics.prompt_tokens}  \n"
         f"Successful Requests: {usage_metrics.successful_requests} "
     )
     return output

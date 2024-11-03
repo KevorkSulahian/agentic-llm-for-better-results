@@ -1,0 +1,35 @@
+sec_filing_mda_task:
+  description: >
+    Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool.
+    Focus on the section Management's Discussion and analysis.
+    Extract information about the growth in key market segments, and forward-looking statements from management.
+    Include information about any key products and forward-looking statements from management.
+
+  expected_output: >
+    The final answer should be a report that includes information about market segments, management discussion,
+    and forward-looking statements from management.
+
+  agent: sec_filing_mda_analyzer
+
+sec_filing_risk_factors_task:
+  description: >
+    Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool.
+    Focus on the section Risk Factors.
+
+  expected_output: >
+    The final answer should be a report that includes information about the most important risk factors
+    mentioned in the SEC filing.
+
+  agent: sec_filing_risk_factors_analyzer
+
+sec_filing_summary_task:
+  description: >
+    Create a summary report for the stock ticker {ticker} {form} SEC filing.
+    Include key insights extracted from the SEC filing with key market segments, key developments and information
+    from Management's Discussion and analysis and Risk Factors sections.
+
+  expected_output: >
+    A concise summary report that provides key information from the SEC filing,
+    including insights from the Management's Discussion and Analysis and Risk Factors sections.
+
+  agent: sec_filing_summarizer
