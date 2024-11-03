@@ -1,0 +1,20 @@
+---
+config:
+  layout: elk
+  theme: base
+  look: classic
+---
+flowchart LR
+    F["fa:fa-file SEC Filing"] --> C["fa:fa-broom Clean"]
+    C --> E
+    E["fa:fa-list Extract TOC"] --> RF["fa:fa-triangle-exclamation Extract Risk Factors"]
+    E --> MDA["fa:fa-comment-dots Extract MD&A"]
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class F lightBlue
+
+    classDef strokeBlack stroke:black
+    class E,C strokeBlack
+
+    classDef green fill:#4CAF50,stroke:black
+    class MDA,RF green
