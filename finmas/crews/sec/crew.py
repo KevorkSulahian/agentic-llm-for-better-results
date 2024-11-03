@@ -5,6 +5,8 @@ from crewai_tools import LlamaIndexTool
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.data.sec.query_engine import get_sec_query_engine
 from edgar import Filing
+from finmas.constants import defaults
+from finmas.crews.utils import SECCrewConfiguration
 
 
 @CrewBase
@@ -22,9 +24,9 @@ class SECFilingCrew:
         embedding_model: str,
         filing: Filing,
         compress_filing: bool = False,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-        similarity_top_k: int | None = None,
+        temperature: float = defaults["llm_temperature"],
+        max_tokens: int = defaults["llm_max_tokens"],
+        similarity_top_k: int = defaults["similarity_top_k"],
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -44,6 +46,17 @@ class SECFilingCrew:
             self.sec_query_engine,
             name=f"{filing.form} SEC Filing Query Tool for {ticker}",
             description=f"Use this tool to search and analyze the the {filing.form} SEC filing",
+        )
+        self.config = SECCrewConfiguration(
+            name="sec",
+            ticker=ticker,
+            llm_provider=llm_provider,
+            llm_model=llm_model,
+            embedding_model=embedding_model,
+            llm_temperature=temperature,
+            llm_max_tokens=max_tokens,
+            similarity_top_k=similarity_top_k,
+            form_type=filing.form,
         )
         super().__init__()
 

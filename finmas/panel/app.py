@@ -15,7 +15,12 @@ from finmas.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.crews.news.crew import NewsAnalysisCrew
 from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.sec_mda_risk_factors.crew import SECFilingSectionsCrew
-from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
+from finmas.crews.utils import (
+    CrewRunMetrics,
+    get_usage_metrics_as_string,
+    get_yaml_config_as_markdown,
+    save_crew_output,
+)
 from finmas.data import get_income_statement, get_price_data
 from finmas.data.news import get_news_fetcher
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
@@ -433,6 +438,7 @@ class FinMAS(pn.viewable.Viewer):
             crew: Union[NewsAnalysisCrew, SECFilingCrew, SECFilingSectionsCrew]
             start = time.time()
             model_config = dict(
+                ticker=self.ticker_select.value,
                 llm_provider=self.llm_provider.value,
                 llm_model=self.llm_model.value,
                 temperature=self.llm_temperature.value,
@@ -443,40 +449,36 @@ class FinMAS(pn.viewable.Viewer):
             self.crew_usage_metrics.object = (
                 "Loading embedding model and creating vector store index"
             )
-            if self.crew_select.value == "news":
-                if getattr(self, "news_records", None) is None:
-                    self.crew_output.object = "Need to fetch news data first."
-                    return
-                crew = NewsAnalysisCrew(
-                    records=self.news_records,
-                    embedding_model=self.embedding_model_news.value,
-                    **model_config,
-                )
-            elif self.crew_select.value == "sec":
-                try:
+            try:
+                if self.crew_select.value == "news":
+                    if getattr(self, "news_records", None) is None:
+                        self.crew_output.object = "Need to fetch news data first."
+                        return
+                    crew = NewsAnalysisCrew(
+                        records=self.news_records,
+                        embedding_model=self.embedding_model_news.value,
+                        news_source=self.news_source.value,
+                        news_start=self.news_start.value,
+                        news_end=self.news_end.value,
+                        **model_config,
+                    )
+                elif self.crew_select.value == "sec":
                     crew = SECFilingCrew(
-                        ticker=self.ticker_select.value,
                         embedding_model=self.embedding_model_sec.value,
                         filing=self.sec_filing,
                         compress_filing=self.compress_sec_filing.value,
                         **model_config,
                     )
-                except Exception as e:
-                    self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
-                    self.crew_output_status.alert_type = "danger"
-                    return
-            elif self.crew_select.value == "sec_mda_risk_factors":
-                try:
+                elif self.crew_select.value == "sec_mda_risk_factors":
                     crew = SECFilingSectionsCrew(
-                        ticker=self.ticker_select.value,
                         embedding_model=self.embedding_model_sec.value,
                         filing=self.sec_filing,
                         **model_config,
                     )
-                except Exception as e:
-                    self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
-                    self.crew_output_status.alert_type = "danger"
-                    return
+            except Exception as e:
+                self.crew_output_status.object = f"Error when setting up the crew: {str(e)}"
+                self.crew_output_status.alert_type = "danger"
+                return
 
             index_creation_metrics_message = ""
             for attr in dir(crew):
@@ -498,57 +500,24 @@ class FinMAS(pn.viewable.Viewer):
                 return
 
             # Display the results
-            time_spent = f"Time spent: {format_time_spent(time.time() - start)}"
-            usage_metrics = get_usage_metrics_as_string(output.token_usage)
+            time_spent = time.time() - start
+            usage_metrics_string = get_usage_metrics_as_string(output.token_usage)
             self.crew_usage_metrics.object = (
                 index_creation_metrics_message
                 + "Crew usage metrics:  \n"
-                + usage_metrics
+                + usage_metrics_string
                 + "\n"
-                + time_spent
+                + f"Time spent: {format_time_spent(time_spent)}"
             )
 
-            timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = (
-                f"{self.ticker_select.value}_{self.crew_select.value}_analysis_{timestamp}.md"
+            crew_run_metrics = CrewRunMetrics(
+                config=crew.config, token_usage=output.token_usage, time_spent=time_spent
             )
-            output_dir = Path(defaults["crew_output_dir"]) / self.crew_select.value
-            output_dir.mkdir(parents=True, exist_ok=True)
+            file_path = save_crew_output(crew_run_metrics, output.raw)
 
-            output_metadata = (
-                self.get_crew_configuration_as_string() + "\n" + usage_metrics + "\n" + time_spent
-            )
-
-            with open(output_dir / filename, "w") as f:
-                f.write(output_metadata + "\n\nCrew output:\n\n" + output.raw)
-
-            self.crew_output_status.object = f"Output stored in {str(output_dir / filename)}"
+            self.crew_output_status.object = f"Output stored in {str(file_path)}"
             self.crew_output_status.alert_type = "success"
             self.crew_output.object = output.raw
-
-    def get_crew_configuration_as_string(self) -> str:
-        """Returns the configuration as a string"""
-
-        embedding_model = (
-            self.embedding_model_news.value
-            if self.crew_select.value == "news"
-            else self.embedding_model_sec.value
-        )
-
-        output = (
-            "Configuration:\n\n"
-            f"LLM: {self.llm_provider.value} / {self.llm_model.value}\n"
-            f"Temperature: {self.llm_temperature.value} Max tokens: {self.llm_max_tokens.value}\n"
-            f"Embedding Model: {embedding_model} similarity_top_k: {self.similarity_top_k.value}\n"
-            f"Ticker: {self.ticker_select.value}\n"
-        )
-        if self.crew_select.value == "news":
-            output += (
-                f"News Source: {self.news_source.value}\n"
-                f"Date range: {self.news_start.value} - {self.news_end.value}\n"
-            )
-
-        return output
 
     def __panel__(self) -> Viewable:
         return pn.Row(

@@ -3,9 +3,11 @@ from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
+from finmas.crews.utils import SECCrewConfiguration
 from finmas.data.sec.query_engine import get_sec_query_engine
 from edgar import Filing
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP
+from finmas.constants import defaults
 
 
 @CrewBase
@@ -22,9 +24,9 @@ class SECFilingSectionsCrew:
         llm_model: str,
         embedding_model: str,
         filing: Filing,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-        similarity_top_k: int | None = None,
+        temperature: float = defaults["llm_temperature"],
+        max_tokens: int = defaults["llm_max_tokens"],
+        similarity_top_k: int = defaults["similarity_top_k"],
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -53,6 +55,17 @@ class SECFilingSectionsCrew:
                 ),
             )
 
+        self.config = SECCrewConfiguration(
+            name="sec_mda_risk_factors",
+            ticker=ticker,
+            llm_provider=llm_provider,
+            llm_model=llm_model,
+            embedding_model=embedding_model,
+            llm_temperature=temperature,
+            llm_max_tokens=max_tokens,
+            similarity_top_k=similarity_top_k,
+            form_type=filing.form,
+        )
         super().__init__()
 
     @agent
