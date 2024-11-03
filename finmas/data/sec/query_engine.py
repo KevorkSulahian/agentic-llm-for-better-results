@@ -7,11 +7,19 @@ from datamule.filing_viewer.filing_viewer import json_to_html
 from edgar import Filing, set_identity
 
 from finmas.constants import defaults
-from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
+from finmas.crews.model_provider import get_hf_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
+from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP, SECFilingParser
 from finmas.data.sec.tool import SECSemanticSearchTool
 
 set_identity("John Doe john.doe@example.com")
+
+SUPPORTED_METHODS = [
+    "section:mda",
+    "section:risk_factors",
+    "semantic_search_keywords",
+    "full_text",
+]
 
 
 def get_sec_filing_as_text_content(ticker: str, filing: Filing) -> str:
@@ -54,13 +62,45 @@ def get_sec_filing_as_text_content(ticker: str, filing: Filing) -> str:
     return text_content
 
 
+def _get_sec_text_content(ticker: str, embedding_model: str, filing: Filing, method: str) -> str:
+    """Handler function to get the text content of the SEC filing based on the method specified.
+
+    We currently support 3 main methods:
+    1. Extract a specific section from the filing (e.g., 'Management Discussion and Analysis')
+    2. Extract sections relevant to predefined keywords using a semantic search
+    3. Use the full text content of the SEC filing.
+
+    See get_sec_query_engine for description of arguments.
+    """
+
+    if method.startswith("section"):
+        parser = SECFilingParser(ticker=ticker, form_type=filing.form)
+        parser.parse_filing_as_html(filing)
+        toc = parser.extract_table_of_contents_from_html()
+
+        section_abbr = method.split(":")[1]
+        section_name = SECTION_FILENAME_MAP[section_abbr]
+        for i, heading in enumerate(toc[:-1]):
+            if section_name in heading:
+                next_heading = toc[i + 1]
+                text_content = parser.extract_section_from_html(heading, next_heading)
+                break
+    else:
+        text_content = get_sec_filing_as_text_content(ticker=ticker, filing=filing)
+
+        if method == "semantic_search_keywords":
+            sec_tool = SECSemanticSearchTool(model_name=embedding_model)
+            text_content = sec_tool.extract_key_metrics(content=text_content)
+    return text_content
+
+
 def get_sec_query_engine(
     ticker: str,
     llm_provider: str,
     llm_model: str,
     embedding_model: str,
     filing: Filing,
-    compress_filing: bool = False,
+    method: str,
     temperature: float | None = None,
     max_tokens: int | None = None,
     similarity_top_k: int | None = None,
@@ -80,28 +120,40 @@ def get_sec_query_engine(
         ticker: Stock ticker symbol (e.g., 'AAPL')
         llm_provider: LLM provider (e.g., 'groq', 'openai')
         llm_model: LLM model name
-        embedding_model: Embedding model name
-        compress_filing: Whether to compress the filing content. Default is False.
+        embedding_model: Embedding model name according to HuggingFace
+        filing: The edgartools SEC filing object.
+        method: Method to use for extracting the text content. Supported methods are:
+            - 'section:mda': Extract the 'Management Discussion and Analysis' section
+            - 'section:risk_factors': Extract the 'Risk Factors' section
+            - 'semantic_search_keywords': Extract sections relevant to keywords using a semantic search
+            - 'full_text': Use the full text content of the SEC filing.
         temperature: Temperature for the LLM
         max_tokens: Maximum number of tokens for the LLM
     """
+    if method not in SUPPORTED_METHODS:
+        raise ValueError(
+            f"Method {method} is not supported. Supported methods are: {SUPPORTED_METHODS}"
+        )
 
-    text_content = get_sec_filing_as_text_content(ticker=ticker, filing=filing)
-
-    if compress_filing:
-        sec_tool = SECSemanticSearchTool(model_name=embedding_model)
-        text_content = sec_tool.extract_key_metrics(content=text_content)
+    text_content = _get_sec_text_content(
+        ticker=ticker, filing=filing, embedding_model=embedding_model, method=method
+    )
 
     from llama_index.core import Document
 
-    documents = [Document(text=text_content, metadata={"SEC Filing Form": filing.form})]
+    document = Document(text=text_content, metadata={"SEC Filing Form": filing.form})
+    if method.startswith("section"):
+        document.metadata["Section"] = SECTION_FILENAME_MAP[method.split(":")[1]]
 
-    embed_model = get_embedding_model(embedding_model)
+    vector_store_index_kwargs = {}
+    if llm_provider != "openai":
+        # If openai is not used, then fetch a HuggingFace embedding model
+        vector_store_index_kwargs["embed_model"] = get_hf_embedding_model(embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
 
     start = time.time()
-    index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
+    index = VectorStoreIndex.from_documents([document], **vector_store_index_kwargs)
     index.storage_context.persist(persist_dir=defaults["sec_filing_index_dir"])
 
     metrics = IndexCreationMetrics(

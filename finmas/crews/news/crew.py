@@ -4,6 +4,9 @@ from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.news.tools import get_news_query_engine
+from finmas.crews.utils import NewsCrewConfiguration
+import datetime as dt
+from finmas.constants import defaults
 
 
 @CrewBase
@@ -15,13 +18,17 @@ class NewsAnalysisCrew:
 
     def __init__(
         self,
+        ticker: str,
         records: list[dict],
         llm_provider: str,
         llm_model: str,
         embedding_model: str,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-        similarity_top_k: int | None = None,
+        news_source: str,
+        news_start: dt.date,
+        news_end: dt.date,
+        temperature: float = defaults["llm_temperature"],
+        max_tokens: int = defaults["llm_max_tokens"],
+        similarity_top_k: int = defaults["similarity_top_k"],
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -39,6 +46,19 @@ class NewsAnalysisCrew:
             self.news_query_engine,
             name="News Query Tool",
             description="Use this tool to lookup the latest news",
+        )
+        self.config = NewsCrewConfiguration(
+            name="news",
+            ticker=ticker,
+            llm_provider=llm_provider,
+            llm_model=llm_model,
+            embedding_model=embedding_model,
+            llm_temperature=temperature,
+            llm_max_tokens=max_tokens,
+            similarity_top_k=similarity_top_k,
+            news_source=news_source,
+            news_start=news_start,
+            news_end=news_end,
         )
         super().__init__()
 

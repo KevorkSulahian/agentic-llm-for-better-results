@@ -22,7 +22,10 @@ defaults:
     - FinLang/investopedia_embedding
   similarity_top_k: 3
   news_source: Benzinga
-  fundamental_freq: Quarterly
+  news_sources:
+    - Benzinga
+    - Yahoo
+  fundamental_freq: Annual
   start_date: "2023-01-01"
   tickerid: NVDA
   tickers_market_cap_exclude:
@@ -33,6 +36,7 @@ defaults:
   crews:
     - news
     - sec
+    - sec_mda_risk_factors
   embedding_models_dir: embedding_models
   crew_output_dir: output
   filings_dir: filings
@@ -45,6 +49,11 @@ defaults:
     - Risk factors
     - Cash flow
     - Management's discussion
+  sec_filing_types_selected:
+    - 10-K
   sec_filing_types:
     - 10-Q
     - 10-K
+  sec_filing_sections:
+    - mda
+    - risk_factors
