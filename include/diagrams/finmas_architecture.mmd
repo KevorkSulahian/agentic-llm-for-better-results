@@ -1,0 +1,23 @@
+---
+config:
+  layout: elk
+  theme: base
+  look: classic
+---
+flowchart TD
+    P["fa:fa-desktop panel"] --> F
+    L["fa:fa-comment-dots LLMs"] --> C
+    C["fa:fa-users crews"] --> F["fa:fa-sitemap FinMAS"]
+    FA["fa:fa-chart-simple Fundamentals"] --> D
+    S["fa:fa-file SEC Filings"] --> D
+    N["fa:fa-newspaper News"] --> D
+    D["fa:fa-database data"] --> F
+    U["fa:fa-wrench utils"] --> F
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class N,FA,L,S lightBlue
+
+    classDef strokeBlack stroke:black
+    class P,C,D,U strokeBlack
+
+    style F fill:#4CAF50,stroke:black
