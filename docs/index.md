@@ -14,12 +14,22 @@ to tasks in the financial domain, and with an extra focus on open source models 
 
 Please visit [GitHub repo](https://github.com/KevorkSulahian/agentic-llm-for-better-results) for further information.
 
+## Features
+
+- **Unstructured data analysis:** Analyze unstructured data such as SEC filings and News articles together with fundamental company data.
+- **Transparent:** Get insight into token usage, performance and the data fed to the system to gain confidence in the result.
+- **Configurable:** Adjust parameters and model selection to optimize the performance of the system.
+- **Ticker:** Select a major ticker listed on NASDAQ or NYSE for analysis.
+- **Multiple LLMs supported:** Use LLM from an hosted provider such as Groq or HuggingFace, or OpenAI GPT models.
+
 The following screenshots illustrate a news analysis crew output and the main dashboard.
 
-### News analysis
+## News analysis
 
 ![](assets/screenshots/finmas_news_analysis.png)
 
-### Main dashboard
+## Main dashboard
 
 ![](assets/screenshots/finmas_main_dashboard.png)
+
+See our [Tutorial](tutorial/index.md) to get started.

@@ -18,7 +18,9 @@ nav:
       - Embedding Models: components/embedding_models.md
   - Data:
       - data/index.md
-      - SEC Filings: data/sec_filings.md
+      - SEC Filings:
+          - data/sec/index.md
+          - Parsing: data/sec/parsing.md
       - News: data/news.md
       - Fundamentals: data/fundamentals.md
   - Development: development.md
@@ -36,6 +38,9 @@ theme:
     - search.suggest
     - content.action.edit
     - content.action.view
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css
 
 markdown_extensions:
   - pymdownx.superfences:
