@@ -1,21 +1,20 @@
 news_analyzer_task:
   description: >
-    Create a news analysis report for articles for the company {ticker}.
+    Analyze recent news articles about the company {ticker} and provide a detailed report highlighting the most impactful events and notable news stories. Focus on events that could significantly affect the company's financial standing or public perception.
   expected_output: >
-    A news report that includes key events, and key company news.
+    A comprehensive news analysis report including key events, impactful news stories, and an assessment of their potential implications for the company.
   agent: news_analyzer
 
 sentiment_analysis_task:
   description: >
-    Create a report on the sentiment of the news articles for {ticker}.
+    Conduct a sentiment analysis on the news articles related to {ticker}, determining the overall tone and public perception of the company. Include insights into whether the sentiment is positive, negative, or neutral, and explain the reasons behind this sentiment.
   expected_output: >
-    A sentiment analysis report that includes the overall sentiment of the news.
+    A detailed sentiment analysis report that provides an overall sentiment score, categorizes each article by tone, and discusses the potential effects of the sentiment on the company's market position.
   agent: sentiment_analyzer
 
 news_summary_task:
   description: >
-    Create a news summary report for {ticker}.
-    Include key events, market sentiment, and key company news.
+    Summarize the key insights from the news articles for {ticker}, providing an overview of important events, market sentiment, and significant company news. The summary should present a holistic view of the news landscape for the company, highlighting both the qualitative and quantitative aspects.
   expected_output: >
-    A news summary report that contains key insights and clear sections.
+    A clear and concise news summary report that includes key insights, categorized sections for market sentiment, major events, and relevant company news, with enough detail to inform strategic decision-making.
   agent: news_summarizer
