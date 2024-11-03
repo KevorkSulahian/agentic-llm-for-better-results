@@ -1,6 +1,6 @@
 ---
 hide:
-    - navigation
+  - navigation
 ---
 
 # FinMAS - Financial Analysis Multi-agent System
@@ -13,6 +13,8 @@ It is meant as a practical and educational app that demonstrates the state-of-th
 to tasks in the financial domain, and with an extra focus on open source models and packages.
 
 Please visit [GitHub repo](https://github.com/KevorkSulahian/agentic-llm-for-better-results) for further information.
+
+See our [Tutorial](tutorial/index.md) to get started.
 
 ## Features
 
@@ -31,5 +33,3 @@ The following screenshots illustrate a news analysis crew output and the main da
 ## Main dashboard
 
 ![](assets/screenshots/finmas_main_dashboard.png)
-
-See our [Tutorial](tutorial/index.md) to get started.

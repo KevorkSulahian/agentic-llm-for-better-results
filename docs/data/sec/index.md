@@ -5,7 +5,7 @@ All of the major companies that are listed on NASDAQ or NYSE are required to fil
 These filings provide information about the historical performance of the company, and also
 give information about what the future may hold for the company.
 
-The filing information is fetched by using the `edgartools` package in Python, which provides
+The filing information is fetched by using the [edgartools](https://github.com/dgunning/edgartools) package in Python, which provides
 a lot of convenience functions to fetch the filings from the EDGAR database.
 The SEC filing is downloaded locally, and subsequently [parsed to extract specific sections of the filing](parsing.md).
 So that the LLM agents can focus in on the most relevant information.

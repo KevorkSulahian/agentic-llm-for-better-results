@@ -10,6 +10,7 @@ repos:
       - id: check-yaml
         exclude: "^mkdocs\\.yml$"
       - id: check-added-large-files
+        args: [--maxkb=5000]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.7
@@ -63,4 +64,6 @@ repos:
         additional_dependencies:
           - mdformat-gfm
           - mdformat-black
-        exclude: ".*/index\\.md$"
+          - mdformat-mkdocs
+          - mdformat-frontmatter
+        # exclude: ".*/index\\.md$"

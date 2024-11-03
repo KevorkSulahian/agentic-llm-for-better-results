@@ -9,7 +9,7 @@ nav:
   - Tutorial:
       - tutorial/index.md
       - News Analysis: tutorial/news.md
-  - Settings: settings.md
+  - Configuration: configuration.md
   - Components:
       - components/index.md
       - Crews: components/crews.md
@@ -49,6 +49,8 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid_custom
+  - toc:
+      permalink: true
 
 plugins:
   - search

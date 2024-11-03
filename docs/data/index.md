@@ -3,7 +3,8 @@
 This is a list of the data sources that have been integrated in this app.
 Those data sources that require an API Key are marked in the table.
 Then it is necessary to set those as a environment variable which can
-be done by editing the `.env` file in the root folder.
+be done by compting the `.env.template` file in the root folder and
+creating a `.env` file with the API keys.
 
 | API Key                         | Name               | Type             | Description                             |
 | ------------------------------- | ------------------ | ---------------- | --------------------------------------- |

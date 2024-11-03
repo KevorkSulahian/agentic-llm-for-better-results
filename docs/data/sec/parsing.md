@@ -2,7 +2,7 @@
 
 One of the aspects that make parsing an SEC filing challenging is that each company have
 a slightly different format for the filing. Therefore we have implemented a custom
-process try to clean up the HTML content as much as is necessary to get a common
+process to attempt to clean up the HTML content as much as is necessary to get a common
 format for each filing. Then we extract the headings from the Table of Contents that is always present at the
 start of the filing.
 Then the headings can be used to extract the relevant sections from the filing.
