@@ -14,6 +14,7 @@ from panel.viewable import Viewable
 from finmas.constants import INCOME_STATEMENT_COLS, defaults
 from finmas.crews.news.crew import NewsAnalysisCrew
 from finmas.crews.sec.crew import SECFilingCrew
+from finmas.crews.sec_mda_risk_factors.crew import SECFilingSectionsCrew
 from finmas.crews.utils import get_usage_metrics_as_string, get_yaml_config_as_markdown
 from finmas.data import get_income_statement, get_price_data
 from finmas.data.news import get_news_fetcher
@@ -77,7 +78,12 @@ class FinMAS(pn.viewable.Viewer):
         value=defaults["fundamental_freq"],
         width=100,
     )
-    news_source = pn.widgets.Select(name="News Source", width=100)
+    news_source = pn.widgets.Select(
+        name="News Source",
+        value=defaults["news_source"],
+        options=defaults["news_sources"],
+        width=100,
+    )
     news_start = pn.widgets.DatetimeInput(
         name="Start",
         format="%Y-%m-%d",
@@ -112,12 +118,12 @@ class FinMAS(pn.viewable.Viewer):
         name="Similarity Top K", value=defaults["similarity_top_k"], width=100
     )
     compress_sec_filing = pn.widgets.Checkbox(
-        name="Compress SEC Filing", value=False, align="center"
+        name="Compress SEC Filing with keywords search", value=False, align="center"
     )
-    filing_types = pn.widgets.MultiChoice(
+    filing_types = pn.widgets.MultiSelect(
         name="Filing Types",
+        value=defaults["sec_filing_types_selected"],
         options=defaults["sec_filing_types"],
-        value=defaults["sec_filing_types"],
         width=200,
     )
     kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
@@ -127,7 +133,7 @@ class FinMAS(pn.viewable.Viewer):
     crew_output_status = pn.pane.Alert("No Crew output generated yet.", alert_type="warning")
     crew_output = pn.pane.Markdown("", sizing_mode="stretch_width")
 
-    def __init__(self, **params) -> None:
+    def __init__(self, ticker: str | None = None, **params) -> None:
         super().__init__(**params)
         # Models
         self.llm_model.options = [defaults["llm_model"]]
@@ -137,13 +143,9 @@ class FinMAS(pn.viewable.Viewer):
         self.update_llm_models_tbl(None)
 
         # Ticker
-        self.ticker_select.value = defaults["tickerid"]
+        self.ticker_select.value = ticker or defaults["tickerid"]
         self.update_tickers_tbl(None)
         self.only_sp500_tickers.param.watch(self.update_tickers_tbl, "value")
-
-        # News
-        self.news_source.options = [defaults["news_source"]]
-        self.news_source.value = defaults["news_source"]
 
         self.fetch_data_btn.on_click(self.fetch_data)
         self.fetch_data(None)
@@ -160,9 +162,6 @@ class FinMAS(pn.viewable.Viewer):
             about = f.read()
 
         self.about_md = pn.pane.Markdown(about)
-
-        # SEC Filings
-        self.fetch_sec_filings(None)
 
     def update_crew_config_markdown(self, event):
         """Update the crew configuration markdown"""
@@ -431,7 +430,7 @@ class FinMAS(pn.viewable.Viewer):
         Displays the output in Markdown.
         """
         with self.kickoff_crew_btn.param.update(loading=True):
-            crew: Union[NewsAnalysisCrew, SECFilingCrew]
+            crew: Union[NewsAnalysisCrew, SECFilingCrew, SECFilingSectionsCrew]
             start = time.time()
             model_config = dict(
                 llm_provider=self.llm_provider.value,
@@ -441,20 +440,19 @@ class FinMAS(pn.viewable.Viewer):
                 similarity_top_k=self.similarity_top_k.value,
             )
 
+            self.crew_usage_metrics.object = (
+                "Loading embedding model and creating vector store index"
+            )
             if self.crew_select.value == "news":
                 if getattr(self, "news_records", None) is None:
                     self.crew_output.object = "Need to fetch news data first."
                     return
-                self.crew_usage_metrics.object = (
-                    "Loading embedding model and creating vector store index"
-                )
                 crew = NewsAnalysisCrew(
                     records=self.news_records,
                     embedding_model=self.embedding_model_news.value,
                     **model_config,
                 )
             elif self.crew_select.value == "sec":
-                self.crew_usage_metrics.object = "Loading SEC filing data and performing analysis"
                 try:
                     crew = SECFilingCrew(
                         ticker=self.ticker_select.value,
@@ -467,13 +465,25 @@ class FinMAS(pn.viewable.Viewer):
                     self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
                     self.crew_output_status.alert_type = "danger"
                     return
+            elif self.crew_select.value == "sec_mda_risk_factors":
+                try:
+                    crew = SECFilingSectionsCrew(
+                        ticker=self.ticker_select.value,
+                        embedding_model=self.embedding_model_sec.value,
+                        filing=self.sec_filing,
+                        **model_config,
+                    )
+                except Exception as e:
+                    self.crew_output_status.object = f"Error loading SEC filings: {str(e)}"
+                    self.crew_output_status.alert_type = "danger"
+                    return
 
-            if hasattr(crew, "index_creation_metrics"):
-                index_creation_metrics_message = (
-                    "Index creation metrics:  \n" + crew.index_creation_metrics.markdown() + "\n\n"
-                )
-            else:
-                index_creation_metrics_message = ""
+            index_creation_metrics_message = ""
+            for attr in dir(crew):
+                if attr.endswith("index_creation_metrics"):
+                    index_creation_metrics_message += (
+                        f"{attr.replace('_', ' ').title()}:  \n{getattr(crew, attr).markdown()}\n\n"
+                    )
 
             self.crew_usage_metrics.object = index_creation_metrics_message + "Started crew..."
 
@@ -654,4 +664,10 @@ class FinMAS(pn.viewable.Viewer):
 
 
 if pn.state.served:
-    FinMAS().servable(title="FinMAS - Financial Multi-Agent System")
+    import argparse
+    import sys
+
+    args_list = sys.argv[1:]
+    args = argparse.Namespace()
+    args.ticker = args_list[0] if args_list else None
+    FinMAS(ticker=args.ticker).servable(title="FinMAS - Financial Multi-Agent System")
