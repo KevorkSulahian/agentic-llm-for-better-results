@@ -3,7 +3,7 @@ from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.news.tools import get_news_query_engine
+from finmas.data.news.query_engine import get_news_query_engine
 from finmas.crews.utils import NewsCrewConfiguration
 import datetime as dt
 from finmas.constants import defaults

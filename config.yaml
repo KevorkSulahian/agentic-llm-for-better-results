@@ -49,6 +49,7 @@ defaults:
   filings_dir: filings
   logs_dir: logs
   sec_filing_index_dir: sec_filing_index
+  fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
     - Total revenue
     - Net income

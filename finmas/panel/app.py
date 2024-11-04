@@ -21,7 +21,7 @@ from finmas.crews.utils import (
     get_yaml_config_as_markdown,
     save_crew_output,
 )
-from finmas.data import get_income_statement, get_price_data
+from finmas.data import get_income_statement_df, get_price_data
 from finmas.data.news import get_news_fetcher
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
 from finmas.panel.formatting import (
@@ -265,9 +265,6 @@ class FinMAS(pn.viewable.Viewer):
             end=self.end_picker.value,
         )
         df.reset_index(inplace=True)
-        if df.columns.nlevels > 1:
-            df.columns = df.columns.get_level_values(0)
-        df.columns = df.columns.str.lower()
 
         if getattr(self, "ohlcv_tbl", None) is None:
             self.ohlcv_tbl = pn.widgets.Tabulator(df, **ohlcv_config)
@@ -276,28 +273,16 @@ class FinMAS(pn.viewable.Viewer):
 
     def fetch_fundamental_data(self, event) -> None:
         """Fetch fundamental data"""
-        income_statement = get_income_statement(
-            ticker=self.ticker_select.value, freq=self.freq_select.value
-        )
-
-        income_statement.set_index("fiscalDateEnding", inplace=True)
-        income_statement.index = pd.to_datetime(income_statement.index)
-        income_statement.sort_index(inplace=True, ascending=False)
-
-        income_statement = income_statement[INCOME_STATEMENT_COLS]
-        # income_statement = income_statement.astype(int) # Too small
-        income_statement = income_statement.astype("Int64")
-
-        income_statement["netProfitMargin"] = (
-            income_statement["netIncome"] / income_statement["totalRevenue"]
+        df = get_income_statement_df(
+            ticker=self.ticker_select.value, freq=self.freq_select.value, cols=INCOME_STATEMENT_COLS
         )
 
         if getattr(self, "income_statement_tbl", None) is None:
             self.income_statement_tbl = pn.widgets.Tabulator(  # type: ignore
-                income_statement, **income_statement_config
+                df, **income_statement_config
             )
         elif isinstance(self.income_statement_tbl, pn.widgets.Tabulator):
-            self.income_statement_tbl.value = income_statement.copy()
+            self.income_statement_tbl.value = df.copy()
 
     def fetch_news(self, event) -> None:
         """Fetch news from the selected news provider and the selected ticker"""
