@@ -509,12 +509,13 @@ class FinMAS(pn.viewable.Viewer):
 
             # Display the results
             time_spent = time.time() - start
-            usage_metrics_string = get_usage_metrics_as_string(output.token_usage)
+            usage_metrics_string = get_usage_metrics_as_string(
+                output.token_usage, self.llm_model.value
+            )
             self.crew_usage_metrics.object = (
                 index_creation_metrics_message
                 + "Crew usage metrics:  \n"
                 + usage_metrics_string
-                + "\n"
                 + f"Time spent: {format_time_spent(time_spent)}"
             )
 

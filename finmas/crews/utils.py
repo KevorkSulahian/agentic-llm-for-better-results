@@ -11,20 +11,32 @@ from finmas.utils.common import format_time_spent
 
 @dataclass
 class IndexCreationMetrics:
+    embedding_model: str
     time_spent: float
     num_nodes: int
     text_length: int
     chunk_size: int
     chunk_overlap: int
+    total_embedding_token_count: int
 
     def markdown(self) -> str:
-        return (
+        output = (
+            f"Embedding Model: {self.embedding_model}  \n"
             f"Time spent: {format_time_spent(self.time_spent)}  \n"
             f"Number of nodes: {self.num_nodes}  \n"
             f"Text length: {self.text_length}  \n"
             f"Chunk size: {self.chunk_size} tokens  \n"
-            f"Chunk overlap: {self.chunk_overlap} tokens"
+            f"Chunk overlap: {self.chunk_overlap} tokens  \n"
+            f"Total embedding token count: {self.total_embedding_token_count}  \n"
         )
+        if self.embedding_model in defaults["embedding_model_cost"]:
+            cost = (
+                defaults["embedding_model_cost"][self.embedding_model]
+                * self.total_embedding_token_count
+            )
+            cost_str = f"${cost:.15f}".rstrip("0")
+            output += f"Estimated embedding model cost for total tokens: {cost_str}  \n"
+        return output
 
 
 @dataclass
@@ -42,10 +54,10 @@ class CrewConfiguration:
         return (
             "Configuration:  \n\n"
             f"Crew Name: {self.name}  \n"
+            f"Ticker: {self.ticker}  \n"
             f"LLM: {self.llm_provider} / {self.llm_model}  \n"
             f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}  \n"
             f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
-            f"Ticker: {self.ticker}  \n"
         )
 
 
@@ -78,7 +90,7 @@ class CrewRunMetrics:
         return (
             self.config.markdown()
             + "\n"
-            + get_usage_metrics_as_string(self.token_usage)
+            + get_usage_metrics_as_string(self.token_usage, self.config.llm_model)
             + "\n"
             + f"Time spent: {format_time_spent(self.time_spent)}"
         )
@@ -99,13 +111,20 @@ def get_yaml_config_as_markdown(config_path: Path, config_file: str):
     return output
 
 
-def get_usage_metrics_as_string(usage_metrics: UsageMetrics) -> str:
+def get_usage_metrics_as_string(usage_metrics: UsageMetrics, llm_model: str | None = None) -> str:
     """Returns a string representation of the usage metrics."""
     output = (
         f"Total tokens: {usage_metrics.total_tokens} "
         f"Prompt tokens: {usage_metrics.prompt_tokens}  \n"
-        f"Successful Requests: {usage_metrics.successful_requests} "
+        f"Successful Requests: {usage_metrics.successful_requests}  \n"
     )
+    if llm_model and llm_model in defaults["llm_model_cost"]:
+        cost = (
+            defaults["llm_model_cost"][llm_model]["input_cost"] * usage_metrics.prompt_tokens
+            + defaults["llm_model_cost"][llm_model]["output_cost"] * usage_metrics.completion_tokens
+        )
+        cost_str = f"{cost:.15f}".rstrip("0")
+        output += f"Estimated LLM Model cost for total tokens: ${cost_str}  \n"
     return output
 
 
