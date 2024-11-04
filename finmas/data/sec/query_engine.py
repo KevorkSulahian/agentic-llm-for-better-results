@@ -140,20 +140,22 @@ def get_sec_query_engine(
     )
 
     from llama_index.core import Document
+    from llama_index.embeddings.openai import OpenAIEmbedding
 
     document = Document(text=text_content, metadata={"SEC Filing Form": filing.form})
     if method.startswith("section"):
         document.metadata["Section"] = SECTION_FILENAME_MAP[method.split(":")[1]]
 
-    vector_store_index_kwargs = {}
-    if llm_provider != "openai":
+    if llm_provider == "openai":
+        embed_model = OpenAIEmbedding(model=embedding_model)
+    else:
         # If openai is not used, then fetch a HuggingFace embedding model
-        vector_store_index_kwargs["embed_model"] = get_hf_embedding_model(embedding_model)
+        embed_model = get_hf_embedding_model(embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
 
     start = time.time()
-    index = VectorStoreIndex.from_documents([document], **vector_store_index_kwargs)
+    index = VectorStoreIndex.from_documents([document], embed_model=embed_model)
     index.storage_context.persist(persist_dir=defaults["sec_filing_index_dir"])
 
     metrics = IndexCreationMetrics(

@@ -141,11 +141,9 @@ class FinMAS(pn.viewable.Viewer):
     def __init__(self, ticker: str | None = None, **params) -> None:
         super().__init__(**params)
         # Models
-        self.llm_model.options = [defaults["llm_model"]]
-        self.llm_model.value = defaults["llm_model"]
         self.llm_provider.value = defaults["llm_provider"]
-        self.llm_provider.param.watch(self.update_llm_models_tbl, "value")
-        self.update_llm_models_tbl(None)
+        self.llm_provider.param.watch(self.handle_llm_provider_change, "value")
+        self.handle_llm_provider_change(None)
 
         # Ticker
         self.ticker_select.value = ticker or defaults["tickerid"]
@@ -192,17 +190,20 @@ class FinMAS(pn.viewable.Viewer):
         if self.ticker_select.value != tickerid:
             self.ticker_select.value = tickerid
 
-    def update_llm_models_tbl(self, event):
+    def handle_llm_provider_change(self, event):
         """
         Updates the LLM models table if the LLM provider have changed.
         Initializes the table with the Tabulator widget.
         The current LLM model is selected in the table.
         """
         df = get_valid_models(self.llm_provider.value)
+        models = df["id"].tolist()
+        self.llm_model.options = models
+        self.llm_model.value = defaults[f"{self.llm_provider.value}_llm_model"]
+        selection = df.index[df["id"] == self.llm_model.value].tolist()
 
         if getattr(self, "llm_models_tbl", None) is None:
             # Initialize the models table
-            selection = df.index[df["id"] == self.llm_model.value].tolist()
             self.llm_models_tbl = pn.widgets.Tabulator(
                 df,
                 on_click=self.handle_llm_models_tbl_click,
@@ -211,7 +212,14 @@ class FinMAS(pn.viewable.Viewer):
             )
         else:
             self.llm_models_tbl.value = df
-        self.llm_model.options = df["id"].tolist()
+            self.llm_models_tbl.selection = selection
+
+        # Update embedding models options
+        prefix = "openai" if self.llm_provider.value == "openai" else "hf"
+        self.embedding_model_news.options = defaults[f"{prefix}_embedding_models"]
+        self.embedding_model_sec.options = defaults[f"{prefix}_embedding_models"]
+        self.embedding_model_news.value = defaults[f"{prefix}_embedding_model_news"]
+        self.embedding_model_sec.value = defaults[f"{prefix}_embedding_model_sec"]
 
     def handle_llm_models_tbl_click(self, event):
         """Callback for when a row in LLM models table is clicked"""
