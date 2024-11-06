@@ -264,7 +264,7 @@ class FinMAS(pn.viewable.Viewer):
             start=self.start_picker.value,
             end=self.end_picker.value,
         )
-        df.reset_index(inplace=True)
+        df = df.reset_index(names="date")
 
         if getattr(self, "ohlcv_tbl", None) is None:
             self.ohlcv_tbl = pn.widgets.Tabulator(df, **ohlcv_config)

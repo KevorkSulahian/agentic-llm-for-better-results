@@ -29,7 +29,7 @@ def parse_news_to_documents(articles: list[dict], field: str = "summary") -> lis
         try:
             text += f"{item[field]}"
         except KeyError as e:
-            print(f"The news item does not contain a content field. Error: {e}")
+            print(f"The news item does not contain the {field} field. Error: {e}")
             sys.exit(1)
 
         doc = Document(text=text)

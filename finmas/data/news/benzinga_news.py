@@ -84,6 +84,11 @@ class BenzingaNewsFetcher(NewsFetcherBase):
             if news.content is None or len(news.content) == 0:
                 continue
             soup = BeautifulSoup(news.content, "html.parser")
+
+            # Decompose all tables
+            for table in soup.find_all("table"):
+                table.decompose()
+
             record = dict(
                 title=news.headline,
                 published=news.updated_at,
@@ -94,7 +99,15 @@ class BenzingaNewsFetcher(NewsFetcherBase):
                 id=news.id,
                 summary=news.summary,
                 content=news.content,
-                markdown_content=convert_to_markdown(soup),
+                markdown_content=convert_to_markdown(
+                    source=soup,
+                    autolinks=False,
+                    escape_misc=False,
+                    heading_style="atx",
+                    strip=["a", "table", "thead", "tbody", "td", "tr", "th", "img"],
+                    wrap=True,
+                    wrap_width=100,
+                ),
                 text=self.get_benzinga_content_text(news.content),
             )
             records.append(record)
@@ -119,10 +132,10 @@ class BenzingaNewsFetcher(NewsFetcherBase):
 
         TAGS = ["p", "ul"]
         filtered_text_list = []
-        for tag in soup.findAll(TAGS):
+        for tag in soup.find_all(TAGS):
             text = condense_newline(tag.text)
             text = unicodedata.normalize("NFKD", text)  # Replace \xa0 with space
-            text = re.sub(r"[\n\r]", "", text)  # Remove all newlines
+            # text = re.sub(r"[\n\r]", "", text)  # Remove all newlines
             text = re.sub(r"\t", " ", text)  # Replace all tab characters with space
             text = re.sub(r"\s+", " ", text).strip()  # Condense whitespace
 

@@ -11,17 +11,19 @@ BASIC_COLS_MAP = {
     "netIncome": "Net Income",
     "netProfitMargin": "Net Profit Margin (%)",
     "close": "Stock Price",
-    "basic_eps": "Basic EPS",
+    "basic_eps": "Basic Earnings Per Share",
     "D/E": "Debt to Equity",
     "totalRevenue_ttm": "Total Revenue TTM",
     "netIncome_ttm": "Net Income TTM",
 }
 
 QOQ_COLS_MAP = {
-    "totalRevenue_qoq": "Total Revenue QoQ",
-    "netIncome_qoq": "Net Income QoQ",
-    "netProfitMargin_qoq": "Net Profit Margin QoQ",
+    "totalRevenue_qoq": "Total Revenue QoQ (%)",
+    "netIncome_qoq": "Net Income QoQ (%)",
+    "netProfitMargin_qoq": "Net Profit Margin QoQ (%)",
 }
+
+NUM_QUARTERS = 8
 
 
 class StockFundamentalsInput(BaseModel):
@@ -38,6 +40,7 @@ class StockFundamentalsTool(BaseTool):
     def _run(self, ticker: str) -> str:
         """Function that returns essential fundamental data for a given ticker in a Markdown table format."""
         df = get_ticker_essentials(ticker)
+        df = df.tail(NUM_QUARTERS)
         df = df.dropna(axis=0, how="any")
         df.index = df.index.strftime("%Y-%m-%d")
         df.index.name = "Date"
@@ -47,6 +50,7 @@ class StockFundamentalsTool(BaseTool):
         basic_df.rename(columns=BASIC_COLS_MAP, inplace=True)
         qoq_df = df[list(QOQ_COLS_MAP.keys())].copy()
         qoq_df.rename(columns=QOQ_COLS_MAP, inplace=True)
+        qoq_df = qoq_df * 100
 
         tabulate_config = dict(
             headers="keys",
@@ -54,8 +58,25 @@ class StockFundamentalsTool(BaseTool):
             floatfmt=".2f",
         )
 
+        basic_table_context = (
+            f"## {ticker} - Fundamentals\n\n"
+            "This table shows some essential fundamental data for the given stock ticker "
+            f"over the last {NUM_QUARTERS} quarters. TTM means Trailing Twelve Months.\n\n"
+        )
+
+        qoq_table_context = (
+            "### Quarter over Quarter Growth\n\n"
+            "This table shows the quarter over quarter growth rates for total revenue, "
+            "net income, net profit margin, and basic EPS for the given stock ticker "
+            f"over the last {NUM_QUARTERS} quarters.\n\n"
+        )
+
         table_output = (
-            basic_df.to_markdown(**tabulate_config) + "\n\n" + qoq_df.to_markdown(**tabulate_config)
+            basic_table_context
+            + basic_df.to_markdown(**tabulate_config)
+            + "\n\n"
+            + qoq_table_context
+            + qoq_df.to_markdown(**tabulate_config)
         )
 
         return table_output
@@ -68,7 +89,6 @@ def get_ticker_essentials(ticker: str):
     - Income statement
     - Balance sheet
     """
-    NUM_QUARTERS = 8
 
     # Price data
     price_df = get_price_data(ticker, period="5y")
@@ -77,7 +97,6 @@ def get_ticker_essentials(ticker: str):
     # Income statement
     income_df = get_income_statement_df(ticker, "Quarterly")
     income_df.sort_index(inplace=True)
-    income_df = income_df.tail(NUM_QUARTERS)
     df = income_df[["totalRevenue", "netIncome", "netProfitMargin"]].copy()
 
     df["close"] = price_df.reindex(df.index, method="ffill")["close"]
@@ -85,7 +104,8 @@ def get_ticker_essentials(ticker: str):
     # Balance sheet
     balance_df = get_fundamental_data(ticker, type="balance", freq="Quarterly")
     balance_df.sort_index(inplace=True)
-    balance_df = balance_df.tail(NUM_QUARTERS)
+
+    income_df = income_df.reindex(balance_df.index, method="ffill")
 
     df["basic_eps"] = income_df["netIncome"] / balance_df["commonStockSharesOutstanding"]
 
