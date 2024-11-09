@@ -14,8 +14,7 @@ sec_storage/
 sec_filing_index/
 
 # Crew Logs
-news_crew.log
-sec_crew.log
+logs/
 
 .finmas_cache/
 

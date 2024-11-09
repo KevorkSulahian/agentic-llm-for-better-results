@@ -155,7 +155,9 @@ def get_sec_query_engine(
     index = VectorStoreIndex.from_documents(
         [document], embed_model=embed_model, callback_manager=CallbackManager([token_counter])
     )
-    index.storage_context.persist(persist_dir=defaults["sec_filing_index_dir"])
+    index.storage_context.persist(
+        persist_dir=f"{defaults['sec_filing_index_dir']}/{method.replace(':', '_')}"
+    )
 
     metrics = IndexCreationMetrics(
         embedding_model=embedding_model,
