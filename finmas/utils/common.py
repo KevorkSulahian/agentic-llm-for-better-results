@@ -16,6 +16,11 @@ HF_ACTIVE_MODELS_URL = (
 )
 
 
+def extract_cols_from_df(df: pd.DataFrame, cols_map: dict[str, str]) -> pd.DataFrame:
+    df = df[list(cols_map.keys())].copy()
+    return df.rename(columns=cols_map)
+
+
 def format_time_spent(seconds: float):
     """Format the time spent in a human-readable way"""
     minutes, seconds = divmod(seconds, 60)

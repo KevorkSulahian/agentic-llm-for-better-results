@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from crewai.types.usage_metrics import UsageMetrics
 
-from finmas.constants import defaults
+from finmas.constants import defaults, agent_config
 from finmas.utils.common import format_time_spent
 
 
@@ -57,6 +57,8 @@ class CrewConfiguration:
             f"Ticker: {self.ticker}  \n"
             f"LLM: {self.llm_provider} / {self.llm_model}  \n"
             f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}  \n"
+            "Agent Configuration:  \n"
+            f"Max iterations: {agent_config['max_iter']} Max requests per minute: {agent_config['max_rpm']}  \n"
         )
         if self.similarity_top_k and self.embedding_model:
             output += f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
@@ -100,6 +102,7 @@ class CrewRunMetrics:
         return (
             self.config.markdown(crew_description)
             + "\n"
+            + "## Crew Run Metrics\n\n"
             + get_usage_metrics_as_string(self.token_usage, self.config.llm_model)
             + "\n"
             + f"Time spent: {format_time_spent(self.time_spent)}"
@@ -153,7 +156,9 @@ def save_crew_output(crew_run_metrics: CrewRunMetrics, output_content: str) -> P
 
     file_path = output_dir / filename
     file_path.write_text(
-        crew_run_metrics.markdown(crew_description=True) + "\n\nCrew output:\n\n" + output_content,
+        crew_run_metrics.markdown(crew_description=True)
+        + "\n\n## Crew output:\n\n"
+        + output_content,
         encoding="utf-8",
     )
     return file_path

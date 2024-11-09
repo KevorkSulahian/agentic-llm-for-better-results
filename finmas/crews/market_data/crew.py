@@ -1,70 +1,44 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-# from crewai_tools import LlamaIndexTool
 
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.utils import CrewConfiguration
 
-# from finmas.data.sec.query_engine import get_sec_query_engine
-# from edgar import Filing
-# from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP
-from finmas.constants import defaults
+from finmas.constants import defaults, agent_config
 from finmas.data.market import StockFundamentalsTool
+from finmas.data.market import TechnicalAnalysisTool
 
 
 @CrewBase
-class CombinedCrew:
-    """Stock Analysis Crew that analyze a stock using:
+class MarketDataCrew:
+    """Crew that analyzes a stock using:
 
-    - Recent news
-    - SEC filing
     - Fundamental data
+    - Stock price data with technical indicators
+
+    The final output is a recommendation on the stock.
     """
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    name = "market_data"
 
     def __init__(
         self,
         ticker: str,
         llm_provider: str,
         llm_model: str,
-        # embedding_model: str,
-        # filing: Filing,
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
-        # similarity_top_k: int = defaults["similarity_top_k"],
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
-        # for section in SECTION_FILENAME_MAP.keys():
-        #     query_engine_result = get_sec_query_engine(
-        #         ticker,
-        #         llm_provider,
-        #         llm_model,
-        #         embedding_model,
-        #         filing=filing,
-        #         method=f"section:{section}",
-        #         temperature=temperature,
-        #         max_tokens=max_tokens,
-        #         similarity_top_k=similarity_top_k,
-        #     )
-        #     setattr(self, f"{section}_query_engine", query_engine_result[0])
-        #     setattr(self, f"{section}_index_creation_metrics", query_engine_result[1])
-        #     setattr(
-        #         self,
-        #         f"{section}_tool",
-        #         LlamaIndexTool.from_query_engine(
-        #             getattr(self, f"{section}_query_engine"),
-        #             name=f"{filing.form} SEC Filing Query Tool for {ticker}",
-        #             description=f"Use this tool to search and analyze the the {filing.form} SEC filing",
-        #         ),
-        #     )
         self.stock_fundamentals_tool = StockFundamentalsTool()
+        self.technical_analysis_tool = TechnicalAnalysisTool()
 
         self.config = CrewConfiguration(
-            name="combined",
+            name=self.name,
             ticker=ticker,
             llm_provider=llm_provider,
             llm_model=llm_model,
@@ -83,17 +57,54 @@ class CombinedCrew:
             memory=True,
             llm=self.crewai_llm,
             tools=[self.stock_fundamentals_tool],
+            **agent_config,
+        )
+
+    @agent
+    def technical_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config["technical_analyst"],  # type: ignore
+            verbose=True,
+            memory=True,
+            llm=self.crewai_llm,
+            tools=[self.technical_analysis_tool],
+            **agent_config,
+        )
+
+    @agent
+    def stock_advisor(self) -> Agent:
+        return Agent(
+            config=self.agents_config["stock_advisor"],  # type: ignore
+            verbose=True,
+            memory=True,
+            llm=self.crewai_llm,
+            **agent_config,
         )
 
     @task
     def fundamental_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["fundamental_analysis"],  # type: ignore
+            async_execution=True,
+        )
+
+    @task
+    def technical_analysis(self) -> Task:
+        return Task(
+            config=self.tasks_config["technical_analysis"],  # type: ignore
+            async_execution=True,
+        )
+
+    @task
+    def stock_advisor_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["stock_advisor_task"],  # type: ignore
+            context=[self.fundamental_analysis(), self.technical_analysis()],
         )
 
     @crew
     def crew(self) -> Crew:
-        """Creates Combined Analysis crew"""
+        """Creates Market Data Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
             tasks=self.tasks,  # type: ignore
@@ -101,5 +112,5 @@ class CombinedCrew:
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file="sec_crew.log",
+            output_log_file=f"{defaults['crew_logs_dir']}/{self.name}_crew.log",
         )

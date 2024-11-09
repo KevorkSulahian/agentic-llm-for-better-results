@@ -1,13 +1,13 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import LlamaIndexTool
+from edgar import Filing
 
+from finmas.constants import agent_config, defaults
 from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.utils import SECCrewConfiguration
 from finmas.data.sec.query_engine import get_sec_query_engine
-from edgar import Filing
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP
-from finmas.constants import defaults
 
 
 @CrewBase
@@ -16,6 +16,7 @@ class SECFilingSectionsCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    name = "sec_mda_risk_factors"
 
     def __init__(
         self,
@@ -56,7 +57,7 @@ class SECFilingSectionsCrew:
             )
 
         self.config = SECCrewConfiguration(
-            name="sec_mda_risk_factors",
+            name=self.name,
             ticker=ticker,
             llm_provider=llm_provider,
             llm_model=llm_model,
@@ -76,6 +77,7 @@ class SECFilingSectionsCrew:
             memory=True,
             llm=self.crewai_llm,
             tools=[getattr(self, "mda_tool")],
+            **agent_config,
         )
 
     @agent
@@ -86,6 +88,7 @@ class SECFilingSectionsCrew:
             memory=True,
             llm=self.crewai_llm,
             tools=[getattr(self, "risk_factors_tool")],
+            **agent_config,
         )
 
     @agent
@@ -95,6 +98,7 @@ class SECFilingSectionsCrew:
             verbose=True,
             memory=True,
             llm=self.crewai_llm,
+            **agent_config,
         )
 
     @task

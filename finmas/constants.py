@@ -1,5 +1,5 @@
 import yaml
-
+from pathlib import Path
 
 CONFIG_FILE = "config.yaml"
 INCOME_STATEMENT_COLS = ["totalRevenue", "operatingExpenses", "grossProfit", "netIncome"]
@@ -36,3 +36,11 @@ with open(CONFIG_FILE, "r") as c:
     config = yaml.safe_load(c)
 
 defaults = config.get("defaults", {})
+
+# CrewAI
+agent_config = dict(
+    max_iter=defaults["crewai"]["max_iterations"],
+    max_rpm=defaults["crewai"]["max_requests_per_minute"],
+)
+
+Path(defaults["crew_logs_dir"]).mkdir(parents=True, exist_ok=True)

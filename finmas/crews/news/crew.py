@@ -1,12 +1,13 @@
+import datetime as dt
+
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import LlamaIndexTool
 
+from finmas.constants import agent_config, defaults
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.data.news.query_engine import get_news_query_engine
 from finmas.crews.utils import NewsCrewConfiguration
-import datetime as dt
-from finmas.constants import defaults
+from finmas.data.news.query_engine import get_news_query_engine
 
 
 @CrewBase
@@ -15,6 +16,7 @@ class NewsAnalysisCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    name = "news"
 
     def __init__(
         self,
@@ -48,7 +50,7 @@ class NewsAnalysisCrew:
             description="Use this tool to lookup the latest news",
         )
         self.config = NewsCrewConfiguration(
-            name="news",
+            name=self.name,
             ticker=ticker,
             llm_provider=llm_provider,
             llm_model=llm_model,
@@ -70,6 +72,7 @@ class NewsAnalysisCrew:
             memory=True,  # helpful for smaller llm in case they fail -> won't repeat the same thing twice
             llm=self.crewai_llm,
             tools=[self.llama_index_news_tool],
+            **agent_config,
         )
 
     @agent
@@ -80,6 +83,7 @@ class NewsAnalysisCrew:
             memory=True,
             llm=self.crewai_llm,
             tools=[self.llama_index_news_tool],
+            **agent_config,
         )
 
     @agent
@@ -89,6 +93,7 @@ class NewsAnalysisCrew:
             verbose=True,
             memory=True,
             llm=self.crewai_llm,
+            **agent_config,
         )
 
     @task
@@ -119,5 +124,5 @@ class NewsAnalysisCrew:
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file="news_crew.log",
+            output_log_file=f"{defaults['crew_logs_dir']}/{self.name}_crew.log",
         )

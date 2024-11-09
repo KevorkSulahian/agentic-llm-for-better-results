@@ -8,6 +8,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
   "alpaca-py>=0.31",
@@ -50,6 +51,7 @@ dependencies = [
   "scikit-learn>=1.5.2",
   "seaborn>=0.13.2",
   "sentence-transformers>=3.1.1",
+  "ta>=0.11",
   "tabulate>=0.9",
   "torch==2.5.1+cpu",
   "tqdm>=4.66.5",
