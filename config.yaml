@@ -44,11 +44,18 @@ defaults:
     - news
     - sec
     - sec_mda_risk_factors
+    - market_data
+    - combined
+  crewai:
+    max_iterations: 10
+    max_requests_per_minute: 30
   embedding_models_dir: embedding_models
   crew_output_dir: output
+  crew_logs_dir: logs
   filings_dir: filings
   logs_dir: logs
   sec_filing_index_dir: sec_filing_index
+  fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
     - Total revenue
     - Net income
@@ -75,3 +82,5 @@ defaults:
     text-embedding-3-small: 2.0e-8
     text-embedding-3-large: 1.3e-7
     text-embedding-ada-002: 1.0e-7
+  fundamentals_tool:
+    include_qoq: False

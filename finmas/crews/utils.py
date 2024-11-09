@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from crewai.types.usage_metrics import UsageMetrics
 
-from finmas.constants import defaults
+from finmas.constants import defaults, agent_config
 from finmas.utils.common import format_time_spent
 
 
@@ -47,18 +47,30 @@ class CrewConfiguration:
     llm_model: str
     llm_temperature: float
     llm_max_tokens: int
-    similarity_top_k: int
-    embedding_model: str
+    similarity_top_k: int | None
+    embedding_model: str | None
 
-    def markdown(self) -> str:
-        return (
-            "Configuration:  \n\n"
+    def markdown(self, crew_description: bool = False) -> str:
+        output = (
+            "## Configuration:  \n\n"
             f"Crew Name: {self.name}  \n"
             f"Ticker: {self.ticker}  \n"
             f"LLM: {self.llm_provider} / {self.llm_model}  \n"
             f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}  \n"
-            f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
+            "Agent Configuration:  \n"
+            f"Max iterations: {agent_config['max_iter']} Max requests per minute: {agent_config['max_rpm']}  \n"
         )
+        if self.similarity_top_k and self.embedding_model:
+            output += f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
+        if crew_description:
+            config_path = Path(__file__).parent / self.name / "config"
+            output += (
+                "\n## Agents\n\n"
+                + get_yaml_config_as_markdown(config_path, "agents")
+                + "## Tasks\n\n"
+                + get_yaml_config_as_markdown(config_path, "tasks")
+            )
+        return output
 
 
 @dataclass
@@ -67,9 +79,9 @@ class NewsCrewConfiguration(CrewConfiguration):
     news_start: dt.date
     news_end: dt.date
 
-    def markdown(self) -> str:
+    def markdown(self, crew_description: bool = False) -> str:
         return (
-            super().markdown()
+            super().markdown(crew_description)
             + f"News Source: {self.news_source}\n"
             + f"Date range: {self.news_start} - {self.news_end}\n"
         )
@@ -86,10 +98,11 @@ class CrewRunMetrics:
     token_usage: UsageMetrics
     time_spent: float
 
-    def markdown(self) -> str:
+    def markdown(self, crew_description: bool = False) -> str:
         return (
-            self.config.markdown()
+            self.config.markdown(crew_description)
             + "\n"
+            + "## Crew Run Metrics\n\n"
             + get_usage_metrics_as_string(self.token_usage, self.config.llm_model)
             + "\n"
             + f"Time spent: {format_time_spent(self.time_spent)}"
@@ -143,6 +156,9 @@ def save_crew_output(crew_run_metrics: CrewRunMetrics, output_content: str) -> P
 
     file_path = output_dir / filename
     file_path.write_text(
-        crew_run_metrics.markdown() + "\n\nCrew output:\n\n" + output_content, encoding="utf-8"
+        crew_run_metrics.markdown(crew_description=True)
+        + "\n\n## Crew output:\n\n"
+        + output_content,
+        encoding="utf-8",
     )
     return file_path

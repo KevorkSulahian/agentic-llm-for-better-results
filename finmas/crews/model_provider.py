@@ -69,6 +69,7 @@ def get_llama_index_llm(
 
 
 def get_hf_embedding_model(model_name: str | None = None):
+    """Get a HuggingFace embedding model"""
     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
     cache_dir = Path(defaults["embedding_models_dir"]).absolute()
@@ -81,3 +82,14 @@ def get_hf_embedding_model(model_name: str | None = None):
         device="cpu",
         cache_folder=str(cache_dir),
     )
+
+
+def get_embedding_model(llm_provider: str, embedding_model: str):
+    """Get the embedding model based on the LLM provider"""
+    if llm_provider == "openai":
+        from llama_index.embeddings.openai import OpenAIEmbedding
+
+        return OpenAIEmbedding(model=embedding_model)
+    else:
+        # If openai is not used, then fetch a HuggingFace embedding model
+        return get_hf_embedding_model(embedding_model)

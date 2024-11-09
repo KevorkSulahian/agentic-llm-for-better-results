@@ -1,6 +1,6 @@
 import time
 
-from finmas.crews.model_provider import get_hf_embedding_model, get_llama_index_llm
+from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.news.news_fetcher import parse_news_to_documents
 
@@ -14,11 +14,9 @@ def get_news_query_engine(
     max_tokens: int | None = None,
     similarity_top_k: int | None = None,
 ):
-    print("Loading embedding model, creating vector store index and loading LLM model")
-
     documents = parse_news_to_documents(records, field="content")
 
-    embed_model = get_hf_embedding_model(embedding_model)
+    embed_model = get_embedding_model(llm_provider, embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
     from llama_index.core.callbacks import CallbackManager, TokenCountingHandler

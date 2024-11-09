@@ -1,0 +1,39 @@
+fundamental_analysis:
+  description: >
+    Analyze {ticker}'s fundamental data to evaluate the company's profitability and growth potential.
+    Use the provided tool to analyze total revenue, net income, earnings per share, net profit margin,
+    and possibly other key financial metrics. Use available Trailing Twelve Months (TTM) data in your analysis
+    if necessary.
+
+  expected_output: >
+    The final answer should be a summary of the company's financial health and growth prospects based on the
+    data available.
+
+  agent: fundamental_analyst
+
+technical_analysis:
+  description: >
+    Analyze {ticker}'s historical price data to predict future price movements. Use the provided tool to
+    analyze price trends, momentum, and volatility. For momentum use the RSI indicator, and for volatility
+    use the Bollinger Bands percentage indicator. Use the available historical price data in the tool to
+    analyze the stock's price movements.
+
+  expected_output: >
+    The final answer should be a summary of the company's price trends and potential future price movements
+    based on the data available.
+
+  agent: technical_analyst
+
+stock_advisor_task:
+  description: >
+    Analyze {ticker}'s fundamental and technical data to provide a recommendation on whether to buy, sell, or hold
+    the stock. Use the provided tools to analyze both fundamental and technical data for a comprehensive view
+    of the stock's investment potential.
+
+  expected_output: >
+    The final answer should be a recommendation (buy, sell, or hold) based on the analysis of the company's
+    profitability, historical fundamental data and technical indicators. The recommendation should be supported
+    by the data available, and should be clear and concise. Highlight the latest fundamental and technical data
+    that support your recommendation.
+
+  agent: stock_advisor
