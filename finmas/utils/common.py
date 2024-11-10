@@ -12,10 +12,14 @@ from bs4 import BeautifulSoup
 
 from finmas.cache_config import cache
 from finmas.constants import MARKET_CAP_MAP, TICKER_COLS, defaults
+from finmas.logger import get_logger
 
 HF_ACTIVE_MODELS_URL = (
     "https://huggingface.co/models?inference=warm&pipeline_tag=text-generation&sort=trending"
 )
+
+
+logger = get_logger(__name__)
 
 
 def get_vector_store_index_dir(ticker: str, data_type: str, subfolder: str | None = None) -> str:
@@ -38,6 +42,21 @@ def get_vector_store_index_dir(ticker: str, data_type: str, subfolder: str | Non
     return str(index_dir)
 
 
+def get_text_content_file(ticker: str, data_type: str, suffix: str | None = None) -> Path:
+    """
+    Get the text content file for the given data type
+
+    Args:
+        data_type: The type of data (e.g. news, sec, fundamentals, etc.)
+    """
+    text_content_dir = Path(f"{defaults['text_content_dir']}/{data_type}")
+    text_content_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"{ticker}_{suffix + '_' if suffix else ''}{timestamp}.md"
+    return text_content_dir / filename
+
+
 def extract_cols_from_df(df: pd.DataFrame, cols_map: dict[str, str]) -> pd.DataFrame:
     df = df[list(cols_map.keys())].copy()
     return df.rename(columns=cols_map)
@@ -58,6 +77,10 @@ def to_datetime(date: dt.date):
     if isinstance(date, dt.date):
         return dt.datetime.combine(date, dt.time(0))
     raise ValueError("Input must be a datetime.date object")
+
+
+def date_to_str(date: dt.date):
+    return date.strftime("%Y-%m-%d")
 
 
 def get_environment_variable(key: str) -> str:
@@ -195,7 +218,7 @@ def get_tickers_df(sp500: bool = False):
         sp500_df = get_wikipedia_sp500_tickers()
         df = sp500_df.join(equities_df, how="inner")
     else:
-        print("Using FinanceDatabase")
+        logger.info("Using FinanceDatabase")
         # There are multiple duplicates in the FinanceDatabase. Keep the first.
         df = equities_df.drop_duplicates(subset=["name"])
         df = df.dropna(subset=["market", "market_cap"], how="any")

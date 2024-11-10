@@ -1,9 +1,13 @@
 import time
 
+from finmas.constants import defaults
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.news.news_fetcher import parse_news_to_documents
-from finmas.utils.common import get_vector_store_index_dir
+from finmas.logger import get_logger
+from finmas.utils.common import get_text_content_file, get_vector_store_index_dir
+
+logger = get_logger(__name__)
 
 
 def get_news_query_engine(
@@ -17,6 +21,12 @@ def get_news_query_engine(
     similarity_top_k: int | None = None,
 ):
     documents = parse_news_to_documents(records, field="content")
+
+    if defaults["save_text_content"]:
+        text_content = "\n\n".join(doc.text for doc in documents)
+        file_path = get_text_content_file(ticker=ticker, data_type="news")
+        file_path.write_text(text_content, encoding="utf-8")
+        logger.info(f"Saved text content to {file_path}")
 
     embed_model = get_embedding_model(llm_provider, embedding_model)
 

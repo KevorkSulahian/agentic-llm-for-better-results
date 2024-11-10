@@ -66,6 +66,7 @@ class SECFilingSectionsCrew:
             llm_max_tokens=max_tokens,
             similarity_top_k=similarity_top_k,
             form_type=filing.form,
+            filing_date=filing.filing_date,
         )
         super().__init__()
 

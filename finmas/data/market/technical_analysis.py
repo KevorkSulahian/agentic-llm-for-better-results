@@ -8,8 +8,12 @@ from ta.momentum import rsi
 from ta.trend import sma_indicator
 from ta.volatility import bollinger_pband
 
+from finmas.constants import defaults
 from finmas.data.market.yahoo_finance import get_price_data
-from finmas.utils.common import extract_cols_from_df
+from finmas.utils.common import extract_cols_from_df, get_text_content_file
+from finmas.logger import get_logger
+
+logger = get_logger(__name__)
 
 NUM_PERIODS = 8
 
@@ -67,6 +71,11 @@ class TechnicalAnalysisTool(BaseTool):
         )
 
         table_output = ta_table_context + ta_df.to_markdown(**tabulate_config)
+
+        if defaults["save_text_content"]:
+            file_path = get_text_content_file(ticker, data_type="market_data", suffix="ta")
+            file_path.write_text(table_output)
+            logger.info(f"Technical analysis data saved to {file_path}")
 
         return table_output
 

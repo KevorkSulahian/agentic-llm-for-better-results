@@ -84,3 +84,5 @@ defaults:
     include_qoq: False
   include_fundamental_data: True
   include_news: False
+  save_text_content: True # Save text content of filings or news
+  text_content_dir: output/text_content

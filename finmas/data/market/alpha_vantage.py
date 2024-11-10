@@ -76,6 +76,8 @@ def get_income_statement_df(ticker: str, freq: str, cols: list[str] | None = Non
     """
     df = get_fundamental_data(ticker=ticker, type="income", freq=freq)
 
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return pd.DataFrame()
     if cols:
         df = df[cols]
 

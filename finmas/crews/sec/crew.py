@@ -15,6 +15,7 @@ class SECFilingCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    name = "sec"
 
     def __init__(
         self,
@@ -57,6 +58,7 @@ class SECFilingCrew:
             llm_max_tokens=max_tokens,
             similarity_top_k=similarity_top_k,
             form_type=filing.form,
+            filing_date=filing.filing_date,
         )
         super().__init__()
 

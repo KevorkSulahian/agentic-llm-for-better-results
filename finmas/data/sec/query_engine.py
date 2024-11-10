@@ -1,3 +1,4 @@
+import datetime as dt
 import time
 from pathlib import Path
 
@@ -11,9 +12,12 @@ from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP, SECFilingParser
 from finmas.data.sec.tool import SECSemanticSearchTool
-from finmas.utils.common import get_vector_store_index_dir
+from finmas.logger import get_logger
+from finmas.utils.common import get_text_content_file, get_vector_store_index_dir
 
 set_identity("John Doe john.doe@example.com")
+
+logger = get_logger(__name__)
 
 SUPPORTED_METHODS = [
     "section:mda",
@@ -92,6 +96,18 @@ def _get_sec_text_content(ticker: str, embedding_model: str, filing: Filing, met
         if method == "semantic_search_keywords":
             sec_tool = SECSemanticSearchTool(model_name=embedding_model)
             text_content = sec_tool.extract_key_metrics(content=text_content)
+
+    # Prepend the text content with ticker, filing type and report date
+    filing_date = (
+        filing.filing_date.strftime("%Y-%m-%d")
+        if isinstance(filing.filing_date, dt.date)
+        else filing.filing_date
+    )
+    text_content = (
+        f"Ticker: {ticker}\nSEC Filing Form: {filing.form}\n"
+        + f"Filing Date: {filing_date}\n\n"
+        + text_content
+    )
     return text_content
 
 
@@ -139,6 +155,12 @@ def get_sec_query_engine(
     text_content = _get_sec_text_content(
         ticker=ticker, filing=filing, embedding_model=embedding_model, method=method
     )
+    if defaults["save_text_content"]:
+        file_path = get_text_content_file(
+            ticker=ticker, data_type="sec", suffix=method.replace(":", "_")
+        )
+        file_path.write_text(text_content, encoding="utf-8")
+        logger.info(f"Saved text content to {file_path}")
 
     from llama_index.core import Document
 
@@ -172,7 +194,9 @@ def get_sec_query_engine(
         total_embedding_token_count=token_counter.total_embedding_token_count,
     )
 
-    print(f"Created Vector Store Index with {len(index.index_struct.nodes_dict.keys())} nodes")
+    logger.info(
+        f"Created Vector Store Index with {len(index.index_struct.nodes_dict.keys())} nodes"
+    )
 
     llama_index_llm = get_llama_index_llm(
         llm_provider=llm_provider,
