@@ -27,7 +27,7 @@ technical_analysis:
 stock_advisor_task:
   description: >
     Analyze {ticker}'s fundamental and technical data to provide a recommendation on whether to buy, sell, or hold
-    the stock. Use the provided tools to analyze both fundamental and technical data for a comprehensive view
+    the stock. Use the provided input to analyze both fundamental and technical data for a comprehensive view
     of the stock's investment potential.
 
   expected_output: >

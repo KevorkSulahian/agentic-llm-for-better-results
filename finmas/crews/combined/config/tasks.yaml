@@ -1,0 +1,65 @@
+news_analysis:
+  description: >
+    Analyze the latest news articles related to {ticker} to understand the current market sentiment and
+    potential impact on the stock price. Use the provided tool to analyze the news sentiment, key topics,
+    and the overall market sentiment towards the company. Use the latest news data available to analyze
+    the impact on the stock price.
+
+  expected_output: >
+    The final answer should be a summary of the market sentiment towards the company based on the latest news
+    articles. Highlight key topics and sentiments that could impact the stock price in the short term.
+
+  agent: news_analyst
+
+sec_filing_analysis:
+  description: >
+    Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool.
+    Focus on the section Management's Discussion and analysis.
+    Extract information about the growth in key market segments, and forward-looking statements from management.
+    Include information about any key products and forward-looking statements from management.
+
+  expected_output: >
+    The final answer should be a report that includes information about market segments, management discussion,
+    and forward-looking statements from management.
+
+  agent: sec_filing_analyst
+
+fundamental_analysis:
+  description: >
+    Analyze {ticker}'s fundamental data to evaluate the company's profitability and growth potential.
+    Use the provided tool to analyze total revenue, net income, earnings per share, net profit margin,
+    and possibly other key financial metrics. Use available Trailing Twelve Months (TTM) data in your analysis
+    if necessary.
+
+  expected_output: >
+    The final answer should be a summary of the company's financial health and growth prospects based on the
+    data available.
+
+  agent: fundamental_analyst
+
+technical_analysis:
+  description: >
+    Analyze {ticker}'s historical price data to predict future price movements. Use the provided tool to
+    analyze price trends, momentum, and volatility. For momentum use the RSI indicator, and for volatility
+    use the Bollinger Bands percentage indicator. Use the available historical price data in the tool to
+    analyze the stock's price movements.
+
+  expected_output: >
+    The final answer should be a summary of the company's price trends and potential future price movements
+    based on the data available.
+
+  agent: technical_analyst
+
+stock_advisor_task:
+  description: >
+    Analyze {ticker}'s fundamental and technical data to provide a recommendation on whether to buy, sell, or hold
+    the stock. Use the information from SEC Filing and News analysis to provide a comprehensive view of the stock's
+    investment potential.
+
+  expected_output: >
+    The final answer should be a recommendation (buy, sell, or hold) based on the analysis of the company's
+    profitability, historical fundamental data and technical indicators. The recommendation should be supported
+    by the data available, and should be clear and concise. Highlight the latest fundamental data, technical data,
+    news information, and SEC filing information that support your recommendation.
+
+  agent: stock_advisor
