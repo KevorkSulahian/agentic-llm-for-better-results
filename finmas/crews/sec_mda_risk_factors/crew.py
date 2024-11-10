@@ -5,7 +5,7 @@ from edgar import Filing
 
 from finmas.constants import agent_config, defaults
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.utils import SECCrewConfiguration
+from finmas.crews.utils import SECCrewConfiguration, get_log_filename
 from finmas.data.sec.query_engine import get_sec_query_engine
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP
 
@@ -127,10 +127,14 @@ class SECFilingSectionsCrew:
         """Creates SEC Filing Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
-            tasks=self.tasks,  # type: ignore
+            tasks=[
+                self.sec_filing_mda_task(),
+                self.sec_filing_risk_factors_task(),
+                self.sec_filing_summary_task(),
+            ],
             cache=True,
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file="sec_crew.log",
+            output_log_file=get_log_filename(self.name),
         )

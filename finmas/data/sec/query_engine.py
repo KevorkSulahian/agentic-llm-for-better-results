@@ -11,6 +11,7 @@ from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP, SECFilingParser
 from finmas.data.sec.tool import SECSemanticSearchTool
+from finmas.utils.common import get_vector_store_index_dir
 
 set_identity("John Doe john.doe@example.com")
 
@@ -156,7 +157,9 @@ def get_sec_query_engine(
         [document], embed_model=embed_model, callback_manager=CallbackManager([token_counter])
     )
     index.storage_context.persist(
-        persist_dir=f"{defaults['sec_filing_index_dir']}/{method.replace(':', '_')}"
+        persist_dir=get_vector_store_index_dir(
+            ticker=ticker, data_type="sec", subfolder=method.replace(":", "_")
+        )
     )
 
     metrics = IndexCreationMetrics(

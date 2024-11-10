@@ -27,6 +27,7 @@ from finmas.data.news import get_news_fetcher
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
 from finmas.panel.formatting import (
     INCOME_STATEMENT_COLS_MAP,
+    embedding_models_config,
     income_statement_config,
     llm_models_config,
     news_config,
@@ -38,6 +39,7 @@ from finmas.panel.formatting import (
 from finmas.panel.plotting import get_income_statment_plot_figure, get_ta_plot_figure
 from finmas.utils.common import (
     format_time_spent,
+    get_embedding_models_df,
     get_llm_models_df,
     get_tickers_df,
     to_datetime,
@@ -106,7 +108,7 @@ class FinMAS(pn.viewable.Viewer):
     fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
     time_elapsed: dict[str, float] = {}
 
-    crew_select = pn.widgets.Select(name="Crew", width=100)
+    crew_select = pn.widgets.Select(name="Crew", width=250)
     llm_temperature = pn.widgets.FloatInput(
         name="LLM Temp.", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
     )
@@ -132,6 +134,8 @@ class FinMAS(pn.viewable.Viewer):
     crew_output_status = pn.pane.Alert("No Crew output generated yet.", alert_type="warning")
     crew_output = pn.pane.Markdown("", sizing_mode="stretch_width")
 
+    sec_filing_selected = pn.widgets.StaticText(name="SEC Filing", align=("center"))
+
     def __init__(self, ticker: str | None = None, **params) -> None:
         super().__init__(**params)
         # Models
@@ -154,6 +158,11 @@ class FinMAS(pn.viewable.Viewer):
 
         self.kickoff_crew_btn.on_click(self.generate_crew_output)
 
+        # Embedding models
+        self.embedding_models_tbl = pn.widgets.Tabulator(
+            get_embedding_models_df(), **embedding_models_config
+        )
+
         # About tab
         with open("finmas/panel/about.md", mode="r", encoding="utf-8") as f:
             about = f.read()
@@ -162,12 +171,16 @@ class FinMAS(pn.viewable.Viewer):
 
     def handle_crew_select_change(self, event):
         """Handle the change of the crew select"""
+        self.similarity_top_k.disabled = False
+        self.compress_sec_filing.disabled = True
+        self.sec_filing_selected.visible = True
+
         if self.crew_select.value == "market_data":
             self.similarity_top_k.disabled = True
-            self.compress_sec_filing.disabled = True
-        else:
-            self.similarity_top_k.disabled = False
+        if self.crew_select.value == "sec":
             self.compress_sec_filing.disabled = False
+        if self.crew_select.value in ["news", "market_data"]:
+            self.sec_filing_selected.visible = False
 
         # Update the crew configuration markdown
         config_path = Path(__file__).parent.parent / "crews" / self.crew_select.value / "config"
@@ -319,12 +332,17 @@ class FinMAS(pn.viewable.Viewer):
             self.sec_filings_tbl.value = df
         self.sec_filings_tbl.selection = [0]
         self.sec_filing = self.sec_filings.get(df.iloc[0]["accession_number"])
+        self.sec_filing_selected.value = (
+            f"{self.sec_filing.form} - Report Date: {df.iloc[0]['reportDate']}"
+        )
 
     def handle_sec_filings_tbl_click(self, event):
         """Callback for when a row in SEC filings table is clicked"""
         self.sec_filing = self.sec_filings.get(
             self.sec_filings_tbl.value.iloc[event.row]["accession_number"]
         )
+        report_date = self.sec_filings_tbl.value.iloc[event.row]["reportDate"]
+        self.sec_filing_selected.value = f"{self.sec_filing.form} - Report Date: {report_date}"
 
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
@@ -444,7 +462,8 @@ class FinMAS(pn.viewable.Viewer):
 
             inputs = {"ticker": self.ticker_select.value, "form": self.sec_filing.form}
             try:
-                output = crew.crew().kickoff(inputs=inputs)
+                crew_ready = crew.crew()
+                output = crew_ready.kickoff(inputs=inputs)
             except Exception as e:
                 self.crew_output_status.object = (
                     "The crew failed with the following error:  \n" + str(e)
@@ -543,7 +562,15 @@ class FinMAS(pn.viewable.Viewer):
                             self.tickers_tbl,
                         ),
                     ),
-                    ("Models", pn.Column(self.llm_models_tbl)),
+                    (
+                        "Models",
+                        pn.Row(
+                            pn.Column(pn.pane.Markdown("### LLM Models"), self.llm_models_tbl),
+                            pn.Column(
+                                pn.pane.Markdown("### Embedding Models"), self.embedding_models_tbl
+                            ),
+                        ),
+                    ),
                     (
                         "SEC Filings",
                         pn.Column(
@@ -555,13 +582,14 @@ class FinMAS(pn.viewable.Viewer):
                         pn.Row(
                             pn.Column(
                                 pn.WidgetBox(
+                                    pn.Row(self.crew_select, self.sec_filing_selected),
                                     pn.Row(
-                                        self.crew_select,
                                         self.llm_temperature,
                                         self.llm_max_tokens,
+                                        self.similarity_top_k,
                                         self.kickoff_crew_btn,
                                     ),
-                                    pn.Row(self.similarity_top_k, self.compress_sec_filing),
+                                    pn.Row(self.compress_sec_filing),
                                 ),
                                 self.crew_usage_metrics,
                                 pn.Column(

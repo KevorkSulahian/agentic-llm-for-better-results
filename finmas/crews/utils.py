@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from crewai.types.usage_metrics import UsageMetrics
 
-from finmas.constants import defaults, agent_config
+from finmas.constants import agent_config, defaults
 from finmas.utils.common import format_time_spent
 
 
@@ -162,3 +162,15 @@ def save_crew_output(crew_run_metrics: CrewRunMetrics, output_content: str) -> P
         encoding="utf-8",
     )
     return file_path
+
+
+def get_log_filename(crew_name: str):
+    """
+    Returns the log file path for the crew.
+    If the folder does not exist, it will be created.
+    """
+    timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M")
+    file_path = f"{defaults['crew_logs_dir']}/{crew_name}/crew_{timestamp}.log"
+    Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(file_path).touch()
+    return str(file_path)

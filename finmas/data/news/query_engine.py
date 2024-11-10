@@ -3,9 +3,11 @@ import time
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.news.news_fetcher import parse_news_to_documents
+from finmas.utils.common import get_vector_store_index_dir
 
 
 def get_news_query_engine(
+    ticker: str,
     records: list[dict],
     llm_provider: str,
     llm_model: str,
@@ -26,7 +28,7 @@ def get_news_query_engine(
     index = VectorStoreIndex.from_documents(
         documents, embed_model=embed_model, callback_manager=CallbackManager([token_counter])
     )
-    index.storage_context.persist(persist_dir="storage")
+    index.storage_context.persist(persist_dir=get_vector_store_index_dir(ticker, "news"))
 
     text_length = sum([len(doc.text) for doc in documents])
 

@@ -1,12 +1,10 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
+from finmas.constants import agent_config, defaults
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.utils import CrewConfiguration
-
-from finmas.constants import defaults, agent_config
-from finmas.data.market import StockFundamentalsTool
-from finmas.data.market import TechnicalAnalysisTool
+from finmas.crews.utils import CrewConfiguration, get_log_filename
+from finmas.data.market import StockFundamentalsTool, TechnicalAnalysisTool
 
 
 @CrewBase
@@ -107,10 +105,14 @@ class MarketDataCrew:
         """Creates Market Data Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
-            tasks=self.tasks,  # type: ignore
+            tasks=[
+                self.fundamental_analysis(),
+                self.technical_analysis(),
+                self.stock_advisor_task(),
+            ],
             cache=True,
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file=f"{defaults['crew_logs_dir']}/{self.name}_crew.log",
+            output_log_file=get_log_filename(self.name),
         )

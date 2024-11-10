@@ -1,6 +1,8 @@
 import datetime as dt
 import os
 import re
+import shutil
+from pathlib import Path
 
 import financedatabase as fd
 import numpy as np
@@ -14,6 +16,26 @@ from finmas.constants import MARKET_CAP_MAP, TICKER_COLS, defaults
 HF_ACTIVE_MODELS_URL = (
     "https://huggingface.co/models?inference=warm&pipeline_tag=text-generation&sort=trending"
 )
+
+
+def get_vector_store_index_dir(ticker: str, data_type: str, subfolder: str | None = None) -> str:
+    """
+    Get the directory of the vector store index
+
+    Args:
+        ticker: The ticker of the stock
+        data_type: The type of data (e.g. news, sec, etc.)
+        subfolder: An optional subfolder inside the vector store index directory
+    """
+    index_dir = Path(f"{defaults['vector_store_index_dir']}/{ticker}/{data_type}")
+    if subfolder:
+        index_dir = index_dir / subfolder
+
+    if Path(index_dir).exists():
+        shutil.rmtree(index_dir)
+    Path(index_dir).mkdir(parents=True, exist_ok=True)
+
+    return str(index_dir)
 
 
 def extract_cols_from_df(df: pd.DataFrame, cols_map: dict[str, str]) -> pd.DataFrame:
@@ -131,6 +153,29 @@ def get_openai_models() -> pd.DataFrame:
         }
     )
     return df
+
+
+def get_embedding_models_df() -> pd.DataFrame:
+    """Returns a DataFrame of the possible embedding models"""
+    records = []
+    for model in defaults["openai_embedding_models"]:
+        records.append(
+            {
+                "provider": "openai",
+                "id": model,
+                "link": "https://platform.openai.com/docs/guides/embeddings",
+            }
+        )
+
+    for model in defaults["hf_embedding_models"]:
+        records.append(
+            {
+                "provider": "huggingface",
+                "id": model,
+                "link": f"https://huggingface.co/{model}",
+            }
+        )
+    return pd.DataFrame(records)
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())

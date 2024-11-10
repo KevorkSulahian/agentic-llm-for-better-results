@@ -103,6 +103,18 @@ news_config = dict(
 
 llm_models_config = dict(show_index=False, disabled=True)
 
+embedding_models_config = dict(
+    formatters={
+        "link": HTMLTemplateFormatter(
+            template=(
+                '<a href="<%= link %>" target="_blank"><i class="fas fa-external-link"></i></a>'
+            )
+        )
+    },
+    show_index=False,
+    disabled=True,
+)
+
 tickers_config = dict(
     page_size=30,
     pagination="local",

@@ -2,8 +2,8 @@
 defaults:
   llm_provider: groq
   llm_providers:
-    - groq
     - openai
+    - groq
   groq_llm_model: llama3-8b-8192
   openai_llm_model: gpt-4o-mini
   openai_models:
@@ -40,10 +40,10 @@ defaults:
   only_sp500_tickers: False
   crew: sec_mda_risk_factors
   crews:
-    - news
-    - sec
-    - sec_mda_risk_factors
-    - market_data
+    News: news
+    SEC: sec
+    SEC MD&A and Risk Factors: sec_mda_risk_factors
+    Market Data: market_data
   crewai:
     max_iterations: 10
     max_requests_per_minute: 30
@@ -52,7 +52,7 @@ defaults:
   crew_logs_dir: logs
   filings_dir: filings
   logs_dir: logs
-  sec_filing_index_dir: sec_filing_index
+  vector_store_index_dir: vector_store_index
   fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
     - Total revenue

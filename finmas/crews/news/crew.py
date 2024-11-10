@@ -6,7 +6,7 @@ from crewai_tools import LlamaIndexTool
 
 from finmas.constants import agent_config, defaults
 from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.crews.utils import NewsCrewConfiguration
+from finmas.crews.utils import NewsCrewConfiguration, get_log_filename
 from finmas.data.news.query_engine import get_news_query_engine
 
 
@@ -36,6 +36,7 @@ class NewsAnalysisCrew:
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
         self.news_query_engine, self.index_creation_metrics = get_news_query_engine(
+            ticker,
             records,
             llm_provider,
             llm_model,
@@ -100,18 +101,21 @@ class NewsAnalysisCrew:
     def news_analyzer_task(self) -> Task:
         return Task(
             config=self.tasks_config["news_analyzer_task"],  # type: ignore
+            async_execution=True,
         )
 
     @task
     def sentiment_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config["sentiment_analysis_task"],  # type: ignore
+            async_execution=True,
         )
 
     @task
     def news_summary_task(self) -> Task:
         return Task(
             config=self.tasks_config["news_summary_task"],  # type: ignore
+            context=[self.news_analyzer_task(), self.sentiment_analysis_task()],
         )
 
     @crew
@@ -119,10 +123,14 @@ class NewsAnalysisCrew:
         """Creates News Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
-            tasks=self.tasks,  # type: ignore
+            tasks=[
+                self.news_analyzer_task(),
+                self.sentiment_analysis_task(),
+                self.news_summary_task(),
+            ],
             cache=True,
             process=Process.sequential,
             verbose=True,
             planning=True,
-            output_log_file=f"{defaults['crew_logs_dir']}/{self.name}_crew.log",
+            output_log_file=get_log_filename(self.name),
         )
