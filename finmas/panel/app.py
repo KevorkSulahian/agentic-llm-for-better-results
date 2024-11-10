@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
-from finmas.constants import INCOME_STATEMENT_COLS, defaults
+from finmas.constants import DOCS_URL, defaults
 from finmas.crews.news.crew import NewsAnalysisCrew
 from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.sec_mda_risk_factors.crew import SECFilingSectionsCrew
@@ -21,18 +21,27 @@ from finmas.crews.utils import (
     get_yaml_config_as_markdown,
     save_crew_output,
 )
-from finmas.data import get_income_statement_df, get_price_data
+from finmas.data.market.fundamentals import NUM_QUARTERS, get_ticker_essentials
+from finmas.data.market.technical_analysis import get_technical_indicators
 from finmas.data.news import get_news_fetcher
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
 from finmas.panel.formatting import (
+    INCOME_STATEMENT_COLS_MAP,
     income_statement_config,
     llm_models_config,
     news_config,
-    ohlcv_config,
     sec_filings_config,
+    ta_config,
+    ta_styler,
     tickers_config,
 )
-from finmas.utils.common import format_time_spent, get_tickers_df, get_valid_models, to_datetime
+from finmas.panel.plotting import get_income_statment_plot_figure, get_ta_plot_figure
+from finmas.utils.common import (
+    format_time_spent,
+    get_llm_models_df,
+    get_tickers_df,
+    to_datetime,
+)
 
 hvplot.extension("plotly")
 pn.extension(
@@ -46,6 +55,7 @@ load_dotenv(find_dotenv())
 
 
 class FinMAS(pn.viewable.Viewer):
+    llm_selected = pn.widgets.StaticText(name="LLM", value="")
     llm_provider = pn.widgets.Select(
         name="LLM Provider",
         options=defaults["llm_providers"],
@@ -64,25 +74,7 @@ class FinMAS(pn.viewable.Viewer):
         options=defaults["hf_embedding_models"],
         width=250,
     )
-    ticker_select = pn.widgets.Select(name="Ticker", disabled=True, width=100)
-    start_picker = pn.widgets.DatetimeInput(
-        name="Start",
-        format="%Y-%m-%d",
-        value=dt.date.fromisoformat(defaults["start_date"]),
-        width=100,
-    )
-    end_picker = pn.widgets.DatetimeInput(
-        name="End",
-        format="%Y-%m-%d",
-        value=dt.date.today(),
-        width=100,
-    )
-    freq_select = pn.widgets.Select(
-        name="Fundamental Freq",
-        options=["Quarterly", "Annual"],
-        value=defaults["fundamental_freq"],
-        width=100,
-    )
+    ticker_select = pn.widgets.StaticText(name="Ticker")
     news_source = pn.widgets.Select(
         name="News Source",
         value=defaults["news_source"],
@@ -101,8 +93,10 @@ class FinMAS(pn.viewable.Viewer):
         value=dt.date.today(),
         width=100,
     )
-    include_fundamental_data = pn.widgets.Checkbox(name="Include Fundamental Data", value=False)
-    include_news = pn.widgets.Checkbox(name="Include News", value=False)
+    include_fundamental_data = pn.widgets.Checkbox(
+        name="Include Fundamental Data", value=defaults["include_fundamental_data"]
+    )
+    include_news = pn.widgets.Checkbox(name="Include News", value=defaults["include_news"])
     only_sp500_tickers = pn.widgets.Checkbox(
         name="SP500 Tickers", value=defaults["only_sp500_tickers"]
     )
@@ -154,7 +148,7 @@ class FinMAS(pn.viewable.Viewer):
         self.fetch_data(None)
 
         # Crews
-        self.crew_select.param.watch(self.update_crew_config_markdown, "value")
+        self.crew_select.param.watch(self.handle_crew_select_change, "value")
         self.crew_select.options = defaults["crews"]
         self.crew_select.value = defaults["crew"]
 
@@ -166,8 +160,16 @@ class FinMAS(pn.viewable.Viewer):
 
         self.about_md = pn.pane.Markdown(about)
 
-    def update_crew_config_markdown(self, event):
-        """Update the crew configuration markdown"""
+    def handle_crew_select_change(self, event):
+        """Handle the change of the crew select"""
+        if self.crew_select.value == "market_data":
+            self.similarity_top_k.disabled = True
+            self.compress_sec_filing.disabled = True
+        else:
+            self.similarity_top_k.disabled = False
+            self.compress_sec_filing.disabled = False
+
+        # Update the crew configuration markdown
         config_path = Path(__file__).parent.parent / "crews" / self.crew_select.value / "config"
         self.crew_agents_config_md.object = get_yaml_config_as_markdown(config_path, "agents")
         self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks")
@@ -182,7 +184,6 @@ class FinMAS(pn.viewable.Viewer):
             )
         else:
             self.tickers_tbl.value = df
-        self.ticker_select.options = df["ticker"].tolist()
 
     def handle_tickers_tbl_click(self, event):
         """Callback for when a row in the tickers table is clicked"""
@@ -196,23 +197,20 @@ class FinMAS(pn.viewable.Viewer):
         Initializes the table with the Tabulator widget.
         The current LLM model is selected in the table.
         """
-        df = get_valid_models(self.llm_provider.value)
-        models = df["id"].tolist()
-        self.llm_model.options = models
-        self.llm_model.value = defaults[f"{self.llm_provider.value}_llm_model"]
-        selection = df.index[df["id"] == self.llm_model.value].tolist()
 
         if getattr(self, "llm_models_tbl", None) is None:
             # Initialize the models table
+            df = get_llm_models_df(self.llm_provider.options)
             self.llm_models_tbl = pn.widgets.Tabulator(
                 df,
                 on_click=self.handle_llm_models_tbl_click,
-                selection=selection,
                 **llm_models_config,
             )
-        else:
-            self.llm_models_tbl.value = df
-            self.llm_models_tbl.selection = selection
+            self.llm_model.options = df.loc[
+                df["provider"] == self.llm_provider.value, "id"
+            ].tolist()
+            self.llm_model.value = defaults[f"{self.llm_provider.value}_llm_model"]
+            self.llm_selected.value = f"{self.llm_provider.value} / {self.llm_model.value}"
 
         # Update embedding models options
         prefix = "openai" if self.llm_provider.value == "openai" else "hf"
@@ -224,14 +222,18 @@ class FinMAS(pn.viewable.Viewer):
     def handle_llm_models_tbl_click(self, event):
         """Callback for when a row in LLM models table is clicked"""
         llm_model_id = self.llm_models_tbl.value.iloc[event.row]["id"]
+        llm_provider = self.llm_models_tbl.value.iloc[event.row]["provider"]
+        if self.llm_provider.value != llm_provider:
+            self.llm_provider.value = llm_provider
         if self.llm_model.value != llm_model_id:
             self.llm_model.value = llm_model_id
+        self.llm_selected.value = f"{self.llm_provider.value} / {self.llm_model.value}"
 
     def fetch_data(self, event) -> None:
         """Main handler for fetching data for the app"""
         with self.fetch_data_btn.param.update(loading=True):
             start = time.time()
-            self.fetch_price_data(event)
+            self.fetch_technical_analysis_data(event)
 
             if self.include_fundamental_data.value:
                 self.fetch_fundamental_data(event)
@@ -257,25 +259,25 @@ class FinMAS(pn.viewable.Viewer):
         message += f". Spent {self.time_elapsed.get('fetch_data', 0)}s"
         return pn.pane.Alert(message, alert_type=alert_type)
 
-    def fetch_price_data(self, event) -> None:
+    def fetch_technical_analysis_data(self, event) -> None:
         """Fetch price data from Yahoo Finance"""
-        df = get_price_data(
-            ticker=self.ticker_select.value,
-            start=self.start_picker.value,
-            end=self.end_picker.value,
-        )
+        df = get_technical_indicators(ticker=self.ticker_select.value, period="5y")
         df = df.reset_index(names="date")
 
-        if getattr(self, "ohlcv_tbl", None) is None:
-            self.ohlcv_tbl = pn.widgets.Tabulator(df, **ohlcv_config)
-        elif isinstance(self.ohlcv_tbl, pn.widgets.Tabulator):
-            self.ohlcv_tbl.value = df
+        if getattr(self, "ta_tbl", None) is None:
+            self.ta_tbl = pn.widgets.Tabulator(df.style.pipe(ta_styler), **ta_config)
+        elif isinstance(self.ta_tbl, pn.widgets.Tabulator):
+            self.ta_tbl.value = df
 
     def fetch_fundamental_data(self, event) -> None:
         """Fetch fundamental data"""
-        df = get_income_statement_df(
-            ticker=self.ticker_select.value, freq=self.freq_select.value, cols=INCOME_STATEMENT_COLS
-        )
+        df: pd.DataFrame = get_ticker_essentials(ticker=self.ticker_select.value)
+        df = df.tail(NUM_QUARTERS * 2)
+        df = df.dropna(axis=0, how="any")
+        assert isinstance(df.index, pd.DatetimeIndex)
+        df.index.name = "date"
+        df = df[list(INCOME_STATEMENT_COLS_MAP.keys())].copy()
+        df.sort_index(ascending=False, inplace=True)
 
         if getattr(self, "income_statement_tbl", None) is None:
             self.income_statement_tbl = pn.widgets.Tabulator(  # type: ignore
@@ -353,41 +355,15 @@ class FinMAS(pn.viewable.Viewer):
 
     def get_ta_plot(self, *args, **kwargs) -> go.Figure:
         """Get the plot for Technical analysis"""
-        if self.ohlcv_tbl is None or self.ohlcv_tbl.value.empty:
+        if self.ta_tbl is None or self.ta_tbl.value.empty:
             return pn.pane.Markdown("No Technical Analysis data")
-        df = self.ohlcv_tbl.value
-        fig = go.Figure(
-            data=[
-                go.Candlestick(
-                    x=df["date"],
-                    open=df["open"],
-                    high=df["high"],
-                    low=df["low"],
-                    close=df["close"],
-                )
-            ]
-        )
-        fig.update_layout(
-            autosize=True,
-            margin=dict(l=10, r=10, t=30, b=10),
-            xaxis_title="Date",
-            yaxis=dict(title="Price (USD)", side="right"),
-        )
-        fig.update_xaxes(
-            rangeselector=dict(
-                buttons=list(
-                    [
-                        dict(count=1, label="1m", step="month", stepmode="backward"),
-                        dict(count=6, label="6m", step="month", stepmode="backward"),
-                        dict(count=1, label="YTD", step="year", stepmode="todate"),
-                        dict(count=1, label="1y", step="year", stepmode="backward"),
-                        dict(step="all"),
-                    ]
-                )
-            ),
-            type="date",
-        )
-        return pn.pane.Plotly(fig)
+        df = self.ta_tbl.value
+
+        return pn.pane.Plotly(get_ta_plot_figure(df))
+
+    def get_ta_plot_title(self, *args, **kwargs) -> str:
+        """Get the title for the Technical analysis plot"""
+        return f"{self.ticker_select.value} - Technical Analysis (Weekly Timeframe)"
 
     def get_income_statement_plot(self, *args, **kwargs) -> go.Figure:
         """Plot income statement table"""
@@ -397,30 +373,14 @@ class FinMAS(pn.viewable.Viewer):
         ):
             return pn.pane.Markdown("No Fundamental data")
         assert isinstance(self.income_statement_tbl, pn.widgets.Tabulator)
-        df = self.income_statement_tbl.value
+        df = self.income_statement_tbl.value.copy()
+        df = df.sort_index()
+        df = df.tail(NUM_QUARTERS)
 
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(x=df.index, y=df["totalRevenue"], mode="lines", name="Total Revenue")
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=df.index, y=df["operatingExpenses"], mode="lines", name="Operating Expenses"
-            )
-        )
-        fig.add_trace(
-            go.Scatter(x=df.index, y=df["grossProfit"], mode="lines", name="Gross Profit")
-        )
-        fig.add_trace(go.Scatter(x=df.index, y=df["netIncome"], mode="lines", name="Net Income"))
+        assert isinstance(df.index, pd.DatetimeIndex)
+        df.index = df.index.to_period("Q").strftime("%YQ%q")
 
-        fig.update_layout(
-            autosize=True,
-            margin=dict(l=10, r=10, t=30, b=10),
-            xaxis_title="",
-            yaxis=dict(title="USD", side="right"),
-            legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=0),
-        )
-        return pn.pane.Plotly(fig)
+        return pn.pane.Plotly(get_income_statment_plot_figure(df))
 
     def generate_crew_output(self, event) -> None:
         """
@@ -517,12 +477,10 @@ class FinMAS(pn.viewable.Viewer):
         return pn.Row(
             pn.Column(
                 pn.WidgetBox(
-                    self.llm_provider,
-                    self.llm_model,
+                    self.ticker_select,
+                    self.llm_selected,
                     self.embedding_model_news,
                     self.embedding_model_sec,
-                    pn.Row(self.ticker_select, self.freq_select),
-                    pn.Row(self.start_picker, self.end_picker),
                     self.news_source,
                     pn.Row(self.news_start, self.news_end),
                     self.include_fundamental_data,
@@ -544,12 +502,15 @@ class FinMAS(pn.viewable.Viewer):
                                         pn.bind(
                                             self.get_ta_plot, update_counter=self.update_counter
                                         ),
-                                        width=600,
+                                        width=700,
                                         height=400,
                                         margin=10,
-                                        title="Technical Analysis",
+                                        title=pn.bind(
+                                            self.get_ta_plot_title,
+                                            update_counter=self.update_counter,
+                                        ),
                                     ),
-                                    self.ohlcv_tbl,
+                                    self.ta_tbl,
                                 ),
                                 pn.Column(
                                     pn.Card(
@@ -557,7 +518,7 @@ class FinMAS(pn.viewable.Viewer):
                                             self.get_income_statement_plot,
                                             update_counter=self.update_counter,
                                         ),
-                                        width=600,
+                                        width=700,
                                         height=400,
                                         margin=10,
                                         title="Income Statement",
@@ -634,3 +595,9 @@ if pn.state.served:
     args = argparse.Namespace()
     args.ticker = args_list[0] if args_list else None
     FinMAS(ticker=args.ticker).servable(title="FinMAS - Financial Multi-Agent System")
+
+    menu_html = f"""
+        <a href="{DOCS_URL}" class="button-style">Docs</a>
+        """
+    app_menu = pn.Row(pn.pane.HTML(menu_html, align="end"))
+    app_menu.servable(area="header")

@@ -7,7 +7,7 @@ and perform financial tasks. The app is developed during the final capstone proj
 It is meant as a practical and educational app that demonstrates the state-of-the-art of LLM models applied
 to tasks in the financial domain, and with an extra focus on open source models and packages.
 
-Please visit [GitHub repo](https://github.com/KevorkSulahian/agentic-llm-for-better-results) for further information.
+Please visit [GitHub repo](https://github.com/KevorkSulahian/agentic-llm-for-better-results) and our [docs](https://kevorksulahian.github.io/agentic-llm-for-better-results/) for further information.
 
 ### Data Sources
 
@@ -27,8 +27,9 @@ be done by editing the `.env` file in the root folder.
 
 Here we list some of the main packages that make this app possible:
 
-| Name        | Description                                              |
-| ----------- | -------------------------------------------------------- |
-| crewai      | Multi-agent orchestration framework                      |
-| llama-index | Data framework to help transform data to be used by LLMs |
-| panel       | Web app framework focused on data science applications   |
+| Name                                                 | Description                                              |
+| ---------------------------------------------------- | -------------------------------------------------------- |
+| [crewai](https://docs.crewai.com/introduction)       | Multi-agent orchestration framework                      |
+| [llama-index](https://docs.llamaindex.ai/en/stable/) | Data framework to help transform data to be used by LLMs |
+| [panel](https://panel.holoviz.org/)                  | Web app framework focused on data science applications   |
+| [groq](https://groq.com/)                            | Run hosted open source LLMs in the cloud                 |

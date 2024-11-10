@@ -2,6 +2,7 @@ import yaml
 from pathlib import Path
 
 CONFIG_FILE = "config.yaml"
+DOCS_URL = "https://kevorksulahian.github.io/agentic-llm-for-better-results/"
 INCOME_STATEMENT_COLS = ["totalRevenue", "operatingExpenses", "grossProfit", "netIncome"]
 
 # Tickers Table

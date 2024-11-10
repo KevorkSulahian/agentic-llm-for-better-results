@@ -98,8 +98,8 @@ def get_technical_indicators(ticker: str, **kwargs) -> pd.DataFrame:
         }
     )
 
-    df["sma_50"] = sma_indicator(df["close"], window=50)
     df["sma_20"] = sma_indicator(df["close"], window=20)
+    df["sma_50"] = sma_indicator(df["close"], window=50)
     df["sma_trend"] = np.where(
         (df["close"] > df["sma_50"]) & (df["close"] > df["sma_50"]),
         "Up",
@@ -111,5 +111,6 @@ def get_technical_indicators(ticker: str, **kwargs) -> pd.DataFrame:
     )
     df["rsi_14"] = rsi(df["close"], window=14)
     df["bb_pband"] = bollinger_pband(df["close"], window=20) * 100
+    df["ret_1w"] = df["close"].pct_change(periods=1)
 
     return df

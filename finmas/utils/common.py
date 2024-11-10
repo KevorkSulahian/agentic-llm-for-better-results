@@ -60,6 +60,14 @@ def get_valid_models(llm_provider: str) -> pd.DataFrame:
         raise ValueError(f"Invalid LLM provider: {llm_provider}")
 
 
+def get_llm_models_df(llm_providers: list[str]) -> pd.DataFrame:
+    """Get a DataFrame of the current active LLM models from multiple providers"""
+    dfs = []
+    for provider in llm_providers:
+        dfs.append(get_valid_models(provider))
+    return pd.concat(dfs).reset_index(drop=True)
+
+
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
 def get_huggingface_models():
     """Get a DataFrame of the current active HuggingFace LLM models"""
@@ -78,23 +86,18 @@ def get_huggingface_models():
         ).strip()
 
         model_info = model_text.split(" ")
-        models.append(
-            {
-                "id": model_info[0],
-                "downloads": model_info[-2],
-                "likes": model_info[-1],
-            }
-        )
+        models.append({"id": model_info[0]})
 
     df = pd.DataFrame(models)
     df["context_window"] = np.nan
     df["owned_by"] = df["id"].str.split("/").str[0]
     df["created"] = np.nan
+    df.insert(0, "provider", "huggingface")
 
     return df
 
 
-@cache.memoize(expire=dt.timedelta(days=1).total_seconds())
+# @cache.memoize(expire=dt.timedelta(seconds=1).total_seconds())
 def get_groq_models() -> pd.DataFrame:
     """Get a DataFrame of the currenct active Groq models"""
     headers = {
@@ -110,9 +113,8 @@ def get_groq_models() -> pd.DataFrame:
 
     df = df[~df["id"].str.contains("whisper")]
     df = df[~df["id"].str.contains("vision")]
-    df["downloads"] = np.nan
-    df["likes"] = np.nan
-    df = df[["id", "downloads", "likes", "context_window", "owned_by", "created"]]
+    df = df[["id", "context_window", "owned_by", "created"]]
+    df.insert(0, "provider", "groq")
 
     return df.sort_values(by=["owned_by", "context_window", "id"]).reset_index(drop=True)
 
@@ -121,9 +123,8 @@ def get_openai_models() -> pd.DataFrame:
     """Get a DataFrame of the currenct active OpenAI models"""
     df = pd.DataFrame(
         {
+            "provider": "openai",
             "id": defaults["openai_models"],
-            "downloads": np.nan,
-            "likes": np.nan,
             "context_window": np.nan,
             "owned_by": "OpenAI",
             "created": np.nan,

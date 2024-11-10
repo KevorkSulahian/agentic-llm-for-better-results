@@ -145,7 +145,9 @@ def get_ticker_essentials(ticker: str) -> pd.DataFrame:
     # Income statement
     income_df = get_income_statement_df(ticker, "Quarterly")
     income_df.sort_index(inplace=True)
-    df = income_df[["totalRevenue", "netIncome", "netProfitMargin"]].copy()
+    df = income_df[
+        ["totalRevenue", "grossProfit", "operatingExpenses", "netIncome", "netProfitMargin"]
+    ].copy()
 
     df["close"] = price_df.reindex(df.index, method="ffill")["close"]
 

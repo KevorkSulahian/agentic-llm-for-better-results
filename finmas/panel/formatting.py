@@ -1,13 +1,22 @@
 from bokeh.models.widgets.tables import DateFormatter, HTMLTemplateFormatter, NumberFormatter
 
+INCOME_STATEMENT_COLS_MAP = {
+    "totalRevenue": "Total Revenue",
+    "operatingExpenses": "OpEx",
+    "grossProfit": "Gross Profit",
+    "netIncome": "Net Income",
+    "netProfitMargin": "Net Profit Margin (%)",
+}
+
 income_statement_config = dict(
+    titles=INCOME_STATEMENT_COLS_MAP,
     formatters={
-        "fiscalDateEnding": DateFormatter(format="%Y-%m-%d"),
+        "date": DateFormatter(format="%Y-%m-%d"),
         "totalRevenue": NumberFormatter(format="0.0a"),
         "operatingExpenses": NumberFormatter(format="0.0a"),
         "grossProfit": NumberFormatter(format="0.0a"),
         "netIncome": NumberFormatter(format="0.0a"),
-        "netProfitMargin": NumberFormatter(format="0.0%"),
+        "netProfitMargin": NumberFormatter(format="0.0"),
     },
     text_align="center",
     page_size=5,
@@ -15,11 +24,25 @@ income_statement_config = dict(
     disabled=True,
 )
 
-ohlcv_config = dict(
+ta_config = dict(
+    titles={
+        "date": "Date",
+        "close": "Close",
+        "sma_20": "SMA 20",
+        "sma_50": "SMA 50",
+        "sma_trend": "SMA Trend",
+        "rsi_14": "RSI 14",
+        "bb_pband": "BB %",
+        "ret_1w": "1W Ret. (%)",
+    },
     formatters={
         "date": DateFormatter(format="%Y-%m-%d"),
         "close": NumberFormatter(format="0,0.00"),
-        "volume": NumberFormatter(format="0,0"),
+        "sma_20": NumberFormatter(format="0,0.00"),
+        "sma_50": NumberFormatter(format="0,0.00"),
+        "rsi_14": NumberFormatter(format="0"),
+        "bb_pband": NumberFormatter(format="0"),
+        "ret_1w": NumberFormatter(format="0.0%"),
     },
     hidden_columns=["open", "high", "low"],
     text_align="center",
@@ -29,6 +52,28 @@ ohlcv_config = dict(
     show_index=False,
     disabled=True,
 )
+
+
+def ta_styler(styler):
+    styler.background_gradient(axis=None, vmin=20, vmax=80, cmap="Spectral_r", subset=["rsi_14"])
+    styler.background_gradient(axis=None, vmin=0, vmax=100, cmap="Spectral_r", subset=["bb_pband"])
+    styler.map(trend_style, subset=["sma_trend"])
+    styler.map(float_color_style, subset=["ret_1w"])
+    return styler
+
+
+def trend_style(v):
+    if v == "Up":
+        return "color:green;"
+    elif v == "Down":
+        return "color:red;"
+    else:
+        return "color:black;"
+
+
+def float_color_style(v):
+    return "color:red;" if v < 0 else "color:green;"
+
 
 news_config = dict(
     page_size=15,

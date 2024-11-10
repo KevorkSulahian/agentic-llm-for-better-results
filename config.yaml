@@ -4,7 +4,6 @@ defaults:
   llm_providers:
     - groq
     - openai
-    - huggingface
   groq_llm_model: llama3-8b-8192
   openai_llm_model: gpt-4o-mini
   openai_models:
@@ -39,13 +38,12 @@ defaults:
     - Micro
     - Nano
   only_sp500_tickers: False
-  crew: news
+  crew: sec_mda_risk_factors
   crews:
     - news
     - sec
     - sec_mda_risk_factors
     - market_data
-    - combined
   crewai:
     max_iterations: 10
     max_requests_per_minute: 30
@@ -84,3 +82,5 @@ defaults:
     text-embedding-ada-002: 1.0e-7
   fundamentals_tool:
     include_qoq: False
+  include_fundamental_data: True
+  include_news: False

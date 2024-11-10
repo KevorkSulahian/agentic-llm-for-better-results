@@ -1,11 +1,17 @@
+<div align="center">
+
 # FinMAS - Financial Analysis by Multi-Agent System
 
-## [Documentation](https://kevorksulahian.github.io/agentic-llm-for-better-results/)
+<h3>
 
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
-[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[Documentation](https://kevorksulahian.github.io/agentic-llm-for-better-results/) | [Example Outputs](https://github.com/KevorkSulahian/agentic-llm-for-better-results/tree/main/output/examples)
+
+</h3>
+
 [![Panel Hero](https://img.shields.io/badge/Panel-Hero)](https://panel.holoviz.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+</div>
 
 This repo contains the code for WQU Capstone project where we investigate the use of LLM multi-agent systems for solving tasks
 in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
