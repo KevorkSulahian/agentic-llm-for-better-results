@@ -1,7 +1,9 @@
 import datetime as dt
 import os
+import pickle
 import re
 import unicodedata
+from pathlib import Path
 
 from alpaca.data.historical.news import NewsClient
 from alpaca.data.models import News, NewsSet
@@ -9,8 +11,12 @@ from alpaca.data.requests import NewsRequest
 from bs4 import BeautifulSoup
 from html_to_markdown import convert_to_markdown
 
-from finmas.cache_config import cache
+from finmas.constants import defaults
 from finmas.data.news.news_fetcher import NewsFetcherBase
+from finmas.logger import get_logger, log_execution_time
+from finmas.utils.common import to_datetime
+
+logger = get_logger(__name__)
 
 BENZINGA_NEWS_LIMIT = 50
 
@@ -33,7 +39,7 @@ def condense_newline(text):
 
 
 class BenzingaNewsFetcher(NewsFetcherBase):
-    @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
+    @log_execution_time(logger)
     def get_news(
         self, ticker: str, start: dt.datetime | None = None, end: dt.datetime | None = None
     ) -> list[dict]:
@@ -41,6 +47,20 @@ class BenzingaNewsFetcher(NewsFetcherBase):
 
         Ref: https://docs.alpaca.markets/reference/news-3
         """
+        if start is None:
+            start = to_datetime(defaults["news_start_date"])
+        if end is None:
+            end = to_datetime(defaults["news_end_date"])
+
+        news_dir = Path(defaults["data_dir"]) / "benzinga_news" / ticker
+        news_dir.mkdir(parents=True, exist_ok=True)
+        filename = f"{start.strftime('%Y-%m-%d')}_{end.strftime('%Y-%m-%d')}.pkl"
+        file_path = news_dir / filename
+        if file_path.exists():
+            logger.info(f"Loading news data from '{file_path}'")
+            with open(file_path, "rb") as file:
+                return pickle.load(file)
+
         assert os.getenv("ALPACA_API_KEY") and os.getenv("ALPACA_API_SECRET")
 
         client = NewsClient(
@@ -111,6 +131,11 @@ class BenzingaNewsFetcher(NewsFetcherBase):
                 text=self.get_benzinga_content_text(news.content),
             )
             records.append(record)
+
+        if defaults["save_news_data"]:
+            with open(file_path, "wb") as file:
+                pickle.dump(records, file)
+                logger.info(f"Benzinga News data for '{ticker}' stored in '{file_path}'")
 
         return records
 

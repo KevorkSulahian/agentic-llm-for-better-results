@@ -73,9 +73,11 @@ def format_time_spent(seconds: float):
     return output
 
 
-def to_datetime(date: dt.date):
+def to_datetime(date: dt.date | str) -> dt.datetime:
     if isinstance(date, dt.date):
         return dt.datetime.combine(date, dt.time(0))
+    elif isinstance(date, str):
+        return dt.datetime.strptime(date, "%Y-%m-%d")
     raise ValueError("Input must be a datetime.date object")
 
 

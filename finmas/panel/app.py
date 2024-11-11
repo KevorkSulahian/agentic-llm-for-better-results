@@ -1,4 +1,3 @@
-import datetime as dt
 import os
 import time
 from pathlib import Path
@@ -83,13 +82,13 @@ class FinMAS(pn.viewable.Viewer):
     news_start = pn.widgets.DatetimeInput(
         name="Start",
         format="%Y-%m-%d",
-        value=dt.date.today() - dt.timedelta(days=14),
+        value=defaults["news_start_date"],
         width=100,
     )
     news_end = pn.widgets.DatetimeInput(
         name="End",
         format="%Y-%m-%d",
-        value=dt.date.today(),
+        value=defaults["news_end_date"],
         width=100,
     )
     include_fundamental_data = pn.widgets.Checkbox(

@@ -30,7 +30,8 @@ defaults:
     - Benzinga
     - Yahoo
   fundamental_freq: Annual
-  start_date: "2023-01-01"
+  news_start_date: 2024-10-01
+  news_end_date: 2024-11-10
   tickerid: NVDA
   tickers_market_cap_exclude:
     - Micro
@@ -51,6 +52,7 @@ defaults:
   crew_logs_dir: logs
   filings_dir: filings
   logs_dir: logs
+  data_dir: data
   vector_store_index_dir: vector_store_index
   fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
@@ -83,5 +85,7 @@ defaults:
     include_qoq: False
   include_fundamental_data: True
   include_news: False
+  save_fundamental_data: True
+  save_news_data: True
   save_text_content: True # Save text content of filings or news
   text_content_dir: output/text_content
