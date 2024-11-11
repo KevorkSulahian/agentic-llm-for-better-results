@@ -30,7 +30,8 @@ SENTENCES_IGNORE_LIST = [
     "read next",
     "click here",
 ]
-HEADLINE_IGNORE_LIST = ["market clubhouse"]
+HEADLINE_IGNORE_LIST = ["market clubhouse", "options", "bonds"]
+MAX_NUM_SYMBOLS = defaults["news_max_num_symbols"]
 
 
 def condense_newline(text):
@@ -91,14 +92,16 @@ class BenzingaNewsFetcher(NewsFetcherBase):
         records = []
 
         # Filter out news items from a fixed headline ignore list
-        news_items = [
-            news
-            for news in news_list
-            if not any(
-                ignore_headline.lower() in news.headline.lower()
-                for ignore_headline in HEADLINE_IGNORE_LIST
-            )
-        ]
+        news_items = []
+        for news in news_list:
+            if (
+                not any(
+                    ignore_headline.lower() in news.headline.lower()
+                    for ignore_headline in HEADLINE_IGNORE_LIST
+                )
+                and len(news.symbols) <= MAX_NUM_SYMBOLS
+            ):
+                news_items.append(news)
 
         for news in news_items:
             if news.content is None or len(news.content) == 0:

@@ -160,7 +160,7 @@ def get_sec_query_engine(
             ticker=ticker, data_type="sec", suffix=method.replace(":", "_")
         )
         file_path.write_text(text_content, encoding="utf-8")
-        logger.info(f"Saved text content to {file_path}")
+        logger.info(f"Saved SEC filing text content to {file_path}")
 
     from llama_index.core import Document
 
@@ -195,7 +195,7 @@ def get_sec_query_engine(
     )
 
     logger.info(
-        f"Created Vector Store Index with {len(index.index_struct.nodes_dict.keys())} nodes"
+        f"Created Vector Store Index for SEC filing with {len(index.index_struct.nodes_dict.keys())} nodes"
     )
 
     llama_index_llm = get_llama_index_llm(

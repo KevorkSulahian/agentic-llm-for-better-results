@@ -26,7 +26,7 @@ def get_news_query_engine(
         text_content = "\n\n".join(doc.text for doc in documents)
         file_path = get_text_content_file(ticker=ticker, data_type="news")
         file_path.write_text(text_content, encoding="utf-8")
-        logger.info(f"Saved text content to {file_path}")
+        logger.info(f"Saved news text content to {file_path}")
 
     embed_model = get_embedding_model(llm_provider, embedding_model)
 
@@ -39,12 +39,14 @@ def get_news_query_engine(
         documents, embed_model=embed_model, callback_manager=CallbackManager([token_counter])
     )
     index.storage_context.persist(persist_dir=get_vector_store_index_dir(ticker, "news"))
+    time_spent = round(time.time() - start, 2)
+    logger.info(f"News index created in {time_spent}s with {len(documents)} documents")
 
     text_length = sum([len(doc.text) for doc in documents])
 
     metrics = IndexCreationMetrics(
         embedding_model=embedding_model,
-        time_spent=round(time.time() - start, 2),
+        time_spent=time_spent,
         num_nodes=len(index.index_struct.nodes_dict.keys()),
         text_length=text_length,
         chunk_size=Settings.chunk_size,

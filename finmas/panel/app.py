@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 from pathlib import Path
 from typing import Union
 
@@ -27,6 +28,7 @@ from finmas.data.market.fundamentals import NUM_QUARTERS, get_ticker_essentials
 from finmas.data.market.technical_analysis import get_technical_indicators
 from finmas.data.news import get_news_fetcher
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
+from finmas.logger import get_logger
 from finmas.panel.formatting import (
     INCOME_STATEMENT_COLS_MAP,
     embedding_models_config,
@@ -56,6 +58,8 @@ pn.extension(
 )
 
 load_dotenv(find_dotenv())
+
+logger = get_logger(__name__)
 
 
 class FinMAS(pn.viewable.Viewer):
@@ -264,6 +268,8 @@ class FinMAS(pn.viewable.Viewer):
             message = "Set ALPHAVANTAGE_API_KEY in the .env file"
             alert_type = "danger"
         message += f". Spent {self.time_elapsed.get('fetch_data', 0)}s"
+        if getattr(self, "news_records", None):
+            message += f"\nFetched {len(self.news_records)} news articles."
         return pn.pane.Alert(message, alert_type=alert_type)
 
     def fetch_technical_analysis_data(self, event) -> None:
@@ -463,7 +469,11 @@ class FinMAS(pn.viewable.Viewer):
                         **model_config,
                     )
             except Exception as e:
-                self.crew_output_status.object = f"Error when setting up the crew: {str(e)}"
+                error_message = (
+                    f"Error when setting up the crew: {str(e)}\n\n{traceback.format_exc()}"
+                )
+                logger.error(error_message)
+                self.crew_output_status.object = error_message
                 self.crew_output_status.alert_type = "danger"
                 return
 
@@ -504,11 +514,14 @@ class FinMAS(pn.viewable.Viewer):
             crew_run_metrics = CrewRunMetrics(
                 config=crew.config, token_usage=output.token_usage, time_spent=time_spent
             )
-            file_path = save_crew_output(crew_run_metrics, output.raw)
+            file_path = save_crew_output(
+                crew_run_metrics, output.raw, index_creation_metrics_message
+            )
 
             self.crew_output_status.object = f"Output stored in {str(file_path)}"
             self.crew_output_status.alert_type = "success"
             self.crew_output.object = output.raw
+            logger.info(f"Crew finished successfully and output stored in {str(file_path)}")
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -565,6 +578,7 @@ class FinMAS(pn.viewable.Viewer):
                                     ),
                                 ),
                             ),
+                            pn.pane.HTML("<b>News Articles</b>"),
                             pn.Row(pn.bind(self.get_news_tbl, update_counter=self.update_counter)),
                         ),
                     ),

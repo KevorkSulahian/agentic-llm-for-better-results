@@ -169,26 +169,30 @@ def get_usage_metrics_as_string(usage_metrics: UsageMetrics, llm_model: str | No
     return output
 
 
-def save_crew_output(crew_run_metrics: CrewRunMetrics, output_content: str) -> Path:
+def save_crew_output(
+    crew_run_metrics: CrewRunMetrics, output_content: str, index_creation_message: str | None = None
+) -> Path:
     """Saves crew output together with metadata from the crew run.
 
     Args:
         crew_run_metrics: Metadata from the crew run.
         output_content: Crew output content.
     """
-    timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     config = crew_run_metrics.config
+
+    timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{config.ticker}_{config.name}_analysis_{timestamp}.md"
     output_dir = Path(defaults["crew_output_dir"]) / config.name
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    text_content = crew_run_metrics.markdown(crew_description=True)
+    if index_creation_message:
+        text_content += f"\n\n{index_creation_message}"
+    text_content += "\n\n## Crew output:\n\n" + output_content
+
     file_path = output_dir / filename
-    file_path.write_text(
-        crew_run_metrics.markdown(crew_description=True)
-        + "\n\n## Crew output:\n\n"
-        + output_content,
-        encoding="utf-8",
-    )
+    file_path.write_text(text_content, encoding="utf-8")
+
     return file_path
 
 

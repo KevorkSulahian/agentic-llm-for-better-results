@@ -14,7 +14,9 @@ class NewsFetcherBase(abc.ABC):
         pass
 
 
-def parse_news_to_documents(articles: list[dict], field: str = "summary") -> list:
+def parse_news_to_documents(
+    articles: list[dict], field: str = "summary", filter: bool = False
+) -> list:
     """
     Parses news records to LlamaIndex Documents.
     For each news article, a simple text string is created from the fields title, published and the content field specified by `field`.

@@ -76,7 +76,14 @@ def float_color_style(v):
 
 
 news_config = dict(
-    page_size=15,
+    titles={
+        "title": "Title",
+        "published": "Published",
+        "author": "Author",
+        "num_symbols": "Num Symbols",
+        "link": "Link",
+    },
+    page_size=20,
     pagination="local",
     # formatters={"link": {"type": "link", "target": "_blank"}},
     formatters={
@@ -88,8 +95,9 @@ news_config = dict(
     },
     header_filters={
         "title": {"type": "input", "func": "like", "placeholder": "Keyword"},
+        "author": {"type": "input", "func": "like", "placeholder": "Author"},
         "published": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
-        "num_symbols": {"type": "number", "func": "<=", "placeholder": "Max amount"},
+        "num_symbols": {"type": "number", "func": ">=", "placeholder": "Min amount"},
     },
     hidden_columns=["id", "summary", "content", "markdown_content", "text", "symbols"],
     # max_width=1000,

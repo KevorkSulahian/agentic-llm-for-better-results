@@ -1,5 +1,6 @@
 from enum import StrEnum
 from pathlib import Path
+from pprint import pprint
 from typing import Optional
 
 import pandas as pd
@@ -77,6 +78,26 @@ def download_news(
     df["published"] = df["published"].dt.strftime("%Y-%m-%d")
 
     print(df)
+
+
+@app.command()
+def clean_up():
+    """
+    Clean up data folders for news
+    """
+    print("Cleaning news data...")
+    # News
+    if typer.confirm("Do you want to clean the news data?", default=False):
+        news_dir = Path(defaults["data_dir"]) / "benzinga_news"
+        for folder in news_dir.iterdir():
+            if folder.is_dir():
+                files = [str(f) for f in folder.iterdir()]
+                pprint(files)
+                if typer.confirm(f"Delete folder '{folder}'?", default=False):
+                    for file in folder.iterdir():
+                        file.unlink()
+                    folder.rmdir()
+                    print("Deleted folder:", folder)
 
 
 if __name__ == "__main__":

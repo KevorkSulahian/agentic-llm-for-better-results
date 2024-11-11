@@ -32,6 +32,7 @@ defaults:
   fundamental_freq: Annual
   news_start_date: 2024-10-01
   news_end_date: 2024-11-10
+  news_max_num_symbols: 5 # Maximum number of symbols to be used in a news article
   tickerid: NVDA
   tickers_market_cap_exclude:
     - Micro

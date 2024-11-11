@@ -1,4 +1,5 @@
 import datetime as dt
+import time
 
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
@@ -11,6 +12,9 @@ from finmas.crews.utils import CombinedCrewConfiguration, get_log_filename
 from finmas.data.market import StockFundamentalsTool, TechnicalAnalysisTool
 from finmas.data.news.query_engine import get_news_query_engine
 from finmas.data.sec.query_engine import get_sec_query_engine
+from finmas.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 @CrewBase
@@ -44,6 +48,7 @@ class CombinedCrew:
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
     ):
+        start = time.time()
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
@@ -102,6 +107,7 @@ class CombinedCrew:
             filing_date=filing.filing_date,
         )
         super().__init__()
+        logger.info(f"Combined Crew initialized in {round(time.time() - start, 2)}s")
 
     @agent
     def news_analyst(self) -> Agent:
@@ -144,6 +150,16 @@ class CombinedCrew:
             memory=True,
             llm=self.crewai_llm,
             tools=[self.technical_analysis_tool],
+            **agent_config,
+        )
+
+    @agent
+    def stock_advisor(self) -> Agent:
+        return Agent(
+            config=self.agents_config["stock_advisor"],  # type: ignore
+            verbose=True,
+            memory=True,
+            llm=self.crewai_llm,
             **agent_config,
         )
 

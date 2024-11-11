@@ -12,6 +12,7 @@ embedding_models/
 storage/
 sec_storage/
 sec_filing_index/
+vector_store_index/
 
 # Crew Logs
 logs/
