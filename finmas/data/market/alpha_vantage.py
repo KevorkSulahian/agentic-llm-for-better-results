@@ -1,13 +1,16 @@
-import datetime as dt
 import os
+from pathlib import Path
 
 import pandas as pd
 from alpha_vantage.fundamentaldata import FundamentalData
 
-from finmas.cache_config import cache
+from finmas.constants import defaults
+from finmas.logger import get_logger, log_execution_time
+
+logger = get_logger(__name__)
 
 
-@cache.memoize(expire=dt.timedelta(days=1).total_seconds())
+@log_execution_time(logger)
 def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
     """Returns fundamental data for a given ticker using Alpha Vantage as data source.
     The full historical data is returned.
@@ -17,8 +20,20 @@ def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
         type: The type of the data. Either "income", "balance", "cash_flow" or "earnings"
         freq: The frequency of the data. Either "Annual" or "Quarterly"
     """
+    if type not in ["income", "balance", "cash_flow", "earnings"]:
+        raise ValueError(f"Invalid type '{type}'")
+    if freq not in ["Annual", "Quarterly"]:
+        raise ValueError(f"Invalid frequency '{freq}'")
+
+    fundamentals_dir = Path(defaults["data_dir"]) / "fundamentals" / ticker
+    fundamentals_dir.mkdir(parents=True, exist_ok=True)
+    file_path = fundamentals_dir / f"{type}_{freq.lower()}.csv"
+    if file_path.exists():
+        logger.info(f"Reading {type} data for '{ticker}' from '{str(file_path)}'")
+        return pd.read_csv(file_path, index_col=0, parse_dates=True)
 
     if os.getenv("ALPHAVANTAGE_API_KEY") is None:
+        logger.error("ALPHAVANTAGE_API_KEY environment variable not set.")
         return pd.DataFrame()
     fundamentals = FundamentalData(output_format="pandas")
 
@@ -61,6 +76,10 @@ def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
 
     df = df.dropna(axis=1, how="all")
 
+    if defaults["save_fundamental_data"]:
+        df.to_csv(file_path)
+        logger.info(f"{type.title()} data for '{ticker}' stored in '{str(file_path)}'")
+
     return df
 
 
@@ -76,6 +95,8 @@ def get_income_statement_df(ticker: str, freq: str, cols: list[str] | None = Non
     """
     df = get_fundamental_data(ticker=ticker, type="income", freq=freq)
 
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return pd.DataFrame()
     if cols:
         df = df[cols]
 

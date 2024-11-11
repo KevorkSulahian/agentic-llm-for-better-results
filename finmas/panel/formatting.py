@@ -2,8 +2,8 @@ from bokeh.models.widgets.tables import DateFormatter, HTMLTemplateFormatter, Nu
 
 INCOME_STATEMENT_COLS_MAP = {
     "totalRevenue": "Total Revenue",
-    "operatingExpenses": "OpEx",
     "grossProfit": "Gross Profit",
+    "operatingExpenses": "OpEx",
     "netIncome": "Net Income",
     "netProfitMargin": "Net Profit Margin (%)",
 }

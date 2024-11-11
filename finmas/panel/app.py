@@ -1,4 +1,3 @@
-import datetime as dt
 import os
 import time
 from pathlib import Path
@@ -8,10 +7,13 @@ import hvplot.pandas  # noqa: F401
 import pandas as pd
 import panel as pn
 import plotly.graph_objects as go
+from crewai import Crew
 from dotenv import find_dotenv, load_dotenv
 from panel.viewable import Viewable
 
 from finmas.constants import DOCS_URL, defaults
+from finmas.crews.combined.crew import CombinedCrew
+from finmas.crews.market_data.crew import MarketDataCrew
 from finmas.crews.news.crew import NewsAnalysisCrew
 from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.sec_mda_risk_factors.crew import SECFilingSectionsCrew
@@ -64,15 +66,9 @@ class FinMAS(pn.viewable.Viewer):
         width=100,
     )
     llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
-    embedding_model_news = pn.widgets.Select(
-        name="Embedding Model News",
-        value=defaults["hf_embedding_model_news"],
-        options=defaults["hf_embedding_models"],
-        width=250,
-    )
-    embedding_model_sec = pn.widgets.Select(
-        name="Embedding Model SEC",
-        value=defaults["hf_embedding_model_sec"],
+    embedding_model = pn.widgets.Select(
+        name="Embedding Model for Text",
+        value=defaults["hf_embedding_model"],
         options=defaults["hf_embedding_models"],
         width=250,
     )
@@ -86,13 +82,13 @@ class FinMAS(pn.viewable.Viewer):
     news_start = pn.widgets.DatetimeInput(
         name="Start",
         format="%Y-%m-%d",
-        value=dt.date.today() - dt.timedelta(days=14),
+        value=defaults["news_start_date"],
         width=100,
     )
     news_end = pn.widgets.DatetimeInput(
         name="End",
         format="%Y-%m-%d",
-        value=dt.date.today(),
+        value=defaults["news_end_date"],
         width=100,
     )
     include_fundamental_data = pn.widgets.Checkbox(
@@ -227,10 +223,8 @@ class FinMAS(pn.viewable.Viewer):
 
         # Update embedding models options
         prefix = "openai" if self.llm_provider.value == "openai" else "hf"
-        self.embedding_model_news.options = defaults[f"{prefix}_embedding_models"]
-        self.embedding_model_sec.options = defaults[f"{prefix}_embedding_models"]
-        self.embedding_model_news.value = defaults[f"{prefix}_embedding_model_news"]
-        self.embedding_model_sec.value = defaults[f"{prefix}_embedding_model_sec"]
+        self.embedding_model.options = defaults[f"{prefix}_embedding_models"]
+        self.embedding_model.value = defaults[f"{prefix}_embedding_model"]
 
     def handle_llm_models_tbl_click(self, event):
         """Callback for when a row in LLM models table is clicked"""
@@ -406,7 +400,16 @@ class FinMAS(pn.viewable.Viewer):
         Displays the output in Markdown.
         """
         with self.kickoff_crew_btn.param.update(loading=True):
-            crew: Union[NewsAnalysisCrew, SECFilingCrew, SECFilingSectionsCrew]
+            if (
+                self.crew_select.value in ["news", "combined"]
+                and getattr(self, "news_records", None) is None
+            ):
+                self.crew_output.object = "Need to fetch news data first."
+                return
+
+            crew: Union[
+                NewsAnalysisCrew, SECFilingCrew, SECFilingSectionsCrew, MarketDataCrew, CombinedCrew
+            ]
             start = time.time()
             model_config = dict(
                 ticker=self.ticker_select.value,
@@ -414,36 +417,49 @@ class FinMAS(pn.viewable.Viewer):
                 llm_model=self.llm_model.value,
                 temperature=self.llm_temperature.value,
                 max_tokens=self.llm_max_tokens.value,
-                similarity_top_k=self.similarity_top_k.value,
             )
 
-            self.crew_usage_metrics.object = (
-                "Loading embedding model and creating vector store index"
-            )
+            if self.crew_select.value != "market_data":
+                self.crew_usage_metrics.object = (
+                    "Loading embedding model and creating vector store index"
+                )
             try:
                 if self.crew_select.value == "news":
-                    if getattr(self, "news_records", None) is None:
-                        self.crew_output.object = "Need to fetch news data first."
-                        return
                     crew = NewsAnalysisCrew(
                         records=self.news_records,
-                        embedding_model=self.embedding_model_news.value,
+                        embedding_model=self.embedding_model.value,
                         news_source=self.news_source.value,
                         news_start=self.news_start.value,
                         news_end=self.news_end.value,
+                        similarity_top_k=self.similarity_top_k.value,
                         **model_config,
                     )
                 elif self.crew_select.value == "sec":
                     crew = SECFilingCrew(
-                        embedding_model=self.embedding_model_sec.value,
+                        embedding_model=self.embedding_model.value,
                         filing=self.sec_filing,
                         compress_filing=self.compress_sec_filing.value,
+                        similarity_top_k=self.similarity_top_k.value,
                         **model_config,
                     )
                 elif self.crew_select.value == "sec_mda_risk_factors":
                     crew = SECFilingSectionsCrew(
-                        embedding_model=self.embedding_model_sec.value,
+                        embedding_model=self.embedding_model.value,
                         filing=self.sec_filing,
+                        similarity_top_k=self.similarity_top_k.value,
+                        **model_config,
+                    )
+                elif self.crew_select.value == "market_data":
+                    crew = MarketDataCrew(**model_config)
+                elif self.crew_select.value == "combined":
+                    crew = CombinedCrew(
+                        records=self.news_records,
+                        embedding_model=self.embedding_model.value,
+                        news_source=self.news_source.value,
+                        news_start=self.news_start.value,
+                        news_end=self.news_end.value,
+                        filing=self.sec_filing,
+                        similarity_top_k=self.similarity_top_k.value,
                         **model_config,
                     )
             except Exception as e:
@@ -460,9 +476,11 @@ class FinMAS(pn.viewable.Viewer):
 
             self.crew_usage_metrics.object = index_creation_metrics_message + "Started crew..."
 
-            inputs = {"ticker": self.ticker_select.value, "form": self.sec_filing.form}
+            inputs = {"ticker": self.ticker_select.value}
+            if crew.name not in ["market_data", "news"]:
+                inputs["form"] = self.sec_filing.form
             try:
-                crew_ready = crew.crew()
+                crew_ready: Crew = crew.crew()
                 output = crew_ready.kickoff(inputs=inputs)
             except Exception as e:
                 self.crew_output_status.object = (
@@ -498,8 +516,7 @@ class FinMAS(pn.viewable.Viewer):
                 pn.WidgetBox(
                     self.ticker_select,
                     self.llm_selected,
-                    self.embedding_model_news,
-                    self.embedding_model_sec,
+                    self.embedding_model,
                     self.news_source,
                     pn.Row(self.news_start, self.news_end),
                     self.include_fundamental_data,

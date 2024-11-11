@@ -7,7 +7,10 @@ from pydantic import BaseModel, Field
 from finmas.constants import defaults
 from finmas.data.market.alpha_vantage import get_fundamental_data, get_income_statement_df
 from finmas.data.market.yahoo_finance import get_price_data
-from finmas.utils.common import extract_cols_from_df
+from finmas.logger import get_logger
+from finmas.utils.common import extract_cols_from_df, get_text_content_file
+
+logger = get_logger(__name__)
 
 BASIC_COLS_MAP = {
     "totalRevenue": "Total Revenue",
@@ -72,6 +75,9 @@ class StockFundamentalsTool(BaseTool):
         include_qoq = defaults["fundamentals_tool"]["include_qoq"]
 
         df: pd.DataFrame = get_ticker_essentials(ticker)
+        if df.empty:
+            return f"No data found for {ticker}."
+
         df = df.tail(NUM_QUARTERS)
         df = df.dropna(axis=0, how="any")
         assert isinstance(df.index, pd.DatetimeIndex)
@@ -121,6 +127,13 @@ class StockFundamentalsTool(BaseTool):
             )
             table_output += "\n\n" + qoq_table_context + qoq_df.to_markdown(**tabulate_config)
 
+        if defaults["save_text_content"]:
+            file_path = get_text_content_file(
+                ticker, data_type="market_data", suffix="fundamentals"
+            )
+            file_path.write_text(table_output)
+            logger.info(f"Fundamental data saved to {file_path}")
+
         return table_output
 
 
@@ -144,6 +157,9 @@ def get_ticker_essentials(ticker: str) -> pd.DataFrame:
 
     # Income statement
     income_df = get_income_statement_df(ticker, "Quarterly")
+    if income_df.empty:
+        return pd.DataFrame()
+
     income_df.sort_index(inplace=True)
     df = income_df[
         ["totalRevenue", "grossProfit", "operatingExpenses", "netIncome", "netProfitMargin"]
@@ -192,8 +208,3 @@ def get_ticker_essentials(ticker: str) -> pd.DataFrame:
     df["netProfitMargin_ttm"] *= 100
 
     return df
-
-
-if __name__ == "__main__":
-    df = get_ticker_essentials("META")
-    print(df)

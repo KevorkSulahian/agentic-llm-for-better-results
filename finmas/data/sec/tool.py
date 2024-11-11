@@ -17,7 +17,7 @@ class SECSemanticSearchTool:
 
     def __init__(
         self,
-        model_name: str = defaults["hf_embedding_model_sec"],
+        model_name: str = defaults["hf_embedding_model"],
         predefined_metrics: list[str] | None = None,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         overlap: int = DEFAULT_OVERLAP,

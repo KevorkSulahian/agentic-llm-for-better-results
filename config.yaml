@@ -11,8 +11,7 @@ defaults:
     - gpt-4o
   llm_temperature: 0.0
   llm_max_tokens: 1024
-  hf_embedding_model_news: BAAI/bge-small-en-v1.5
-  hf_embedding_model_sec: sentence-transformers/all-MiniLM-L6-v2
+  hf_embedding_model: BAAI/bge-small-en-v1.5
   hf_embedding_models:
     - BAAI/bge-small-en-v1.5
     - sentence-transformers/all-MiniLM-L6-v2
@@ -20,8 +19,7 @@ defaults:
     - nomic-ai/nomic-embed-text-v1.5
     - BAAI/bge-large-en-v1.5
     - FinLang/investopedia_embedding
-  openai_embedding_model_news: text-embedding-3-small
-  openai_embedding_model_sec: text-embedding-3-small
+  openai_embedding_model: text-embedding-3-small
   openai_embedding_models:
     - text-embedding-3-small
     - text-embedding-3-large
@@ -32,7 +30,8 @@ defaults:
     - Benzinga
     - Yahoo
   fundamental_freq: Annual
-  start_date: "2023-01-01"
+  news_start_date: 2024-10-01
+  news_end_date: 2024-11-10
   tickerid: NVDA
   tickers_market_cap_exclude:
     - Micro
@@ -44,6 +43,7 @@ defaults:
     SEC: sec
     SEC MD&A and Risk Factors: sec_mda_risk_factors
     Market Data: market_data
+    Combined: combined
   crewai:
     max_iterations: 10
     max_requests_per_minute: 30
@@ -52,6 +52,7 @@ defaults:
   crew_logs_dir: logs
   filings_dir: filings
   logs_dir: logs
+  data_dir: data
   vector_store_index_dir: vector_store_index
   fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
@@ -84,3 +85,7 @@ defaults:
     include_qoq: False
   include_fundamental_data: True
   include_news: False
+  save_fundamental_data: True
+  save_news_data: True
+  save_text_content: True # Save text content of filings or news
+  text_content_dir: output/text_content

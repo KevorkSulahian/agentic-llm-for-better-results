@@ -90,6 +90,32 @@ class NewsCrewConfiguration(CrewConfiguration):
 @dataclass
 class SECCrewConfiguration(CrewConfiguration):
     form_type: str
+    filing_date: dt.date
+
+    def markdown(self, crew_description: bool = False) -> str:
+        return (
+            super().markdown(crew_description)
+            + f"SEC Filing Form: {self.form_type}  \n"
+            + f"Filing Date: {self.filing_date.strftime('%Y-%m-%d')}  \n"
+        )
+
+
+@dataclass
+class CombinedCrewConfiguration(CrewConfiguration):
+    news_source: str
+    news_start: dt.date
+    news_end: dt.date
+    form_type: str
+    filing_date: dt.date
+
+    def markdown(self, crew_description: bool = False) -> str:
+        return (
+            super().markdown(crew_description)
+            + f"News Source: {self.news_source}  \n"
+            + f"Date range: {self.news_start} - {self.news_end}  \n"
+            + f"SEC Filing Form: {self.form_type}  \n"
+            + f"Filing Date: {self.filing_date.strftime('%Y-%m-%d')}  \n"
+        )
 
 
 @dataclass
@@ -119,6 +145,8 @@ def get_yaml_config_as_markdown(config_path: Path, config_file: str):
         output += f"### {key.replace('_', ' ').title()}\n\n"
         for field, specification in value.items():
             output += f"- **{field.replace('_', ' ').title()}**: {specification}"
+            if field == "agent":
+                output += "\n"
         output += "\n"
 
     return output
