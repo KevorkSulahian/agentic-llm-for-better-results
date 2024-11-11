@@ -52,6 +52,7 @@ defaults:
   crew_logs_dir: logs
   filings_dir: filings
   logs_dir: logs
+  data_dir: data
   vector_store_index_dir: vector_store_index
   fundamentals_dir: data/fundamentals
   sec_filing_key_metrics_for_compression:
@@ -84,3 +85,4 @@ defaults:
     include_qoq: False
   include_fundamental_data: True
   include_news: False
+  save_fundamental_data: True

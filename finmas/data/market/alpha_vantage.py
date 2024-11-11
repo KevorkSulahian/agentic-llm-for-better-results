@@ -5,11 +5,15 @@ import pandas as pd
 from alpha_vantage.fundamentaldata import FundamentalData
 
 from finmas.cache_config import cache
+from finmas.constants import defaults
+from pathlib import Path
 
 
 @cache.memoize(expire=dt.timedelta(days=1).total_seconds())
 def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
     """Returns fundamental data for a given ticker using Alpha Vantage as data source.
+    If the data has already been downloaded, it is loaded from the CSV file.
+    Otherwise, the data is downloaded from Alpha Vantage and saved as a CSV file.
     The full historical data is returned.
 
     Args:
@@ -17,8 +21,18 @@ def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
         type: The type of the data. Either "income", "balance", "cash_flow" or "earnings"
         freq: The frequency of the data. Either "Annual" or "Quarterly"
     """
+    if type not in ["income", "balance", "cash_flow", "earnings"]:
+        raise ValueError(f"Invalid type '{type}'")
+    if freq not in ["Annual", "Quarterly"]:
+        raise ValueError(f"Invalid frequency '{freq}'")
+
+    fundamentals_dir = Path(defaults["data_dir"]) / "fundamentals" / ticker
+    file_path = fundamentals_dir / f"{type}_{freq.lower()}.csv"
+    if file_path.exists():
+        return pd.read_csv(file_path, index_col=0, parse_dates=True)
 
     if os.getenv("ALPHAVANTAGE_API_KEY") is None:
+        print("ALPHAVANTAGE_API_KEY environment variable not set")
         return pd.DataFrame()
     fundamentals = FundamentalData(output_format="pandas")
 
@@ -60,6 +74,10 @@ def get_fundamental_data(ticker: str, type: str, freq: str) -> pd.DataFrame:
     df = df.apply(pd.to_numeric, errors="coerce")
 
     df = df.dropna(axis=1, how="all")
+
+    if defaults["save_fundamental_data"]:
+        fundamentals_dir.mkdir(parents=True, exist_ok=True)
+        df.to_csv(file_path)
 
     return df
 
