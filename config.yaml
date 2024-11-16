@@ -90,3 +90,11 @@ defaults:
   save_news_data: True
   save_text_content: True # Save text content of filings or news
   text_content_dir: output/text_content
+  query_data_source: section:mda
+  query_data_sources:
+    News: news
+    SEC MDA: section:mda
+    SEC Risk Factors: section:risk_factors
+  default_query: >
+    "Extract the most important statements from the Management's Discussion "
+    "and Analysis section of the provided 10-K filing."

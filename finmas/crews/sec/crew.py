@@ -1,12 +1,12 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import LlamaIndexTool
-
-from finmas.crews.model_provider import get_crewai_llm_model
-from finmas.data.sec.query_engine import get_sec_query_engine
 from edgar import Filing
+
 from finmas.constants import defaults
+from finmas.crews.model_provider import get_crewai_llm_model
 from finmas.crews.utils import SECCrewConfiguration
+from finmas.data.sec.query_engine import get_sec_query_engine
 
 
 @CrewBase

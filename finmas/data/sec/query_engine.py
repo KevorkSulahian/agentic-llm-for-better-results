@@ -121,7 +121,7 @@ def get_sec_query_engine(
     temperature: float | None = None,
     max_tokens: int | None = None,
     similarity_top_k: int | None = None,
-):
+) -> tuple:
     """
     Create a llama-index query engine that uses a Vector Store Index that is created using the
     text content of the SEC filing.
@@ -205,6 +205,10 @@ def get_sec_query_engine(
         max_tokens=max_tokens,
     )
 
-    query_engine = index.as_query_engine(llm=llama_index_llm, similarity_top_k=similarity_top_k)
+    from llama_index.core.query_engine import BaseQueryEngine
+
+    query_engine: BaseQueryEngine = index.as_query_engine(
+        llm=llama_index_llm, similarity_top_k=similarity_top_k
+    )
 
     return (query_engine, metrics)

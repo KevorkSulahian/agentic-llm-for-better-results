@@ -13,6 +13,9 @@ storage/
 sec_storage/
 sec_filing_index/
 vector_store_index/
+*.bin
+*.sqlite3
+filings_index/
 
 # Crew Logs
 logs/
@@ -25,6 +28,13 @@ filings/
 
 # Docs
 site/
+
+output/text_content
+output/sec
+output/market_data
+output/combined
+output/news
+output/sec_mda_risk_factors
 
 ### JupyterNotebooks ###
 
