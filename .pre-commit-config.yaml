@@ -60,7 +60,7 @@ repos:
     rev: 0.7.18
     hooks:
       - id: mdformat
-        args: ["--number"]
+        args: ["--number", "--align-semantic-breaks-in-lists"]
         additional_dependencies:
           - mdformat-gfm
           - mdformat-black

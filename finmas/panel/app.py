@@ -20,6 +20,7 @@ from finmas.crews.sec.crew import SECFilingCrew
 from finmas.crews.sec_mda_risk_factors.crew import SECFilingSectionsCrew
 from finmas.crews.utils import (
     CrewRunMetrics,
+    IndexCreationMetrics,
     get_usage_metrics_as_string,
     get_yaml_config_as_markdown,
     save_crew_output,
@@ -27,7 +28,9 @@ from finmas.crews.utils import (
 from finmas.data.market.fundamentals import NUM_QUARTERS, get_ticker_essentials
 from finmas.data.market.technical_analysis import get_technical_indicators
 from finmas.data.news import get_news_fetcher
+from finmas.data.news.query_engine import get_news_query_engine
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
+from finmas.data.sec.query_engine import get_sec_query_engine
 from finmas.logger import get_logger
 from finmas.panel.formatting import (
     INCOME_STATEMENT_COLS_MAP,
@@ -127,14 +130,44 @@ class FinMAS(pn.viewable.Viewer):
         options=defaults["sec_filing_types"],
         width=200,
     )
-    kickoff_crew_btn = pn.widgets.Button(name="Kickoff Crew", button_type="primary", align="center")
+    kickoff_crew_btn = pn.widgets.Button(
+        name="Kickoff Crew", button_type="primary", align=("start", "end")
+    )
     crew_agents_config_md = pn.pane.Markdown("Agents", sizing_mode="stretch_width")
     crew_tasks_config_md = pn.pane.Markdown("Tasks", sizing_mode="stretch_width")
     crew_usage_metrics = pn.pane.Markdown("")
     crew_output_status = pn.pane.Alert("No Crew output generated yet.", alert_type="warning")
     crew_output = pn.pane.Markdown("", sizing_mode="stretch_width")
 
-    sec_filing_selected = pn.widgets.StaticText(name="SEC Filing", align=("center"))
+    sec_filing_selected = pn.widgets.StaticText(name="SEC Filing")
+    query_sec_filing_selected = pn.widgets.StaticText(name="SEC Filing")
+
+    # Chat
+    query_data_select = pn.widgets.Select(
+        name="Data Source", options=defaults["query_data_sources"], width=250
+    )
+    query = pn.widgets.TextAreaInput(
+        name="Query",
+        auto_grow=True,
+        max_rows=10,
+        rows=6,
+        width=500,
+    )
+    query_alert_box = pn.pane.Alert(
+        "Vector store have not been created", alert_type="warning", sizing_mode="stretch_width"
+    )
+    create_query_engine_btn = pn.widgets.Button(
+        name="Create Vector Store", button_type="primary", align=("start", "end")
+    )
+    query_btn = pn.widgets.Button(name="Query", button_type="primary", disabled=True)
+
+    query_engine_metrics = pn.pane.Markdown("", sizing_mode="stretch_width")
+    query_output_source_nodes = pn.pane.Markdown(
+        "No sources have been generated.", sizing_mode="stretch_width", margin=(10, 10, 20, 20)
+    )
+    query_output = pn.pane.Markdown(
+        "No answer have been generated.", sizing_mode="stretch_width", margin=(10, 10, 20, 20)
+    )
 
     def __init__(self, ticker: str | None = None, **params) -> None:
         super().__init__(**params)
@@ -163,22 +196,29 @@ class FinMAS(pn.viewable.Viewer):
             get_embedding_models_df(), **embedding_models_config
         )
 
-        # About tab
-        with open("finmas/panel/about.md", mode="r", encoding="utf-8") as f:
-            about = f.read()
+        # Query
+        self.create_query_engine_btn.on_click(self.create_query_engine)
+        self.query_btn.on_click(self.run_query_engine)
+        self.query_data_select.param.watch(self.handle_query_data_select_change, "value")
+        self.active_query_data = defaults["query_data_source"]
+        self.query_data_select.value = defaults["query_data_source"]
+        self.query.value = defaults["default_query"].replace("\n", " ").replace('"', "")
+        self.handle_query_data_select_change(None)
 
-        self.about_md = pn.pane.Markdown(about)
+        # Markdown content
+        self.about_md = pn.pane.Markdown(Path("finmas/panel/about.md").read_text(encoding="utf-8"))
+        self.query_md = pn.pane.Markdown(Path("finmas/panel/query.md").read_text(encoding="utf-8"))
 
     def handle_crew_select_change(self, event):
         """Handle the change of the crew select"""
         self.similarity_top_k.disabled = False
-        self.compress_sec_filing.disabled = True
+        self.compress_sec_filing.visible = False
         self.sec_filing_selected.visible = True
 
         if self.crew_select.value == "market_data":
             self.similarity_top_k.disabled = True
         if self.crew_select.value == "sec":
-            self.compress_sec_filing.disabled = False
+            self.compress_sec_filing.visible = True
         if self.crew_select.value in ["news", "market_data"]:
             self.sec_filing_selected.visible = False
 
@@ -332,9 +372,9 @@ class FinMAS(pn.viewable.Viewer):
             self.sec_filings_tbl.value = df
         self.sec_filings_tbl.selection = [0]
         self.sec_filing = self.sec_filings.get(df.iloc[0]["accession_number"])
-        self.sec_filing_selected.value = (
-            f"{self.sec_filing.form} - Report Date: {df.iloc[0]['reportDate']}"
-        )
+        sec_filing_selected = f"{self.sec_filing.form} - Report Date: {df.iloc[0]['reportDate']}"
+        self.sec_filing_selected.value = sec_filing_selected
+        self.query_sec_filing_selected.value = sec_filing_selected
 
     def handle_sec_filings_tbl_click(self, event):
         """Callback for when a row in SEC filings table is clicked"""
@@ -342,7 +382,9 @@ class FinMAS(pn.viewable.Viewer):
             self.sec_filings_tbl.value.iloc[event.row]["accession_number"]
         )
         report_date = self.sec_filings_tbl.value.iloc[event.row]["reportDate"]
-        self.sec_filing_selected.value = f"{self.sec_filing.form} - Report Date: {report_date}"
+        sec_filing_selected = f"{self.sec_filing.form} - Report Date: {report_date}"
+        self.sec_filing_selected.value = sec_filing_selected
+        self.query_sec_filing_selected.value = sec_filing_selected
 
     @pn.cache
     def get_news_content(self, row: pd.Series) -> pn.pane.HTML:
@@ -523,6 +565,65 @@ class FinMAS(pn.viewable.Viewer):
             self.crew_output.object = output.raw
             logger.info(f"Crew finished successfully and output stored in {str(file_path)}")
 
+    def handle_query_data_select_change(self, event) -> None:
+        """Handle the change of the query data select"""
+        self.query_sec_filing_selected.visible = True
+        if self.active_query_data != self.query_data_select.value:
+            self.query_btn.disabled = True
+        if self.query_data_select.value == "news":
+            self.query_sec_filing_selected.visible = False
+
+    def create_query_engine(self, event) -> None:
+        """Create a Llama Index Vector store based on the selected SEC filing"""
+        with self.create_query_engine_btn.param.update(loading=True):
+            query_data = self.query_data_select.value
+            start = time.time()
+            if query_data == "news":
+                kwargs = dict(records=self.news_records)
+                func = get_news_query_engine
+            elif str(query_data).startswith("section"):
+                kwargs = dict(filing=self.sec_filing, method=query_data)
+                func = get_sec_query_engine  # type: ignore[assignment]
+
+            self.query_engine, metrics = func(
+                ticker=self.ticker_select.value,
+                llm_provider=self.llm_provider.value,
+                llm_model=self.llm_model.value,
+                embedding_model=self.embedding_model.value,
+                temperature=self.llm_temperature.value,
+                max_tokens=self.llm_max_tokens.value,
+                similarity_top_k=self.similarity_top_k.value,
+                **kwargs,
+            )
+            assert isinstance(metrics, IndexCreationMetrics)
+            query_data_string = query_data.split(":")[-1].replace("_", " ").title()
+            self.query_engine_metrics.object = (
+                f"{query_data_string} Index Creation Metrics:  \n{metrics.markdown()}\n\n"
+            )
+            self.query_alert_box.object = (
+                f"Vector store index and Query engine created in {time.time() - start:.1f} seconds"
+            )
+            self.query_alert_box.alert_type = "success"
+            self.query_btn.disabled = False
+            self.active_query_data = self.query_data_select.value
+
+    def run_query_engine(self, event) -> None:
+        """Query the LLM model"""
+        with self.query_btn.param.update(loading=True):
+            start = time.time()
+
+            from llama_index.core.query_engine import BaseQueryEngine
+            from llama_index.core.response import Response
+
+            assert isinstance(self.query_engine, BaseQueryEngine)
+
+            response: Response = self.query_engine.query(self.query.value)
+            end = time.time()
+            self.query_output.object = response.response
+            self.query_output_source_nodes.object = response.get_formatted_sources(length=1000)
+            self.query_alert_box.object = f"Query completed in {end - start:.1f} seconds"
+            self.query_alert_box.alert_type = "success"
+
     def __panel__(self) -> Viewable:
         return pn.Row(
             pn.Column(
@@ -537,7 +638,16 @@ class FinMAS(pn.viewable.Viewer):
                     self.fetch_data_btn,
                 ),
                 pn.bind(self._data_alert_box, update_counter=self.update_counter),
-                pn.WidgetBox("## Config", self.only_sp500_tickers, self.filing_types),
+                pn.WidgetBox(
+                    pn.pane.HTML("<b>Config</b>"),
+                    pn.pane.HTML("<b>LLM</b>"),
+                    pn.Row(self.llm_temperature, self.llm_max_tokens),
+                    self.similarity_top_k,
+                    pn.pane.HTML("<b>Ticker</b>"),
+                    self.only_sp500_tickers,
+                    pn.pane.HTML("<b>SEC Filing</b>"),
+                    self.filing_types,
+                ),
                 width=300,
             ),
             pn.Column(
@@ -613,14 +723,9 @@ class FinMAS(pn.viewable.Viewer):
                         pn.Row(
                             pn.Column(
                                 pn.WidgetBox(
-                                    pn.Row(self.crew_select, self.sec_filing_selected),
-                                    pn.Row(
-                                        self.llm_temperature,
-                                        self.llm_max_tokens,
-                                        self.similarity_top_k,
-                                        self.kickoff_crew_btn,
-                                    ),
-                                    pn.Row(self.compress_sec_filing),
+                                    pn.Row(self.crew_select, self.kickoff_crew_btn),
+                                    self.sec_filing_selected,
+                                    self.compress_sec_filing,
                                 ),
                                 self.crew_usage_metrics,
                                 pn.Column(
@@ -638,6 +743,41 @@ class FinMAS(pn.viewable.Viewer):
                                 ),
                             ),
                             pn.Column(self.crew_output_status, self.crew_output),
+                        ),
+                    ),
+                    (
+                        "Query Engine",
+                        pn.Row(
+                            pn.Column(
+                                pn.Row(
+                                    pn.Column(
+                                        pn.Row(
+                                            self.query_data_select, self.create_query_engine_btn
+                                        ),
+                                        self.query_sec_filing_selected,
+                                        self.query_alert_box,
+                                        self.query,
+                                        pn.Row(self.query_btn),
+                                        max_width=450,
+                                    ),
+                                    pn.Column(self.query_engine_metrics, max_width=400),
+                                ),
+                                pn.Card(
+                                    self.query_output,
+                                    title="Query Engine Response",
+                                    margin=10,
+                                    max_width=900,
+                                ),
+                                pn.Card(
+                                    self.query_output_source_nodes,
+                                    title="Source Nodes",
+                                    collapsed=True,
+                                    margin=10,
+                                    max_width=900,
+                                ),
+                                max_width=900,
+                            ),
+                            pn.Column(self.query_md, max_width=600, align=("start", "start")),
                         ),
                     ),
                     ("About", pn.Column(self.about_md)),

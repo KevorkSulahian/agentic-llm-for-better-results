@@ -19,7 +19,7 @@ def get_news_query_engine(
     temperature: float | None = None,
     max_tokens: int | None = None,
     similarity_top_k: int | None = None,
-):
+) -> tuple:
     documents = parse_news_to_documents(records, field="markdown_content")
 
     if defaults["save_text_content"]:
@@ -60,6 +60,10 @@ def get_news_query_engine(
         temperature=temperature,
         max_tokens=max_tokens,
     )
-    query_engine = index.as_query_engine(llm=llama_index_llm, similarity_top_k=similarity_top_k)
+    from llama_index.core.query_engine import BaseQueryEngine
+
+    query_engine: BaseQueryEngine = index.as_query_engine(
+        llm=llama_index_llm, similarity_top_k=similarity_top_k
+    )
 
     return (query_engine, metrics)
