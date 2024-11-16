@@ -12,7 +12,7 @@ FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 
 
 @pn.cache
-def get_logger(name, format_=FORMAT, level=logging.INFO):
+def get_logger(name, format_=FORMAT, level=logging.INFO) -> logging.Logger:
     """
     Returns a logger with the given name, format and level.
     This is useful for loggers for specific modules

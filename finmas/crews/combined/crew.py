@@ -47,6 +47,7 @@ class CombinedCrew:
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
+        async_execution: bool = True,
     ):
         start = time.time()
         self.crewai_llm = get_crewai_llm_model(
@@ -106,6 +107,7 @@ class CombinedCrew:
             form_type=filing.form,
             filing_date=filing.filing_date,
         )
+        self.async_execution = async_execution
         super().__init__()
         logger.info(f"Combined Crew initialized in {round(time.time() - start, 2)}s")
 
@@ -167,28 +169,28 @@ class CombinedCrew:
     def news_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["news_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def sec_filing_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def fundamental_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["fundamental_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def technical_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["technical_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task

@@ -18,9 +18,12 @@ Some example queries you can try are:
 **SEC Risk Factors**
 
 - Extract the most important statements from the Risk Factors section of the
-  provided 10-K filing.
+  provided 10-K filing. Focus on risks that can impact the company's
+  earnings or stock price.
 
 **News Data**
 
 - Extract the most important statements from the news articles for the
-  ticker (Input the ticker for analysis).
+  ticker (Input the ticker for analysis). Focus on news statements about
+  new products or performance of existing products. Do not include statements about
+  earnings or stock price.

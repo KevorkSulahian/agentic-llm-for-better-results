@@ -126,6 +126,16 @@ embedding_models_config = dict(
 tickers_config = dict(
     page_size=30,
     pagination="local",
+    titles={
+        "ticker": "Ticker",
+        "name": "Name",
+        "market_cap": "Market Cap",
+        "sector": "Sector",
+        "industry_group": "Industry Group",
+        "industry": "Industry",
+        "market": "Market",
+        "website": "Website",
+    },
     formatters={
         "website": HTMLTemplateFormatter(
             template=(

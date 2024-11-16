@@ -31,6 +31,7 @@ from finmas.data.news import get_news_fetcher
 from finmas.data.news.query_engine import get_news_query_engine
 from finmas.data.sec.filings import filings_to_df, get_sec_filings
 from finmas.data.sec.query_engine import get_sec_query_engine
+from finmas.data.token_counting import get_token_counter_as_string, token_counter
 from finmas.logger import get_logger
 from finmas.panel.formatting import (
     INCOME_STATEMENT_COLS_MAP,
@@ -66,6 +67,7 @@ logger = get_logger(__name__)
 
 
 class FinMAS(pn.viewable.Viewer):
+    # LLM + embedding model config
     llm_selected = pn.widgets.StaticText(name="LLM", value="")
     llm_provider = pn.widgets.Select(
         name="LLM Provider",
@@ -73,13 +75,25 @@ class FinMAS(pn.viewable.Viewer):
         width=100,
     )
     llm_model = pn.widgets.Select(name="LLM Model", width=200, disabled=True)
+    llm_temperature = pn.widgets.FloatInput(
+        name="LLM Temp.", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
+    )
+    llm_max_tokens = pn.widgets.IntInput(
+        name="Max tokens", value=defaults["llm_max_tokens"], width=100
+    )
+    similarity_top_k = pn.widgets.IntInput(
+        name="Similarity Top K", value=defaults["similarity_top_k"], width=100
+    )
     embedding_model = pn.widgets.Select(
         name="Embedding Model for Text",
         value=defaults["hf_embedding_model"],
         options=defaults["hf_embedding_models"],
         width=250,
     )
+
+    # Data config
     ticker_select = pn.widgets.StaticText(name="Ticker")
+
     news_source = pn.widgets.Select(
         name="News Source",
         value=defaults["news_source"],
@@ -105,31 +119,26 @@ class FinMAS(pn.viewable.Viewer):
     only_sp500_tickers = pn.widgets.Checkbox(
         name="SP500 Tickers", value=defaults["only_sp500_tickers"]
     )
-
-    update_counter = pn.widgets.IntInput(value=0)
-
-    fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
-    time_elapsed: dict[str, float] = {}
-
-    crew_select = pn.widgets.Select(name="Crew", width=250)
-    llm_temperature = pn.widgets.FloatInput(
-        name="LLM Temp.", value=defaults["llm_temperature"], start=0.0, end=1.0, width=100
-    )
-    llm_max_tokens = pn.widgets.IntInput(
-        name="Max tokens", value=defaults["llm_max_tokens"], width=100
-    )
-    similarity_top_k = pn.widgets.IntInput(
-        name="Similarity Top K", value=defaults["similarity_top_k"], width=100
-    )
-    compress_sec_filing = pn.widgets.Checkbox(
-        name="Compress SEC Filing with keywords search", value=False, align="center"
-    )
     filing_types = pn.widgets.MultiSelect(
         name="Filing Types",
         value=defaults["sec_filing_types_selected"],
         options=defaults["sec_filing_types"],
         width=200,
     )
+
+    update_counter = pn.widgets.IntInput(value=0)
+
+    fetch_data_btn = pn.widgets.Button(name="Fetch data", button_type="primary")
+    time_elapsed: dict[str, float] = {}
+
+    # Crew attributes
+    async_execution = pn.widgets.Checkbox(
+        name="Async Execution for Tasks", value=defaults["crewai"]["async_execution"]
+    )
+    compress_sec_filing = pn.widgets.Checkbox(
+        name="Compress SEC Filing with keywords search", value=False, align="center"
+    )
+    crew_select = pn.widgets.Select(name="Crew", width=250)
     kickoff_crew_btn = pn.widgets.Button(
         name="Kickoff Crew", button_type="primary", align=("start", "end")
     )
@@ -142,9 +151,9 @@ class FinMAS(pn.viewable.Viewer):
     sec_filing_selected = pn.widgets.StaticText(name="SEC Filing")
     query_sec_filing_selected = pn.widgets.StaticText(name="SEC Filing")
 
-    # Chat
+    # Query engine attributes
     query_data_select = pn.widgets.Select(
-        name="Data Source", options=defaults["query_data_sources"], width=250
+        name="Data Source", options=defaults["query_data_sources"], width=150
     )
     query = pn.widgets.TextAreaInput(
         name="Query",
@@ -157,16 +166,21 @@ class FinMAS(pn.viewable.Viewer):
         "Vector store have not been created", alert_type="warning", sizing_mode="stretch_width"
     )
     create_query_engine_btn = pn.widgets.Button(
-        name="Create Vector Store", button_type="primary", align=("start", "end")
+        name="Create Vector Store Index / Query Engine",
+        button_type="primary",
+        align=("start", "end"),
     )
     query_btn = pn.widgets.Button(name="Query", button_type="primary", disabled=True)
 
-    query_engine_metrics = pn.pane.Markdown("", sizing_mode="stretch_width")
+    index_creation_metrics = pn.pane.Markdown("", sizing_mode="stretch_width", margin=(0, 0, 0, 20))
+    query_engine_metrics = pn.pane.Markdown(
+        "", sizing_mode="stretch_width", margin=(0, 0, 0, 20), align="start"
+    )
     query_output_source_nodes = pn.pane.Markdown(
-        "No sources have been generated.", sizing_mode="stretch_width", margin=(10, 10, 20, 20)
+        "No sources have been generated.", sizing_mode="stretch_width", margin=(10, 20, 10, 20)
     )
     query_output = pn.pane.Markdown(
-        "No answer have been generated.", sizing_mode="stretch_width", margin=(10, 10, 20, 20)
+        "No answer have been generated.", sizing_mode="stretch_width", margin=(10, 20, 10, 20)
     )
 
     def __init__(self, ticker: str | None = None, **params) -> None:
@@ -178,6 +192,7 @@ class FinMAS(pn.viewable.Viewer):
 
         # Ticker
         self.ticker_select.value = ticker or defaults["tickerid"]
+        self.active_ticker = ""
         self.update_tickers_tbl(None)
         self.only_sp500_tickers.param.watch(self.update_tickers_tbl, "value")
 
@@ -224,8 +239,14 @@ class FinMAS(pn.viewable.Viewer):
 
         # Update the crew configuration markdown
         config_path = Path(__file__).parent.parent / "crews" / self.crew_select.value / "config"
-        self.crew_agents_config_md.object = get_yaml_config_as_markdown(config_path, "agents")
-        self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks")
+        inputs = dict(
+            ticker=self.ticker_select.value,
+            form=self.sec_filing.form if self.sec_filing else "",
+        )
+        self.crew_agents_config_md.object = get_yaml_config_as_markdown(
+            config_path, "agents", inputs
+        )
+        self.crew_tasks_config_md.object = get_yaml_config_as_markdown(config_path, "tasks", inputs)
 
     def update_tickers_tbl(self, event):
         """Set the tickers table"""
@@ -243,6 +264,12 @@ class FinMAS(pn.viewable.Viewer):
         tickerid = self.tickers_tbl.value.iloc[event.row]["ticker"]
         if self.ticker_select.value != tickerid:
             self.ticker_select.value = tickerid
+            if self.active_ticker != tickerid:
+                self.query_btn.disabled = True
+                self.create_query_engine_btn.disabled = True
+            else:
+                self.create_query_engine_btn.disabled = False
+                self.query_btn.disabled = False
 
     def handle_llm_provider_change(self, event):
         """
@@ -297,6 +324,10 @@ class FinMAS(pn.viewable.Viewer):
                 self.news_tbl = None
 
             self.fetch_sec_filings(event)
+
+            self.active_ticker = self.ticker_select.value
+            self.create_query_engine_btn.disabled = False
+            self.query_btn.disabled = True
 
             self.time_elapsed["fetch_data"] = round(time.time() - start, 1)
             self.update_counter.value += 1  # This trigges updates of plots and tables widgets
@@ -459,12 +490,13 @@ class FinMAS(pn.viewable.Viewer):
                 NewsAnalysisCrew, SECFilingCrew, SECFilingSectionsCrew, MarketDataCrew, CombinedCrew
             ]
             start = time.time()
-            model_config = dict(
+            crew_config = dict(
                 ticker=self.ticker_select.value,
                 llm_provider=self.llm_provider.value,
                 llm_model=self.llm_model.value,
                 temperature=self.llm_temperature.value,
                 max_tokens=self.llm_max_tokens.value,
+                async_execution=self.async_execution.value,
             )
 
             if self.crew_select.value != "market_data":
@@ -480,7 +512,7 @@ class FinMAS(pn.viewable.Viewer):
                         news_start=self.news_start.value,
                         news_end=self.news_end.value,
                         similarity_top_k=self.similarity_top_k.value,
-                        **model_config,
+                        **crew_config,
                     )
                 elif self.crew_select.value == "sec":
                     crew = SECFilingCrew(
@@ -488,17 +520,17 @@ class FinMAS(pn.viewable.Viewer):
                         filing=self.sec_filing,
                         compress_filing=self.compress_sec_filing.value,
                         similarity_top_k=self.similarity_top_k.value,
-                        **model_config,
+                        **crew_config,
                     )
                 elif self.crew_select.value == "sec_mda_risk_factors":
                     crew = SECFilingSectionsCrew(
                         embedding_model=self.embedding_model.value,
                         filing=self.sec_filing,
                         similarity_top_k=self.similarity_top_k.value,
-                        **model_config,
+                        **crew_config,
                     )
                 elif self.crew_select.value == "market_data":
-                    crew = MarketDataCrew(**model_config)
+                    crew = MarketDataCrew(**crew_config)
                 elif self.crew_select.value == "combined":
                     crew = CombinedCrew(
                         records=self.news_records,
@@ -508,7 +540,7 @@ class FinMAS(pn.viewable.Viewer):
                         news_end=self.news_end.value,
                         filing=self.sec_filing,
                         similarity_top_k=self.similarity_top_k.value,
-                        **model_config,
+                        **crew_config,
                     )
             except Exception as e:
                 error_message = (
@@ -600,9 +632,11 @@ class FinMAS(pn.viewable.Viewer):
 
             # Process the result: Show metrics and alert box. Enable the query button
             assert isinstance(metrics, IndexCreationMetrics)
-            query_data_string = query_data.split(":")[-1].replace("_", " ").title()
-            self.query_engine_metrics.object = (
-                f"{query_data_string} Index Creation Metrics:  \n{metrics.markdown()}\n\n"
+            query_data_string = (
+                query_data.split(":")[-1].replace("_", " ").title().replace("Mda", "MDA")
+            )
+            self.index_creation_metrics.object = (
+                f"**{query_data_string} Index Creation Metrics:**  \n{metrics.markdown()}"
             )
             self.query_alert_box.object = (
                 f"Vector store index and Query engine created in {time.time() - start:.1f} seconds"
@@ -619,14 +653,19 @@ class FinMAS(pn.viewable.Viewer):
 
             assert isinstance(self.query_engine, BaseQueryEngine)
 
+            token_counter.reset_counts()
             start = time.time()
             response: Response = self.query_engine.query(self.query.value)
-            end = time.time()
 
             self.query_output.object = response.response
             self.query_output_source_nodes.object = response.get_formatted_sources(length=1000)
-            self.query_alert_box.object = f"Query completed in {end - start:.1f} seconds"
+            self.query_alert_box.object = f"Query completed in {time.time() - start:.1f} seconds"
             self.query_alert_box.alert_type = "success"
+
+            self.query_engine_metrics.object = (
+                "**Query Engine Metrics:**  \n"
+                + get_token_counter_as_string(llm_model=self.llm_model.value)
+            )
 
     def __panel__(self) -> Viewable:
         return pn.Row(
@@ -730,6 +769,7 @@ class FinMAS(pn.viewable.Viewer):
                                     pn.Row(self.crew_select, self.kickoff_crew_btn),
                                     self.sec_filing_selected,
                                     self.compress_sec_filing,
+                                    self.async_execution,
                                 ),
                                 self.crew_usage_metrics,
                                 pn.Column(
@@ -764,7 +804,11 @@ class FinMAS(pn.viewable.Viewer):
                                         pn.Row(self.query_btn),
                                         max_width=450,
                                     ),
-                                    pn.Column(self.query_engine_metrics, max_width=400),
+                                    pn.Column(
+                                        self.index_creation_metrics,
+                                        self.query_engine_metrics,
+                                        max_width=400,
+                                    ),
                                 ),
                                 pn.Card(
                                     self.query_output,

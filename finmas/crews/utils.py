@@ -135,15 +135,20 @@ class CrewRunMetrics:
         )
 
 
-def get_yaml_config_as_markdown(config_path: Path, config_file: str):
+def get_yaml_config_as_markdown(
+    config_path: Path, config_file: str, inputs: dict | None = None
+) -> str:
     """Returns a markdown representation of the yaml configuration file."""
     with open(config_path / f"{config_file}.yaml", "r") as c:
         config = yaml.safe_load(c)
 
     output = ""
     for key, value in config.items():
-        output += f"### {key.replace('_', ' ').title()}\n\n"
+        headline = key.replace("_", " ").title().replace("Sec", "SEC").replace("Mda", "MDA")
+        output += f"### {headline}\n\n"
         for field, specification in value.items():
+            if inputs:
+                specification = specification.format(**inputs)
             output += f"- **{field.replace('_', ' ').title()}**: {specification}"
             if field == "agent":
                 output += "\n"

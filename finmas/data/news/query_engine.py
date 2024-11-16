@@ -1,6 +1,7 @@
 import time
 
 from finmas.constants import defaults
+from finmas.data.token_counting import token_counter
 from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.news.news_fetcher import parse_news_to_documents
@@ -31,13 +32,10 @@ def get_news_query_engine(
     embed_model = get_embedding_model(llm_provider, embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
-    from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
     start = time.time()
-    token_counter = TokenCountingHandler()
-    index = VectorStoreIndex.from_documents(
-        documents, embed_model=embed_model, callback_manager=CallbackManager([token_counter])
-    )
+    token_counter.reset_counts()
+    index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
     index.storage_context.persist(persist_dir=get_vector_store_index_dir(ticker, "news"))
     time_spent = round(time.time() - start, 2)
     logger.info(f"News index created in {time_spent}s with {len(documents)} documents")

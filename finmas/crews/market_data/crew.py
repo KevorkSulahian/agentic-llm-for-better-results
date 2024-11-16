@@ -28,6 +28,7 @@ class MarketDataCrew:
         llm_model: str,
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
+        async_execution: bool = True,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -45,6 +46,7 @@ class MarketDataCrew:
             similarity_top_k=None,
             embedding_model=None,
         )
+        self.async_execution = async_execution
         super().__init__()
 
     @agent
@@ -83,14 +85,14 @@ class MarketDataCrew:
     def fundamental_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["fundamental_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def technical_analysis(self) -> Task:
         return Task(
             config=self.tasks_config["technical_analysis"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task

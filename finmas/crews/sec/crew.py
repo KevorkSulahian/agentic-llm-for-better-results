@@ -28,6 +28,7 @@ class SECFilingCrew:
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
+        async_execution: bool = True,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -60,6 +61,7 @@ class SECFilingCrew:
             form_type=filing.form,
             filing_date=filing.filing_date,
         )
+        self.async_execution = async_execution
         super().__init__()
 
     @agent
@@ -95,14 +97,14 @@ class SECFilingCrew:
     def sec_filing_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_analysis_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def sec_filing_sentiment_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_sentiment_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
@@ -117,7 +119,11 @@ class SECFilingCrew:
         """Creates SEC Filing Analysis crew"""
         return Crew(
             agents=self.agents,  # type: ignore
-            tasks=self.tasks,  # type: ignore
+            tasks=[
+                self.sec_filing_analysis_task(),
+                self.sec_filing_sentiment_task(),
+                self.sec_filing_summary_task(),
+            ],
             cache=True,
             process=Process.sequential,
             verbose=True,

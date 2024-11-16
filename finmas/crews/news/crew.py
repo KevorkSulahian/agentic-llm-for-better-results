@@ -31,6 +31,7 @@ class NewsAnalysisCrew:
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
+        async_execution: bool = True,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -63,6 +64,7 @@ class NewsAnalysisCrew:
             news_start=news_start,
             news_end=news_end,
         )
+        self.async_execution = async_execution
         super().__init__()
 
     @agent
@@ -101,14 +103,14 @@ class NewsAnalysisCrew:
     def news_analyzer_task(self) -> Task:
         return Task(
             config=self.tasks_config["news_analyzer_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def sentiment_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config["sentiment_analysis_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task

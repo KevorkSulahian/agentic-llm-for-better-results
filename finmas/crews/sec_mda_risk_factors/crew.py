@@ -28,6 +28,7 @@ class SECFilingSectionsCrew:
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
+        async_execution: bool = True,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
@@ -68,6 +69,7 @@ class SECFilingSectionsCrew:
             form_type=filing.form,
             filing_date=filing.filing_date,
         )
+        self.async_execution = async_execution
         super().__init__()
 
     @agent
@@ -106,14 +108,14 @@ class SECFilingSectionsCrew:
     def sec_filing_mda_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_mda_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task
     def sec_filing_risk_factors_task(self) -> Task:
         return Task(
             config=self.tasks_config["sec_filing_risk_factors_task"],  # type: ignore
-            async_execution=True,
+            async_execution=self.async_execution,
         )
 
     @task

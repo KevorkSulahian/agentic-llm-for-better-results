@@ -12,6 +12,7 @@ from finmas.crews.model_provider import get_embedding_model, get_llama_index_llm
 from finmas.crews.utils import IndexCreationMetrics
 from finmas.data.sec.sec_parser import SECTION_FILENAME_MAP, SECFilingParser
 from finmas.data.sec.tool import SECSemanticSearchTool
+from finmas.data.token_counting import token_counter
 from finmas.logger import get_logger
 from finmas.utils.common import get_text_content_file, get_vector_store_index_dir
 
@@ -171,13 +172,10 @@ def get_sec_query_engine(
     embed_model = get_embedding_model(llm_provider, embedding_model)
 
     from llama_index.core import Settings, VectorStoreIndex
-    from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
     start = time.time()
-    token_counter = TokenCountingHandler()
-    index = VectorStoreIndex.from_documents(
-        [document], embed_model=embed_model, callback_manager=CallbackManager([token_counter])
-    )
+    token_counter.reset_counts()
+    index = VectorStoreIndex.from_documents([document], embed_model=embed_model)
     index.storage_context.persist(
         persist_dir=get_vector_store_index_dir(
             ticker=ticker, data_type="sec", subfolder=method.replace(":", "_")

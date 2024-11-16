@@ -30,10 +30,10 @@ defaults:
     - Benzinga
     - Yahoo
   fundamental_freq: Annual
-  news_start_date: 2024-10-01
+  news_start_date: 2024-10-15
   news_end_date: 2024-11-10
   news_max_num_symbols: 5 # Maximum number of symbols to be used in a news article
-  tickerid: NVDA
+  tickerid: META
   tickers_market_cap_exclude:
     - Micro
     - Nano
@@ -48,6 +48,7 @@ defaults:
   crewai:
     max_iterations: 10
     max_requests_per_minute: 30
+    async_execution: True
   embedding_models_dir: embedding_models
   crew_output_dir: output
   crew_logs_dir: logs
@@ -85,7 +86,7 @@ defaults:
   fundamentals_tool:
     include_qoq: False
   include_fundamental_data: True
-  include_news: False
+  include_news: True
   save_fundamental_data: True
   save_news_data: True
   save_text_content: True # Save text content of filings or news
