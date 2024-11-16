@@ -574,10 +574,12 @@ class FinMAS(pn.viewable.Viewer):
             self.query_sec_filing_selected.visible = False
 
     def create_query_engine(self, event) -> None:
-        """Create a Llama Index Vector store based on the selected SEC filing"""
+        """Create a Llama Index Vector store based on the selected data source"""
         with self.create_query_engine_btn.param.update(loading=True):
             query_data = self.query_data_select.value
             start = time.time()
+
+            # Create the query engine based on the selected data source
             if query_data == "news":
                 kwargs = dict(records=self.news_records)
                 func = get_news_query_engine
@@ -595,6 +597,8 @@ class FinMAS(pn.viewable.Viewer):
                 similarity_top_k=self.similarity_top_k.value,
                 **kwargs,
             )
+
+            # Process the result: Show metrics and alert box. Enable the query button
             assert isinstance(metrics, IndexCreationMetrics)
             query_data_string = query_data.split(":")[-1].replace("_", " ").title()
             self.query_engine_metrics.object = (
@@ -608,17 +612,17 @@ class FinMAS(pn.viewable.Viewer):
             self.active_query_data = self.query_data_select.value
 
     def run_query_engine(self, event) -> None:
-        """Query the LLM model"""
+        """Use the query engine to query the data"""
         with self.query_btn.param.update(loading=True):
-            start = time.time()
-
             from llama_index.core.query_engine import BaseQueryEngine
             from llama_index.core.response import Response
 
             assert isinstance(self.query_engine, BaseQueryEngine)
 
+            start = time.time()
             response: Response = self.query_engine.query(self.query.value)
             end = time.time()
+
             self.query_output.object = response.response
             self.query_output_source_nodes.object = response.get_formatted_sources(length=1000)
             self.query_alert_box.object = f"Query completed in {end - start:.1f} seconds"
