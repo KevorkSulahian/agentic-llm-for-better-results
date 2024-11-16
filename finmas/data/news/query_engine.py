@@ -20,7 +20,7 @@ def get_news_query_engine(
     max_tokens: int | None = None,
     similarity_top_k: int | None = None,
 ):
-    documents = parse_news_to_documents(records, field="content")
+    documents = parse_news_to_documents(records, field="markdown_content")
 
     if defaults["save_text_content"]:
         text_content = "\n\n".join(doc.text for doc in documents)

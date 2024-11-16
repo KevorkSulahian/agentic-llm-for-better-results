@@ -13,4 +13,3 @@ creating a `.env` file with the API keys.
 |                                 | Yahoo Finance News | News             | Free access to the latest News via RSS  |
 | <i class="fa-solid fa-key"></i> | Benzinga           | News             | Requires registration of Alpaca account |
 | <i class="fa-solid fa-key"></i> | Alpha Vantage      | Fundamental data | Limited to 25 calls per day.            |
-|                                 |                    |                  |                                         |

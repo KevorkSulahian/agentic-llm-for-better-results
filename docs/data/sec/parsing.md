@@ -7,7 +7,7 @@ format for each filing. Then we extract the headings from the Table of Contents 
 start of the filing.
 Then the headings can be used to extract the relevant sections from the filing.
 
-The process is implemented in the `SECFilingsParser` class and relies heavily
+The process is implemented in the [SECFilingParser](https://github.com/KevorkSulahian/agentic-llm-for-better-results/blob/main/finmas/data/sec/sec_parser.py) class and relies heavily
 on the [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) package to parse the HTML content.
 
 The following simplified diagram shows the overall steps for the parsing:

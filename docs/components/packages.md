@@ -4,9 +4,9 @@ The following sections include a short description about key packages that
 are used in this project. We highlight why and how these packages are used
 in the project.
 
-## crewai
+## crewAI
 
-crewai is a multi-agent orchestration package that provides a framework for how
+[crewAI](https://github.com/crewAIInc/crewAI) is a multi-agent orchestration package that provides a framework for how
 a system (or a crew of agents) can be defined and executed. The main components
 of the framework are Agents, Tasks, Tools, and Crew.
 
@@ -37,7 +37,7 @@ with LLMs so that it is possible to query or have a chat with the data.
 ## panel
 
 Developing a user interface for any app with a lot of data and configuration can be
-quite time consuming. Therefore we use the [panel](https://panel.holoviz.org/) package, which is a
+quite time consuming. Therefore, we use the [panel](https://panel.holoviz.org/) package, which is a
 web app framework focused on data science applications. There are numeruous web frameworks
 available in Python, however, panel provides some unique features in terms of
 advanced data visualization and interactivity that makes it favorable
