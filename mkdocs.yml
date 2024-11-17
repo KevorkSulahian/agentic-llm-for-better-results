@@ -13,9 +13,10 @@ nav:
   - Components:
       - components/index.md
       - Crews: components/crews.md
-      - Packages: components/packages.md
+      - Query Engine: components/query_engine.md
       - LLM Models: components/llm_models.md
       - Embedding Models: components/embedding_models.md
+      - Packages: components/packages.md
   - Data:
       - data/index.md
       - SEC Filings:

@@ -109,9 +109,24 @@ news_config = dict(
     disabled=True,
 )
 
-llm_models_config = dict(show_index=False, disabled=True)
+llm_models_config = dict(
+    titles={
+        "provider": "Provider",
+        "id": "Model ID",
+        "context_window": "Context Window",
+        "owned_by": "Owned By",
+        "created": "Created",
+    },
+    show_index=False,
+    disabled=True,
+)
 
 embedding_models_config = dict(
+    titles={
+        "provider": "Provider",
+        "id": "Model ID",
+        "link": "Link",
+    },
     formatters={
         "link": HTMLTemplateFormatter(
             template=(
@@ -159,7 +174,12 @@ tickers_config = dict(
 sec_filings_config = dict(
     page_size=10,
     pagination="local",
-    # formatters={"link": {"type": "link", "target": "_blank"}},
+    titles={
+        "form": "Form",
+        "filing_date": "Filing Date",
+        "reportDate": "Report Date",
+        "link": "Link",
+    },
     formatters={
         "link": HTMLTemplateFormatter(
             template=(
@@ -173,7 +193,6 @@ sec_filings_config = dict(
         "reportDate": {"type": "input", "func": "like", "placeholder": "YYYY-MM-DD"},
     },
     hidden_columns=["accession_number"],
-    # max_width=1000,
     layout="fit_data_fill",
     show_index=False,
     disabled=True,

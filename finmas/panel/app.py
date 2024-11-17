@@ -749,16 +749,35 @@ class FinMAS(pn.viewable.Viewer):
                     (
                         "Models",
                         pn.Row(
-                            pn.Column(pn.pane.Markdown("### LLM Models"), self.llm_models_tbl),
                             pn.Column(
-                                pn.pane.Markdown("### Embedding Models"), self.embedding_models_tbl
+                                pn.Card(
+                                    self.llm_models_tbl,
+                                    collapsible=False,
+                                    margin=10,
+                                    title="LLM Models",
+                                )
+                            ),
+                            pn.Column(
+                                pn.Card(
+                                    self.embedding_models_tbl,
+                                    collapsible=False,
+                                    margin=10,
+                                    title="Embedding Models",
+                                )
                             ),
                         ),
                     ),
                     (
                         "SEC Filings",
                         pn.Column(
-                            pn.bind(self.get_sec_filings_tbl, update_counter=self.update_counter)
+                            pn.Card(
+                                pn.bind(
+                                    self.get_sec_filings_tbl, update_counter=self.update_counter
+                                ),
+                                collapsible=False,
+                                margin=10,
+                                title="SEC Filings",
+                            ),
                         ),
                     ),
                     (

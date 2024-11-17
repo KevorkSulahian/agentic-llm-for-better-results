@@ -33,3 +33,4 @@ Here we list some of the main packages that make this app possible:
 | [llama-index](https://docs.llamaindex.ai/en/stable/) | Data framework to help transform data to be used by LLMs |
 | [panel](https://panel.holoviz.org/)                  | Web app framework focused on data science applications   |
 | [groq](https://groq.com/)                            | Run hosted open source LLMs in the cloud                 |
+| [openai](https://github.com/openai/openai-python)    | Access to gpt-4o and gpt-4o-mini                         |

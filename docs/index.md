@@ -20,18 +20,22 @@ to understand better what the multi-agent systems can do.
 
 ## Features
 
-- **Extracting insights from unstructured data:** Analyze unstructured data such as SEC filings and News articles together with fundamental company data.
+- **Extracting insights from unstructured data:** Analyze unstructured data such as SEC filings and
+  News articles together with fundamental company data.
 - **Transparent:** Get insight into token usage, performance and the data fed to the system to gain confidence in the result.
 - **Configurable:** Adjust parameters and model selection to optimize the performance of the system.
 - **Ticker focused:** Select a major ticker listed on NASDAQ or NYSE for analysis.
 - **Multiple LLMs supported:** Use LLM from an hosted provider such as Groq or HuggingFace, or OpenAI GPT models.
-- **Multiple agent systems supported:** Use defined crews of agents to perform dedicated analysis.
+- **Multiple agent systems supported:** Use defined crews of agents to perform dedicated analysis on
+  news or SEC filings, or combine them for a final analysis.
+- **Query directly the data source:** Use the same tool as the agents to query the data source directly from the UI.
+  Powered by [llama-index's query engine](https://docs.llamaindex.ai/en/stable/understanding/querying/querying/).
 
-The following screenshots illustrate a news analysis crew output and the main dashboard.
+The following screenshots illustrate a output from a combined analysis crew and the main dashboard.
 
-## News analysis
+## Combined analysis
 
-![](assets/screenshots/finmas_news_analysis.png)
+![](assets/screenshots/finmas_combined_analysis.png)
 
 ## Main dashboard
 

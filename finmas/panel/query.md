@@ -1,6 +1,7 @@
 ## Query Engine Help
 
-The llama-index Query Engine can use the Vector Store Index to add context to queries
+The [llama-index Query Engine](https://docs.llamaindex.ai/en/stable/module_guides/deploying/query_engine/) can use the
+[Vector Store Index](https://docs.llamaindex.ai/en/stable/module_guides/indexing/vector_store_index/) to add context to queries
 that is sent to the LLM. Here you can choose to create a Vector Store Index
 from either the News data or a section from the SEC filing. This is the same
 query engine that the agents in the crews use to solve their tasks.

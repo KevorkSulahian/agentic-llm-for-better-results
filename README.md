@@ -8,20 +8,32 @@
 
 </h3>
 
+
+[![CrewAI](https://img.shields.io/badge/CrewAI-red)](https://docs.crewai.com/introduction)
+[![LlamaIndex](https://img.shields.io/badge/LlamaIndex-black)](https://docs.llamaindex.ai/en/stable/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-green?logo=openai&logoColor=white)](https://platform.openai.com/docs/models)
+[![Groq](https://img.shields.io/badge/Groq-red)](https://console.groq.com/docs/overview)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFD21E?logo=huggingface&logoColor=000)](https://huggingface.co/models?other=embeddings)
 [![Panel Hero](https://img.shields.io/badge/Panel-Hero)](https://panel.holoviz.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
-This repo contains the code for WQU Capstone project where we investigate the use of LLM multi-agent systems for solving tasks
-in the financial domain. The main focus will be on sentiment analysis, while also maintaining a broader look on how such multi-agent
-systems may perform on other financial tasks as well.
+This repo contains the code for [WQU](https://www.wqu.edu/mscfe) Capstone project where
+we investigate the use of LLM multi-agent systems for solving tasks in the financial domain.
+We use the [CrewAI](https://docs.crewai.com/introduction) framework to orchestrate the agents,
+and the [LlamaIndex](https://docs.llamaindex.ai/en/stable/) framework to creating vector store
+index from unstructured text data like news and SEC filings.
 
-The following screenshots illustrate a news analysis crew output and the main dashboard.
+Different crews are created that have different focus, and finally a combined crew
+that combines data from news, SEC filings and market data to provide a final stock
+analysis that includes a recommendation.
 
-### News analysis
+The following screenshots illustrate a output from the combined crew and the main dashboard.
 
-![](docs/assets/screenshots/finmas_news_analysis.png)
+### Combined analysis
+
+![](docs/assets/screenshots/finmas_combined_analysis.png)
 
 ### Main dashboard
 
@@ -48,19 +60,22 @@ cd agentic-llm-for-better-results
 
 2. Create a virtual environment and install the dependencies into the environment.
 
-Using `venv` and `pip`
+We recommend using the [uv package manager](https://github.com/astral-sh/uv) to install the dependencies.
+
+From the root of the project run the following command to install the
+latest dependencies without the development dependencies:
+
+```shell
+uv sync --upgrade --no-dev
+```
+
+If you want to use standard pip instead, use the following:
 
 ```shell
 python -m venv .venv
 source .venv/bin/activate  # macOS or Linux
 .venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-```
-
-Using uv
-
-```shell
-uv sync
 ```
 
 3. Set up `.env` file with necessary API keys.
@@ -75,6 +90,12 @@ source .venv/bin/activate  # macOS or Linux
 panel serve finmas/panel/app.py --show
 ```
 
+If you want to start the app with a specific ticker like `META`:
+
+```shell
+panel serve finmas/panel/app.py --show --args --args META
+```
+
 We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (income statements).\
 You can create your `.env` file by copying the `.env.template` file in the repo.
 Set the following API keys in the `.env` file in the repo folder:
@@ -83,7 +104,7 @@ Set the following API keys in the `.env` file in the repo folder:
 - `ALPACA_API_KEY` and `ALPACA_API_SECRET` for access to Benzinga Historical News API.
 - `GROQ_API_KEY` for access to running Groq models.
 - `OPENAI_API_KEY` for accessing OpenAI models `gpt-4o` and `gpt-4o-mini`.
-- `HF_TOKEN` for access to HuggingFace models.
+- `HF_TOKEN` for access to HuggingFace embedding models.
 
 ### Virtual environment
 
