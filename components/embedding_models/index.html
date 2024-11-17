@@ -14,11 +14,11 @@
         <link rel="prev" href="../llm_models/">
       
       
-        <link rel="next" href="../../data/">
+        <link rel="next" href="../packages/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -487,6 +487,8 @@
       
         
       
+        
+      
     
     
       
@@ -561,11 +563,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../packages/" class="md-nav__link">
+      <a href="../query_engine/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Packages
+    Query Engine
   </span>
   
 
@@ -649,18 +651,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#huggingface-embedding-models" class="md-nav__link">
+  <a href="#openai-embedding-model" class="md-nav__link">
     <span class="md-ellipsis">
-      HuggingFace embedding models
+      OpenAI embedding model
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#openai-embedding-model" class="md-nav__link">
+  <a href="#huggingface-embedding-models" class="md-nav__link">
     <span class="md-ellipsis">
-      OpenAI embedding model
+      HuggingFace embedding models
     </span>
   </a>
   
@@ -670,6 +672,27 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Packages
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -927,18 +950,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#huggingface-embedding-models" class="md-nav__link">
+  <a href="#openai-embedding-model" class="md-nav__link">
     <span class="md-ellipsis">
-      HuggingFace embedding models
+      OpenAI embedding model
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#openai-embedding-model" class="md-nav__link">
+  <a href="#huggingface-embedding-models" class="md-nav__link">
     <span class="md-ellipsis">
-      OpenAI embedding model
+      HuggingFace embedding models
     </span>
   </a>
   
@@ -976,26 +999,30 @@
 
 
 <h1 id="embedding-models">Embedding Models<a class="headerlink" href="#embedding-models" title="Permanent link">&para;</a></h1>
-<p>For the FinMAS system to be successful the relevant data needs to be sent to the LLM agents
-together with the task that the LLM agents is set to perform. For the system to make a best
+<p>For the FinMAS system to be successful, the relevant data needs to be sent to the LLM agents
+together with the task that the LLM agents are set to perform. For the system to make a best
 effort to find the most relevant data for the query, it uses embedding models to convert
 textual data into dense numerical representations that we call embeddings.
-The main concept is that by storing the data as numerical vectors the model would be able
+The main concept is that by storing the data as numerical vectors, the model would be able
 to estimate which parts of the data are similar to each other and which part of the data
 are very different from each other.</p>
-<p>The user can choose from a pre-defined selection of embedding models that are retrieved
-from HuggingFace. When an embedding model is retrieved from HuggingFace it will be downloaded
-locally to the directory set in the <code>embedding_models_dir</code>. If an OpenAI model is used,
-then the embedding model of OpenAI will be used.</p>
 <p>The choice of embedding model can significantly affect the result from the analysis done by
 the Multi-agent system, as the model is responsible for finding the relevant data to sent
 to the LLM agent.</p>
-<h2 id="huggingface-embedding-models">HuggingFace embedding models<a class="headerlink" href="#huggingface-embedding-models" title="Permanent link">&para;</a></h2>
-<p>TODO: explain the main features of the most popular models</p>
 <h2 id="openai-embedding-model">OpenAI embedding model<a class="headerlink" href="#openai-embedding-model" title="Permanent link">&para;</a></h2>
-<p>When using the OpenAI embedding model ada-002 it will consume tokens during the embedding
-process. For large datasets, the token consumption can be somewhat high and this should be
-taken into consideration when using this model.</p>
+<p>If an OpenAI model is used, then an embedding model of OpenAI will be used.
+The default embedding model is set to <a href="https://platform.openai.com/docs/guides/embeddings#embedding-models">text-embedding-3-small</a>
+which is most cost-effective option from OpenAI. There is also an option to use
+<code>text-embedding-3-large</code>, and these <a href="https://openai.com/index/new-embedding-models-and-api-updates/">embedding models were released early in 2024</a>.
+We generally do not recommend to use the <code>text-embedding-ada-002</code> model as it is not as cost-effective.</p>
+<h2 id="huggingface-embedding-models">HuggingFace embedding models<a class="headerlink" href="#huggingface-embedding-models" title="Permanent link">&para;</a></h2>
+<p>The user can choose from a pre-defined selection of embedding models that are retrieved
+from HuggingFace. When an embedding model is retrieved from HuggingFace it will be downloaded
+locally to the directory set in the <code>embedding_models_dir</code>.</p>
+<p>The default option is to use <a href="https://huggingface.co/BAAI/bge-small-en-v1.5">BAAI/bge-small-en-v1.5</a>
+This model is developed by Beijing Academy of Artificial Intelligence (BAAI) and is a small
+English text embedding model. It has a maximum sequence length of 512 tokens and outputs a
+vector representation with a dimension of 384.</p>
 
 
 

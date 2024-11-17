@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -485,6 +485,8 @@
       
         
       
+        
+      
     
     
       
@@ -556,11 +558,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../components/packages/" class="md-nav__link">
+      <a href="../../components/query_engine/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Packages
+    Query Engine
   </span>
   
 
@@ -603,6 +605,27 @@
   
   <span class="md-ellipsis">
     Embedding Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Packages
   </span>
   
 
@@ -905,6 +928,29 @@
 
 
 <h1 id="fundamentals">Fundamentals<a class="headerlink" href="#fundamentals" title="Permanent link">&para;</a></h1>
+<p>Fundamental data consists mainly of the income statement and balance sheet of a company.
+We extract these data from <a href="https://www.alphavantage.co/">Alpha Vantage</a> to get a sufficient number of quarterly filing data.
+The main line items of interest are:</p>
+<ul>
+<li>Total Revenue</li>
+<li>Gross Profit</li>
+<li>Operating Expenses</li>
+<li>Net Income</li>
+<li>Total Shareholder Equity</li>
+<li>Total Debt</li>
+<li>Number of Shares Outstanding</li>
+</ul>
+<p>From these line items, we can calculate the following metrics and ratios:</p>
+<ul>
+<li>Net Profit Margin</li>
+<li>Earnings per Share (EPS)</li>
+<li>Price to Earnings Ratio (P/E)</li>
+<li>Price to Sales Ratio (P/S)</li>
+<li>Debt to Equity Ratio (D/E)</li>
+</ul>
+<p>The processing of the fundamental data and conversion into Markdown tables that can be fed to the LLM models are
+shown in the <a href="https://github.com/KevorkSulahian/agentic-llm-for-better-results/blob/main/finmas/data/market/fundamentals.py">StockFundamentalsTool</a>.
+Especially computation of YoY growth rates is important for evaluating the trend and growth of a company.</p>
 
 
 

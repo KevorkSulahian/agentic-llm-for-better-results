@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -485,6 +485,8 @@
       
         
       
+        
+      
     
     
       
@@ -556,11 +558,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../components/packages/" class="md-nav__link">
+      <a href="../../components/query_engine/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Packages
+    Query Engine
   </span>
   
 
@@ -603,6 +605,27 @@
   
   <span class="md-ellipsis">
     Embedding Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Packages
   </span>
   
 
@@ -962,7 +985,16 @@
 
 <h1 id="news">News<a class="headerlink" href="#news" title="Permanent link">&para;</a></h1>
 <h2 id="benzinga-news">Benzinga News<a class="headerlink" href="#benzinga-news" title="Permanent link">&para;</a></h2>
-<p>This News source is accessed through the Alpaca API.</p>
+<p>This News source is accessed through the Alpaca API. It contains historical news articles from Benzinga.
+The processing of the news articles is done in the <a href="https://github.com/KevorkSulahian/agentic-llm-for-better-results/blob/main/finmas/data/news/benzinga_news.py">BenzingaNewsFecther</a> class.
+The news articles are converted from HTML to Markdown using the <a href="https://pypi.org/project/html-to-markdown/">html-to-markdown</a> package.
+The news articles are filtered so that only news articles that are likely to be relevant
+to the chosen ticker are used.</p>
+<p>The following rules are used to filter out news articles:</p>
+<ul>
+<li>News articles about options</li>
+<li>News articles with more than 5 tickers tagged to the article.</li>
+</ul>
 
 
 

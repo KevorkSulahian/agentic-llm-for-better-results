@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
     
     
       
@@ -400,9 +400,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#news-analysis" class="md-nav__link">
+  <a href="#combined-analysis" class="md-nav__link">
     <span class="md-ellipsis">
-      News analysis
+      Combined analysis
     </span>
   </a>
   
@@ -552,6 +552,8 @@
       
         
       
+        
+      
     
     
       
@@ -623,11 +625,11 @@
   
   
     <li class="md-nav__item">
-      <a href="components/packages/" class="md-nav__link">
+      <a href="components/query_engine/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Packages
+    Query Engine
   </span>
   
 
@@ -670,6 +672,27 @@
   
   <span class="md-ellipsis">
     Embedding Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="components/packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Packages
   </span>
   
 
@@ -942,9 +965,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#news-analysis" class="md-nav__link">
+  <a href="#combined-analysis" class="md-nav__link">
     <span class="md-ellipsis">
-      News analysis
+      Combined analysis
     </span>
   </a>
   
@@ -997,18 +1020,25 @@ and perform financial tasks. The app is developed during the final capstone proj
 <p>It is meant as a practical and educational app that demonstrates the state-of-the-art of LLM models applied
 to tasks in the financial domain, and with an extra focus on open source models and packages.</p>
 <p>Please visit <a href="https://github.com/KevorkSulahian/agentic-llm-for-better-results">GitHub repo</a> for further information.</p>
-<p>See our <a href="tutorial/">Tutorial</a> to get started.</p>
+<p>See our <a href="tutorial/">Tutorial</a> to get started, and see some
+<a href="https://github.com/KevorkSulahian/agentic-llm-for-better-results/tree/main/output/examples">example outputs</a>
+to understand better what the multi-agent systems can do.</p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Unstructured data analysis:</strong> Analyze unstructured data such as SEC filings and News articles together with fundamental company data.</li>
+<li><strong>Extracting insights from unstructured data:</strong> Analyze unstructured data such as SEC filings and
+  News articles together with fundamental company data.</li>
 <li><strong>Transparent:</strong> Get insight into token usage, performance and the data fed to the system to gain confidence in the result.</li>
 <li><strong>Configurable:</strong> Adjust parameters and model selection to optimize the performance of the system.</li>
-<li><strong>Ticker:</strong> Select a major ticker listed on NASDAQ or NYSE for analysis.</li>
+<li><strong>Ticker focused:</strong> Select a major ticker listed on NASDAQ or NYSE for analysis.</li>
 <li><strong>Multiple LLMs supported:</strong> Use LLM from an hosted provider such as Groq or HuggingFace, or OpenAI GPT models.</li>
+<li><strong>Multiple agent systems supported:</strong> Use defined crews of agents to perform dedicated analysis on
+  news or SEC filings, or combine them for a final analysis.</li>
+<li><strong>Query directly the data source:</strong> Use the same tool as the agents to query the data source directly from the UI.
+  Powered by <a href="https://docs.llamaindex.ai/en/stable/understanding/querying/querying/">llama-index's query engine</a>.</li>
 </ul>
-<p>The following screenshots illustrate a news analysis crew output and the main dashboard.</p>
-<h2 id="news-analysis">News analysis<a class="headerlink" href="#news-analysis" title="Permanent link">&para;</a></h2>
-<p><img alt="" src="assets/screenshots/finmas_news_analysis.png" /></p>
+<p>The following screenshots illustrate a output from a combined analysis crew and the main dashboard.</p>
+<h2 id="combined-analysis">Combined analysis<a class="headerlink" href="#combined-analysis" title="Permanent link">&para;</a></h2>
+<p><img alt="" src="assets/screenshots/finmas_combined_analysis.png" /></p>
 <h2 id="main-dashboard">Main dashboard<a class="headerlink" href="#main-dashboard" title="Permanent link">&para;</a></h2>
 <p><img alt="" src="assets/screenshots/finmas_main_dashboard.png" /></p>
 

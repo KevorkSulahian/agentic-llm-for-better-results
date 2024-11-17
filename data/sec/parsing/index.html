@@ -9,7 +9,7 @@
 <link href="../" rel="prev"/>
 <link href="../../news/" rel="next"/>
 <link href="../../../assets/images/favicon.png" rel="icon"/>
-<meta content="mkdocs-1.6.1, mkdocs-material-9.5.43" name="generator"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.5.44" name="generator"/>
 <title>Parsing - FinMAS - Financial Analysis Multi-agent System</title>
 <link href="../../../assets/stylesheets/main.0253249f.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -255,9 +255,9 @@
 </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../components/packages/">
+<a class="md-nav__link" href="../../../components/query_engine/">
 <span class="md-ellipsis">
-    Packages
+    Query Engine
   </span>
 </a>
 </li>
@@ -272,6 +272,13 @@
 <a class="md-nav__link" href="../../../components/embedding_models/">
 <span class="md-ellipsis">
     Embedding Models
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../components/packages/">
+<span class="md-ellipsis">
+    Packages
   </span>
 </a>
 </li>
@@ -377,7 +384,7 @@ process to attempt to clean up the HTML content as much as is necessary to get a
 format for each filing. Then we extract the headings from the Table of Contents that is always present at the
 start of the filing.
 Then the headings can be used to extract the relevant sections from the filing.</p>
-<p>The process is implemented in the <code>SECFilingsParser</code> class and relies heavily
+<p>The process is implemented in the <a href="https://github.com/KevorkSulahian/agentic-llm-for-better-results/blob/main/finmas/data/sec/sec_parser.py">SECFilingParser</a> class and relies heavily
 on the <a href="https://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</a> package to parse the HTML content.</p>
 <p>The following simplified diagram shows the overall steps for the parsing:</p>
 <pre class="mermaid"><code>---
