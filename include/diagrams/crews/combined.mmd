@@ -1,0 +1,21 @@
+---
+config:
+  layout: elk
+  look: classic
+  theme: neutral
+---
+flowchart LR
+    AV["Alpha Vantage"] --> F
+    TA["Yahoo Finance"] --> T
+    B["Benzinga News"] --> N
+    E["EDGAR SEC Filings"] --> MDA
+    N["fa:fa-newspaper News Analyst"] --> A["fa:fa-user Stock Advisor"]
+    T["fa:fa-chart-line Technical Analyst"] --> A
+    F["fa:fa-chart-simple Fundamental Analyst"] --> A
+    MDA["fa:fa-comment-dots SEC Analyst - MD&A"] --> A
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class A lightBlue
+
+    classDef beige fill:#F5F5DC,stroke:black
+    class AV,TA,B,E beige

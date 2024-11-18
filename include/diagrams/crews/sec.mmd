@@ -1,0 +1,16 @@
+---
+config:
+  look: classic
+  theme: neutral
+---
+flowchart LR
+    E["Filing from EDGAR"] --> rf["SEC Analyst - Risk Factors"]
+    rf --> S["SEC Filing Summarizer"]
+    E --> mda["SEC Analyst - MD&A"]
+    mda --> S
+
+    classDef beige fill:#F5F5DC,stroke:black
+    class E beige
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class S lightBlue
