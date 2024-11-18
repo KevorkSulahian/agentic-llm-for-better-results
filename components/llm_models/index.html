@@ -576,6 +576,10 @@
       
         
       
+        
+      
+        
+      
     
     
       
@@ -651,6 +655,48 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/news/NVDA_llama3-8b_2024-11-18/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NVDA llama3-8b
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/news/NVDA_gpt-4o-mini_2024-11-18/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NVDA gpt-4o-mini
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -667,6 +713,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -724,6 +774,48 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/sec_mda_risk_factors/NVDA_llama3-8b_2024-11-18/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NVDA llama3-8b
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/sec_mda_risk_factors/NVDA_gpt-4o_2024-11-18/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    NVDA gpt-4o
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -740,6 +832,8 @@
   
     
     
+      
+        
       
         
       
@@ -790,6 +884,27 @@
   
   <span class="md-ellipsis">
     META gpt-4o
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/market_data/META_gpt-4o-mini_2024-11-18/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    META gpt-4o-mini
   </span>
   
 
@@ -1281,9 +1396,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#llama" class="md-nav__link">
+  <a href="#groq-hosted-models" class="md-nav__link">
     <span class="md-ellipsis">
-      Llama
+      Groq hosted models
     </span>
   </a>
   
@@ -1601,9 +1716,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#llama" class="md-nav__link">
+  <a href="#groq-hosted-models" class="md-nav__link">
     <span class="md-ellipsis">
-      Llama
+      Groq hosted models
     </span>
   </a>
   
@@ -1641,8 +1756,56 @@
 
 
 <h1 id="large-language-models">Large Language Models<a class="headerlink" href="#large-language-models" title="Permanent link">#</a></h1>
+<p>In the FinMAS project, we have mainly used the llama3-8b and gpt-4o models.
+A summary of their key features is provided below.</p>
+<table>
+<thead>
+<tr>
+<th>Model Id</th>
+<th>Context Window</th>
+<th>Parameter Size</th>
+<th>Released</th>
+<th>Input Cost ($/MT)</th>
+<th>Output Cost ($/MT)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gpt-4o-mini</td>
+<td>128k</td>
+<td>Not disclosed</td>
+<td>2024-07-18</td>
+<td>0.15</td>
+<td>0.6</td>
+</tr>
+<tr>
+<td>gpt-4o</td>
+<td>128k</td>
+<td>Not disclosed</td>
+<td>2024-05-13</td>
+<td>2.5</td>
+<td>10</td>
+</tr>
+<tr>
+<td>llama3-8b-8192</td>
+<td>8192</td>
+<td>8b</td>
+<td>2024-04-18</td>
+<td>Free</td>
+<td>Free</td>
+</tr>
+</tbody>
+</table>
+<p>$/MT = Cost per million tokens</p>
 <h2 id="openai-gpt-4o-and-gpt-4o-mini">OpenAI gpt-4o and gpt-4o-mini<a class="headerlink" href="#openai-gpt-4o-and-gpt-4o-mini" title="Permanent link">#</a></h2>
-<h2 id="llama">Llama<a class="headerlink" href="#llama" title="Permanent link">#</a></h2>
+<p>The gpt-4o models from OpenAI are currently the main models that are available for developers at a
+decent cost. The gpt-4o-mini model is particularly cost-effective and is a good choice general-purpose
+tasks.</p>
+<h2 id="groq-hosted-models">Groq hosted models<a class="headerlink" href="#groq-hosted-models" title="Permanent link">#</a></h2>
+<p>It is possible to use other models hosted by Groq than the llama3-8b-8192 model, however
+within the free tier this model have the most capacity in terms of tokens per minute that
+the model is able to process. For trying other models, find the
+<a href="https://console.groq.com/docs/models">model id in their documentation</a>.</p>
 
 
 
