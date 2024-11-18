@@ -4,7 +4,7 @@
 
 <h3>
 
-[Documentation](https://kevorksulahian.github.io/agentic-llm-for-better-results/) | [Example Outputs](https://github.com/KevorkSulahian/agentic-llm-for-better-results/tree/main/output/examples)
+[Documentation](https://kevorksulahian.github.io/agentic-llm-for-better-results/) | [Example Outputs](https://kevorksulahian.github.io/agentic-llm-for-better-results/examples_index/)
 
 </h3>
 

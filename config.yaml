@@ -79,8 +79,8 @@ defaults:
       input_cost: 1.5e-7
       output_cost: 6.0e-7
     gpt-4o:
-      input_cost: 0.000005
-      output_cost: 0.000015
+      input_cost: 2.5e-6
+      output_cost: 1.0e-5
   embedding_model_cost:
     text-embedding-3-small: 2.0e-8
     text-embedding-3-large: 1.3e-7

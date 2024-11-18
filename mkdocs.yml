@@ -14,10 +14,15 @@ nav:
       - News:
           - TSLA llama3-8b: examples/news/TSLA_llama3-8b_2024-11-18.md
           - TSLA gpt-4o-mini: examples/news/TSLA_gpt-4o-mini_2024-11-18.md
+          - NVDA llama3-8b: examples/news/NVDA_llama3-8b_2024-11-18.md
+          - NVDA gpt-4o-mini: examples/news/NVDA_gpt-4o-mini_2024-11-18.md
       - SEC MD&A and Risk Factors:
           - META gpt-4o: examples/sec_mda_risk_factors/META_gpt-4o_2024-11-18.md
+          - NVDA llama3-8b: examples/sec_mda_risk_factors/NVDA_llama3-8b_2024-11-18.md
+          - NVDA gpt-4o: examples/sec_mda_risk_factors/NVDA_gpt-4o_2024-11-18.md
       - Market Data:
           - META gpt-4o: examples/market_data/META_gpt-4o_2024-11-18.md
+          - META gpt-4o-mini: examples/market_data/META_gpt-4o-mini_2024-11-18.md
           - META llama3-8b: examples/market_data/META_llama3-8b_2024-11-18.md
       - Combined:
           - NVDA gpt-4o: examples/combined/NVDA_gpt-4o_2024-11-18.md

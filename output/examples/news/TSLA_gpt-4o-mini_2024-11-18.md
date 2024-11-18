@@ -35,9 +35,9 @@ The recent developments surrounding Tesla, Inc. (TSLA) present a mixed landscape
 
 ## Crew Run Metrics
 
-Total tokens: 13029, Prompt tokens: 10702
-Successful Requests: 9
-Estimated LLM Model cost for total tokens: $0.0030015
+- Total tokens: 13029, Prompt tokens: 10702
+- Successful Requests: 9
+- Estimated LLM Model cost for total tokens: $0.0030015
 
 Time spent: 1m 18s
 
