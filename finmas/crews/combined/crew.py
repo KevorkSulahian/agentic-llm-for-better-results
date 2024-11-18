@@ -106,6 +106,7 @@ class CombinedCrew:
             news_source=news_source,
             news_start=news_start,
             news_end=news_end,
+            news_num_articles=len(records),
             form_type=filing.form,
             filing_date=filing.filing_date,
         )

@@ -6,6 +6,7 @@ import yaml
 from crewai.types.usage_metrics import UsageMetrics
 
 from finmas.constants import agent_config, defaults
+from finmas.crews.types import CrewType
 from finmas.utils.common import format_time_spent
 
 
@@ -21,13 +22,13 @@ class IndexCreationMetrics:
 
     def markdown(self) -> str:
         output = (
-            f"Embedding Model: {self.embedding_model}  \n"
-            f"Time spent: {format_time_spent(self.time_spent)}  \n"
-            f"Number of nodes: {self.num_nodes}  \n"
-            f"Text length: {self.text_length}  \n"
-            f"Chunk size: {self.chunk_size} tokens  \n"
-            f"Chunk overlap: {self.chunk_overlap} tokens  \n"
-            f"Total embedding token count: {self.total_embedding_token_count}  \n"
+            f"- Embedding Model: {self.embedding_model}\n"
+            f"- Time spent: {format_time_spent(self.time_spent)}\n"
+            f"- Number of nodes: {self.num_nodes}\n"
+            f"- Text length: {self.text_length}\n"
+            f"- Chunk size: {self.chunk_size} tokens\n"
+            f"- Chunk overlap: {self.chunk_overlap} tokens\n"
+            f"- Total embedding token count: {self.total_embedding_token_count}\n"
         )
         if self.embedding_model in defaults["embedding_model_cost"]:
             cost = (
@@ -35,7 +36,7 @@ class IndexCreationMetrics:
                 * self.total_embedding_token_count
             )
             cost_str = f"${cost:.15f}".rstrip("0")
-            output += f"Estimated embedding model cost for total tokens: {cost_str}  \n"
+            output += f"- Estimated embedding model cost for total tokens: {cost_str}\n"
         return output
 
 
@@ -53,15 +54,15 @@ class CrewConfiguration:
     def markdown(self, crew_description: bool = False) -> str:
         output = (
             "## Configuration\n\n"
-            f"Crew Name: {self.name}  \n"
-            f"Ticker: {self.ticker}  \n"
-            f"LLM: {self.llm_provider} / {self.llm_model}  \n"
-            f"Temperature: {self.llm_temperature} Max tokens: {self.llm_max_tokens}  \n"
-            "Agent Configuration:  \n"
-            f"Max iterations: {agent_config['max_iter']} Max requests per minute: {agent_config['max_rpm']}  \n"
+            f"- Crew Name: {self.name}\n"
+            f"- Ticker: {self.ticker}\n"
+            f"- LLM: {self.llm_provider} / {self.llm_model}\n"
+            f"- Temperature: {self.llm_temperature}, Max tokens: {self.llm_max_tokens}\n\n"
+            "Agent Configuration:\n\n"
+            f"- Max iterations: {agent_config['max_iter']}, Max requests per minute: {agent_config['max_rpm']}\n"
         )
         if self.similarity_top_k and self.embedding_model:
-            output += f"Embedding Model: {self.embedding_model} similarity_top_k: {self.similarity_top_k}  \n"
+            output += f"- Embedding Model: {self.embedding_model}, similarity_top_k: {self.similarity_top_k}\n"
         if crew_description:
             config_path = Path(__file__).parent / self.name / "config"
             output += (
@@ -78,12 +79,15 @@ class NewsCrewConfiguration(CrewConfiguration):
     news_source: str
     news_start: dt.date
     news_end: dt.date
+    news_num_articles: int
 
     def markdown(self, crew_description: bool = False) -> str:
         return (
-            super().markdown(crew_description)
-            + f"News Source: {self.news_source}\n"
-            + f"Date range: {self.news_start} - {self.news_end}\n"
+            "## Inputs\n\n"
+            + f"- News Source: {self.news_source}\n"
+            + f"- Date range: {self.news_start} - {self.news_end}\n"
+            + f"- Number of articles: {self.news_num_articles}\n\n"
+            + super().markdown(crew_description)
         )
 
 
@@ -94,9 +98,10 @@ class SECCrewConfiguration(CrewConfiguration):
 
     def markdown(self, crew_description: bool = False) -> str:
         return (
-            super().markdown(crew_description)
-            + f"SEC Filing Form: {self.form_type}  \n"
-            + f"Filing Date: {self.filing_date.strftime('%Y-%m-%d')}  \n"
+            "## Inputs\n\n"
+            + f"- SEC Filing Form: {self.form_type}\n"
+            + f"- Filing Date: {self.filing_date.strftime('%Y-%m-%d')}\n\n"
+            + super().markdown(crew_description)
         )
 
 
@@ -105,16 +110,18 @@ class CombinedCrewConfiguration(CrewConfiguration):
     news_source: str
     news_start: dt.date
     news_end: dt.date
+    news_num_articles: int
     form_type: str
     filing_date: dt.date
 
     def markdown(self, crew_description: bool = False) -> str:
         return (
             "## Inputs\n\n"
-            + f"News Source: {self.news_source}  \n"
-            + f"Date range: {self.news_start} - {self.news_end}  \n"
-            + f"SEC Filing Form: {self.form_type}  \n"
-            + f"Filing Date: {self.filing_date.strftime('%Y-%m-%d')}  \n"
+            + f"- News Source: {self.news_source}\n"
+            + f"- Date range: {self.news_start} - {self.news_end}\n"
+            + f"- Number of articles: {self.news_num_articles}\n"
+            + f"- SEC Filing Form: {self.form_type}\n"
+            + f"- Filing Date: {self.filing_date.strftime('%Y-%m-%d')}\n\n"
             + super().markdown(crew_description)
         )
 
@@ -161,9 +168,9 @@ def get_yaml_config_as_markdown(
 def get_usage_metrics_as_string(usage_metrics: UsageMetrics, llm_model: str | None = None) -> str:
     """Returns a string representation of the usage metrics."""
     output = (
-        f"Total tokens: {usage_metrics.total_tokens} "
-        f"Prompt tokens: {usage_metrics.prompt_tokens}  \n"
-        f"Successful Requests: {usage_metrics.successful_requests}  \n"
+        f"- Total tokens: {usage_metrics.total_tokens}\n"
+        f"- Prompt tokens: {usage_metrics.prompt_tokens}\n"
+        f"- Successful Requests: {usage_metrics.successful_requests}\n"
     )
     if llm_model and llm_model in defaults["llm_model_cost"]:
         cost = (
@@ -171,7 +178,7 @@ def get_usage_metrics_as_string(usage_metrics: UsageMetrics, llm_model: str | No
             + defaults["llm_model_cost"][llm_model]["output_cost"] * usage_metrics.completion_tokens
         )
         cost_str = f"{cost:.15f}".rstrip("0")
-        output += f"Estimated LLM Model cost for total tokens: ${cost_str}  \n"
+        output += f"- Estimated LLM Model cost for total tokens: ${cost_str}\n"
     return output
 
 
@@ -194,7 +201,7 @@ def save_crew_output(
     text_content = f"# Crew Output\n\n{output_content}\n\n"
     text_content += crew_run_metrics.markdown(crew_description=True)
     if index_creation_message:
-        text_content += f"\n\n{index_creation_message}"
+        text_content += f"\n{index_creation_message}"
 
     file_path = output_dir / filename
     file_path.write_text(text_content, encoding="utf-8")
@@ -212,3 +219,16 @@ def get_log_filename(crew_name: str):
     Path(file_path).parent.mkdir(parents=True, exist_ok=True)
     Path(file_path).touch()
     return str(file_path)
+
+
+def get_index_creation_metrics(crew: CrewType) -> str:
+    """
+    Returns a Markdown string with the index creation metrics that
+    have been collected during the crew initialization.
+    """
+    result = ""
+    for attr in dir(crew):
+        if attr.endswith("index_creation_metrics"):
+            result += f"## {attr.replace('_', ' ').title()}\n\n{getattr(crew, attr).markdown()}\n"
+
+    return result

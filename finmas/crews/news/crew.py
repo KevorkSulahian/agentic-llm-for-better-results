@@ -63,6 +63,7 @@ class NewsAnalysisCrew:
             news_source=news_source,
             news_start=news_start,
             news_end=news_end,
+            news_num_articles=len(records),
         )
         self.async_execution = async_execution
         super().__init__()

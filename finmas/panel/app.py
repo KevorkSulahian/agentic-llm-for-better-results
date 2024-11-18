@@ -24,6 +24,7 @@ from finmas.crews.utils import (
     get_usage_metrics_as_string,
     get_yaml_config_as_markdown,
     save_crew_output,
+    get_index_creation_metrics,
 )
 from finmas.data.market.fundamentals import NUM_QUARTERS, get_ticker_essentials
 from finmas.data.market.technical_analysis import get_technical_indicators
@@ -561,12 +562,7 @@ class FinMAS(pn.viewable.Viewer):
                 self.crew_output_status.alert_type = "danger"
                 return
 
-            index_creation_metrics_message = ""
-            for attr in dir(crew):
-                if attr.endswith("index_creation_metrics"):
-                    index_creation_metrics_message += (
-                        f"{attr.replace('_', ' ').title()}:  \n{getattr(crew, attr).markdown()}\n\n"
-                    )
+            index_creation_metrics_message = get_index_creation_metrics(crew)
 
             self.crew_usage_metrics.object = index_creation_metrics_message + "Started crew..."
 
