@@ -1,0 +1,9 @@
+---
+config:
+  look: classic
+  theme: neutral
+---
+flowchart LR
+    section["Extract target section from SEC filing"] --> embeddings["Generate embeddings"]
+    embeddings --> vectordb["Vector database"]
+    vectordb --> llm["Connect LLM"]

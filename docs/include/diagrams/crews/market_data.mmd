@@ -1,0 +1,16 @@
+---
+config:
+  look: classic
+  theme: neutral
+---
+flowchart LR
+    AV["Alpha Vantage Data"] --> F["Fundamental Analyst"]
+    F --> A["Stock Advisor"]
+    TA["Yahoo Finance Price Data"] --> T["Technical Analyst"]
+    T --> A
+
+    classDef beige fill:#F5F5DC,stroke:black
+    class AV,TA beige
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class A lightBlue

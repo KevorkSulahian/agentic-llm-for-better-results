@@ -1,0 +1,35 @@
+---
+config:
+  layout: elk
+  theme: default
+---
+flowchart LR
+  subgraph DS["Data Sources"]
+        Benzinga["fa:fa-newspaper Benzinga News"]
+        YF["fa:fa-chart-line Yahoo Finance"]
+        SEC["fa:fa-file SEC Filings"]
+        AV["fa:fa-chart-simple Alpha Vantage"]
+  end
+  subgraph Crews["Crews"]
+        SECCrew["fa:fa-file SEC MD&A RF"]
+        News["fa:fa-newspaper News"]
+        Combined["Combined"]
+        MarketData["fa:fa-chart-simple MarketData"]
+  end
+  subgraph LLMs["LLM Providers"]
+        Groq["Groq"]
+        OpenAI["OpenAI"]
+  end
+  subgraph embeddings["Embedding Models "]
+        HF["Hugging Face"]
+        OpenAIembeddings["OpenAI"]
+  end
+    Crews <--> FinMAS["FinMAS"]
+    DS --> Crews & FinMAS
+    FinMAS <--> User
+    LLMs <--> Crews
+    embeddings --> Crews
+    User
+    style FinMAS fill:#4CAF50,stroke:#333
+    style Crews fill:#2196F3,stroke:#333
+    style User stroke:#333

@@ -1,0 +1,16 @@
+---
+config:
+  look: classic
+  theme: neutral
+---
+flowchart LR
+    A["News Analyzer"] --> S["News Summarizer"]
+    B["Benzinga News Data"] --> A
+    SA["Sentiment Analyzer"] --> S
+    B --> SA
+
+    classDef beige fill:#F5F5DC,stroke:black
+    class B beige
+
+    classDef lightBlue fill:#ADD8E6,stroke:black
+    class S lightBlue

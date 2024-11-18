@@ -1,4 +1,4 @@
-site_name: FinMAS - Financial Analysis Multi-agent System
+site_name: "FinMAS: Financial Analysis using Multi-Agent Systems"
 site_url: https://KevorkSulahian.github.io/agentic-llm-for-better-results
 docs_dir: docs/
 repo_url: https://github.com/KevorkSulahian/agentic-llm-for-better-results
@@ -9,6 +9,12 @@ nav:
   - Tutorial:
       - tutorial/index.md
       - News Analysis: tutorial/news.md
+  - Crews:
+      - crews/index.md
+      - Market Data: crews/market_data.md
+      - SEC MD&A and Risk Factors: crews/sec.md
+      - News: crews/news.md
+      - Combined: crews/combined.md
   - Configuration: configuration.md
   - Components:
       - components/index.md
@@ -42,6 +48,7 @@ theme:
 
 extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css
+  - styles/extra.css
 
 markdown_extensions:
   - pymdownx.superfences:
@@ -51,10 +58,12 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid_custom
   - toc:
-      permalink: true
+      permalink: "#"
 
 plugins:
   - search
+  - mermaid2
   - macros:
       include_dir: docs/include
-  - mermaid2
+  - markdown-exec:
+      ansi: required

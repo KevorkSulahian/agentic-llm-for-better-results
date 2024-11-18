@@ -9,7 +9,7 @@ to estimate which parts of the data are similar to each other and which part of 
 are very different from each other.
 
 The choice of embedding model can significantly affect the result from the analysis done by
-the Multi-agent system, as the model is responsible for finding the relevant data to sent
+the Multi-Agent system, as the model is responsible for finding the relevant data to sent
 to the LLM agent.
 
 ## OpenAI embedding model

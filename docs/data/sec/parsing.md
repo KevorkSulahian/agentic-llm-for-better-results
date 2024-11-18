@@ -13,5 +13,5 @@ on the [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) package t
 The following simplified diagram shows the overall steps for the parsing:
 
 ```mermaid
-{% include 'diagrams/sec_filing_parsing.mmd' %}
+{% include 'diagrams/tools/sec_filing_parsing.mmd' %}
 ```

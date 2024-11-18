@@ -860,7 +860,9 @@ if pn.state.served:
     args_list = sys.argv[1:]
     args = argparse.Namespace()
     args.ticker = args_list[0] if args_list else None
-    FinMAS(ticker=args.ticker).servable(title="FinMAS - Financial Multi-Agent System")
+    FinMAS(ticker=args.ticker).servable(
+        title="FinMAS: Financial Analysis using LLM Multi-Agent Systems"
+    )
 
     menu_html = f"""
         <a href="{DOCS_URL}" class="button-style">Docs</a>
