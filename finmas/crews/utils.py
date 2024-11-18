@@ -6,7 +6,6 @@ import yaml
 from crewai.types.usage_metrics import UsageMetrics
 
 from finmas.constants import agent_config, defaults
-from finmas.crews.types import CrewType
 from finmas.utils.common import format_time_spent
 
 
@@ -221,7 +220,7 @@ def get_log_filename(crew_name: str):
     return str(file_path)
 
 
-def get_index_creation_metrics(crew: CrewType) -> str:
+def get_index_creation_metrics(crew) -> str:
     """
     Returns a Markdown string with the index creation metrics that
     have been collected during the crew initialization.

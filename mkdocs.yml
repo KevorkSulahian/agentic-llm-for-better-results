@@ -20,6 +20,7 @@ nav:
           - META gpt-4o: examples/market_data/META_gpt-4o_2024-11-18.md
           - META llama3-8b: examples/market_data/META_llama3-8b_2024-11-18.md
       - Combined:
+          - NVDA gpt-4o: examples/combined/NVDA_gpt-4o_2024-11-18.md
           - NVDA gpt-4o-mini: examples/combined/NVDA_gpt-4o-mini_2024-11-18.md
   - Crews:
       - crews/index.md
