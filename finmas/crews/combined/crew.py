@@ -35,6 +35,7 @@ class CombinedCrew:
 
     def __init__(
         self,
+        *,
         ticker: str,
         records: list[dict],
         llm_provider: str,
@@ -48,6 +49,7 @@ class CombinedCrew:
         max_tokens: int = defaults["llm_max_tokens"],
         similarity_top_k: int = defaults["similarity_top_k"],
         async_execution: bool = True,
+        price_end_date: dt.date | None = None,
     ):
         start = time.time()
         self.crewai_llm = get_crewai_llm_model(
@@ -90,7 +92,7 @@ class CombinedCrew:
 
         # Market Data
         self.stock_fundamentals_tool = StockFundamentalsTool()
-        self.technical_analysis_tool = TechnicalAnalysisTool()
+        self.technical_analysis_tool = TechnicalAnalysisTool(end_date=price_end_date)
 
         self.config = CombinedCrewConfiguration(
             name=self.name,

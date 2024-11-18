@@ -94,6 +94,12 @@ class FinMAS(pn.viewable.Viewer):
     # Data config
     ticker_select = pn.widgets.StaticText(name="Ticker")
 
+    price_end_date = pn.widgets.DatetimeInput(
+        name="Price End Date",
+        format="%Y-%m-%d",
+        value=defaults["price_end_date"],
+        width=100,
+    )
     news_source = pn.widgets.Select(
         name="News Source",
         value=defaults["news_source"],
@@ -101,13 +107,13 @@ class FinMAS(pn.viewable.Viewer):
         width=100,
     )
     news_start = pn.widgets.DatetimeInput(
-        name="Start",
+        name="News Start Date",
         format="%Y-%m-%d",
         value=defaults["news_start_date"],
         width=100,
     )
     news_end = pn.widgets.DatetimeInput(
-        name="End",
+        name="News End Date",
         format="%Y-%m-%d",
         value=defaults["news_end_date"],
         width=100,
@@ -345,7 +351,10 @@ class FinMAS(pn.viewable.Viewer):
 
     def fetch_technical_analysis_data(self, event) -> None:
         """Fetch price data from Yahoo Finance"""
-        df = get_technical_indicators(ticker=self.ticker_select.value, period="5y")
+        start = (self.price_end_date.value - pd.DateOffset(years=5)).date()
+        df = get_technical_indicators(
+            ticker=self.ticker_select.value, start=start, end=self.price_end_date.value
+        )
         df = df.reset_index(names="date")
 
         if getattr(self, "ta_tbl", None) is None:
@@ -530,10 +539,11 @@ class FinMAS(pn.viewable.Viewer):
                         **crew_config,
                     )
                 elif self.crew_select.value == "market_data":
-                    crew = MarketDataCrew(**crew_config)
+                    crew = MarketDataCrew(price_end_date=self.price_end_date.value, **crew_config)
                 elif self.crew_select.value == "combined":
                     crew = CombinedCrew(
                         records=self.news_records,
+                        price_end_date=self.price_end_date.value,
                         embedding_model=self.embedding_model.value,
                         news_source=self.news_source.value,
                         news_start=self.news_start.value,
@@ -674,7 +684,7 @@ class FinMAS(pn.viewable.Viewer):
                     self.ticker_select,
                     self.llm_selected,
                     self.embedding_model,
-                    self.news_source,
+                    pn.Row(self.news_source, self.price_end_date),
                     pn.Row(self.news_start, self.news_end),
                     self.include_fundamental_data,
                     self.include_news,

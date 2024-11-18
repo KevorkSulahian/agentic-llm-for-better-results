@@ -126,12 +126,12 @@ class CrewRunMetrics:
 
     def markdown(self, crew_description: bool = False) -> str:
         return (
-            self.config.markdown(crew_description)
-            + "\n"
-            + "## Crew Run Metrics\n\n"
+            "## Crew Run Metrics\n\n"
             + get_usage_metrics_as_string(self.token_usage, self.config.llm_model)
             + "\n"
             + f"Time spent: {format_time_spent(self.time_spent)}"
+            + "\n"
+            + self.config.markdown(crew_description)
         )
 
 
@@ -190,10 +190,10 @@ def save_crew_output(
     output_dir = Path(defaults["crew_output_dir"]) / config.name
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    text_content = crew_run_metrics.markdown(crew_description=True)
+    text_content = f"# Crew output:\n\n{output_content}\n\n"
+    text_content += crew_run_metrics.markdown(crew_description=True)
     if index_creation_message:
         text_content += f"\n\n{index_creation_message}"
-    text_content += "\n\n## Crew output:\n\n" + output_content
 
     file_path = output_dir / filename
     file_path.write_text(text_content, encoding="utf-8")

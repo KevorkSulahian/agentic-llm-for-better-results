@@ -1,3 +1,5 @@
+import datetime as dt
+
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
@@ -29,12 +31,13 @@ class MarketDataCrew:
         temperature: float = defaults["llm_temperature"],
         max_tokens: int = defaults["llm_max_tokens"],
         async_execution: bool = True,
+        price_end_date: dt.date | None = None,
     ):
         self.crewai_llm = get_crewai_llm_model(
             llm_provider, llm_model, temperature=temperature, max_tokens=max_tokens
         )
         self.stock_fundamentals_tool = StockFundamentalsTool()
-        self.technical_analysis_tool = TechnicalAnalysisTool()
+        self.technical_analysis_tool = TechnicalAnalysisTool(end_date=price_end_date)
 
         self.config = CrewConfiguration(
             name=self.name,

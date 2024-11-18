@@ -44,7 +44,7 @@ YOY_COLS_MAP = {
 }
 
 
-NUM_QUARTERS = 8
+NUM_QUARTERS = defaults["fundamental_analysis_quarters"]
 
 
 def format_value(value):

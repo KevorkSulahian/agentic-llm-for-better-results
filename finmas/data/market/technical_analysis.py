@@ -1,3 +1,4 @@
+import datetime as dt
 from typing import Type
 
 import numpy as np
@@ -10,12 +11,12 @@ from ta.volatility import bollinger_pband
 
 from finmas.constants import defaults
 from finmas.data.market.yahoo_finance import get_price_data
-from finmas.utils.common import extract_cols_from_df, get_text_content_file
 from finmas.logger import get_logger
+from finmas.utils.common import extract_cols_from_df, get_text_content_file
 
 logger = get_logger(__name__)
 
-NUM_PERIODS = 8
+NUM_PERIODS = defaults["technical_analysis_periods"]
 
 TA_COLS_MAP = {
     "close": "Close price",
@@ -39,11 +40,16 @@ class TechnicalAnalysisTool(BaseTool):
         "Use this tool to get essential technical indicators for a given stock ticker."
     )
     args_schema: Type[BaseModel] = TechnicalAnalysisInput
+    end_date: dt.date
+
+    def __init__(self, end_date: dt.date | None = None, **kwargs):
+        end_date = end_date or dt.date.today()
+        super().__init__(end_date=end_date, **kwargs)
 
     def _run(self, ticker: str) -> str:
         """Function that returns essential technical indicators and price for a given ticker in a Markdown table format."""
-
-        df: pd.DataFrame = get_technical_indicators(ticker, period="5y")
+        start = (self.end_date - pd.DateOffset(years=5)).date()
+        df: pd.DataFrame = get_technical_indicators(ticker, start=start, end=self.end_date)
         df = df.tail(NUM_PERIODS)
         df = df.dropna(axis=0, how="any")
         assert isinstance(df.index, pd.DatetimeIndex)

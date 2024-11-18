@@ -31,6 +31,7 @@ defaults:
   fundamental_freq: Annual
   news_start_date: 2024-10-15
   news_end_date: 2024-11-10
+  price_end_date: 2024-11-10
   news_max_num_symbols: 5 # Maximum number of symbols to be used in a news article
   tickerid: META
   tickers_market_cap_exclude:
@@ -48,6 +49,8 @@ defaults:
     max_iterations: 10
     max_requests_per_minute: 30
     async_execution: True
+  technical_analysis_periods: 8
+  fundamental_analysis_quarters: 8
   embedding_models_dir: embedding_models
   crew_output_dir: output
   crew_logs_dir: logs

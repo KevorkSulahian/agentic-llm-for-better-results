@@ -1,13 +1,12 @@
 <div align="center">
 
-# FinMAS - Financial Analysis by Multi-Agent System
+# FinMAS: Financial Analysis using LLM Multi-Agent Systems
 
 <h3>
 
 [Documentation](https://kevorksulahian.github.io/agentic-llm-for-better-results/) | [Example Outputs](https://github.com/KevorkSulahian/agentic-llm-for-better-results/tree/main/output/examples)
 
 </h3>
-
 
 [![CrewAI](https://img.shields.io/badge/CrewAI-red)](https://docs.crewai.com/introduction)
 [![LlamaIndex](https://img.shields.io/badge/LlamaIndex-black)](https://docs.llamaindex.ai/en/stable/)
@@ -25,9 +24,11 @@ We use the [CrewAI](https://docs.crewai.com/introduction) framework to orchestra
 and the [LlamaIndex](https://docs.llamaindex.ai/en/stable/) framework to creating vector store
 index from unstructured text data like news and SEC filings.
 
-Different crews are created that have different focus, and finally a combined crew
-that combines data from news, SEC filings and market data to provide a final stock
-analysis that includes a recommendation.
+[4 crews](https://kevorksulahian.github.io/agentic-llm-for-better-results/crews/) have been
+created that have different focus, with different data sources.
+A final [combined crew](https://kevorksulahian.github.io/agentic-llm-for-better-results/crews/combined/) is created
+that combines data from news, SEC filings and market data to provide a final stock analysis that
+includes a recommendation.
 
 The following screenshots illustrate a output from the combined crew and the main dashboard.
 
