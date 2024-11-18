@@ -36,10 +36,12 @@ output/combined
 output/news
 output/sec_mda_risk_factors
 
-### JupyterNotebooks ###
+### Notebooks ###
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+notebooks/drafts/
 
 # IPython
 profile_default/

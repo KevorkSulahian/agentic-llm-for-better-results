@@ -1,0 +1,105 @@
+# Crew Output
+
+**META 10-K SEC Filing Summary Report**
+
+**Introduction**
+
+This report provides a concise summary of the key insights from META's 10-K SEC filing, focusing on the Management's Discussion and Analysis, key developments and market segments, and risk factors. The aim is to present stakeholders with a clear understanding of META's financial performance, strategic initiatives, and potential risks.
+
+**Insights from Management's Discussion and Analysis**
+
+In 2023, META reported a total revenue of $134.90 billion, marking a 16% increase from the previous year. This growth was primarily driven by an increase in advertising revenue, with ad impressions across META's Family of Apps rising by 28% year-over-year. However, the average price per ad decreased by 9%. The company's annual worldwide ARPU (Average Revenue Per User) was $44.60, a 13% increase from 2022, with notable growth in Europe and the Rest of World regions. Looking forward, user growth is expected to be concentrated in regions with lower ARPU, which may impact future ARPU growth rates.
+
+META plans to enhance its reporting by providing year-over-year percentage changes in ad impressions and average price per ad by geographic region starting in 2024. The company is also investing heavily in privacy-enhancing technologies and AI to improve ad targeting and measurement, despite facing challenges from regulatory changes and platform developments. Significant investments are being made in AI and the metaverse, with the latter seen as a long-term initiative that could unlock future monetization opportunities.
+
+**Key Developments and Market Segments**
+
+META is actively developing new ad products and formats, such as Reels ads and business messaging ad products, to boost user engagement and monetization. The focus on privacy-enhancing technologies and AI is central to improving its advertising products and services. These strategic initiatives are expected to drive growth in key market segments and enhance META's competitive position.
+
+**Summary of Key Risk Factors**
+
+META's 10-K filing outlines several risk factors that could adversely affect its business, financial condition, and results of operations:
+
+1. **Product Offerings and User Engagement**: Maintaining user engagement is critical, as declines could reduce advertising revenue. Changes in user preferences or failure to innovate could negatively impact growth.
+
+2. **Advertising Revenue**: Reductions in marketer spending or changes in digital advertising trends could significantly affect revenue.
+
+3. **Competition**: Intense competition in the technology and social media sectors could impact market share and profitability.
+
+4. **Media Coverage**: Unfavorable media coverage could damage reputation and user trust, affecting engagement and revenue.
+
+5. **Technical Infrastructure**: The ability to scale and adapt technical infrastructure is crucial, with failures potentially disrupting operations.
+
+6. **Government Regulation**: Privacy and data protection laws pose significant risks, with compliance potentially increasing operational costs.
+
+7. **Data Security**: Breaches and cyber-attacks pose threats to user data and privacy, potentially leading to legal liabilities.
+
+8. **Dual Class Stock Structure**: This structure limits the influence of Class A stockholders, concentrating control with certain stakeholders.
+
+9. **Catastrophic Events**: Natural disasters or pandemics could disrupt operations and affect financial performance.
+
+10. **Economic Conditions and Tax Laws**: Changes in economic conditions or tax laws could impact financial results and strategic decisions.
+
+**Conclusion**
+
+META's 10-K SEC filing highlights the company's strong financial performance in 2023, driven by advertising revenue growth and strategic investments in AI and the metaverse. However, the company faces significant risks, including competition, regulatory challenges, and data security threats. Stakeholders should consider these factors when evaluating META's future prospects. The company's focus on innovation and privacy-enhancing technologies positions it well for future growth, but careful management of the identified risks will be crucial to sustaining its market position.
+
+## Crew Run Metrics
+
+Total tokens: 7291 Prompt tokens: 5613\
+Successful Requests: 7\
+Estimated LLM Model cost for total tokens: $0.053235
+
+Time spent: 1m 7s
+
+## Configuration
+
+Crew Name: sec_mda_risk_factors\
+Ticker: META\
+LLM: openai / gpt-4o\
+Temperature: 0.0 Max tokens: 1024\
+Agent Configuration:\
+Max iterations: 10 Max requests per minute: 30\
+Embedding Model: text-embedding-3-small similarity_top_k: 3\
+SEC Filing Form: 10-K\
+Filing Date: 2024-02-02
+
+## Agents
+
+### SEC Filing MDA Analyzer
+
+- **Role**: SEC Filing Management's Discussion and Analysis Section Analyst
+- **Goal**: Analyze {ticker}'s {form} SEC filing to extract information from the Management's Discussion and Analysis section.
+- **Backstory**: You are an expert in analyzing the Management's Discussion and Analysis (MD&A) section of SEC filings. Your deep understanding of this section allows you to extract critical insights about a company's performance, strategic direction, and management's perspective on future risks and opportunities. Your expertise helps stakeholders gain a nuanced understanding of the company's operational and financial outlook.
+
+### SEC Filing Risk Factors Analyzer
+
+- **Role**: SEC Filing Risk Factors Section Analyst
+- **Goal**: Analyze {ticker}'s {form} SEC filing to extract information from the Risk Factor's section.
+- **Backstory**: You are an expert in analyzing the Risk Factors sections of SEC filings, skilled at extracting detailed risk information presented by the company. Your insights help stakeholders understand the potential risks that could impact the company's performance and operations.
+
+### SEC Filing Summarizer
+
+- **Role**: SEC Filing Summarizer
+- **Goal**: Summarize the information from SEC filing into a concise, easy-to-read report for {ticker}.
+- **Backstory**: You are a financial writer skilled at synthesizing complex financial and operational information from SEC filings into clear and informative summaries. Your work ensures that stakeholders can easily understand the essential takeaways without delving into the full details of regulatory documents.
+
+## Tasks
+
+### SEC Filing MDA Task
+
+- **Description**: Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool. Focus on the section Management's Discussion and analysis. Extract information about the growth in key market segments, and forward-looking statements from management. Include information about any key products and forward-looking statements from management.
+- **Expected Output**: The final answer should be a report that includes information about market segments, management discussion, and forward-looking statements from management.
+- **Agent**: sec_filing_mda_analyzer
+
+### SEC Filing Risk Factors Task
+
+- **Description**: Analyze the {form} SEC filing for the stock ticker {ticker} by using your assigned tool. Focus on the section Risk Factors.
+- **Expected Output**: The final answer should be a report that includes information about the most important risk factors mentioned in the SEC filing.
+- **Agent**: sec_filing_risk_factors_analyzer
+
+### SEC Filing Summary Task
+
+- **Description**: Create a summary report for the stock ticker {ticker} {form} SEC filing. Include key insights extracted from the SEC filing with key market segments, key developments and information from Management's Discussion and analysis and Risk Factors sections.
+- **Expected Output**: A concise summary report that provides key information from the SEC filing, including insights from the Management's Discussion and Analysis and Risk Factors sections.
+- **Agent**: sec_filing_summarizer

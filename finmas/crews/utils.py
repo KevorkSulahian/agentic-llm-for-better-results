@@ -52,7 +52,7 @@ class CrewConfiguration:
 
     def markdown(self, crew_description: bool = False) -> str:
         output = (
-            "## Configuration:  \n\n"
+            "## Configuration\n\n"
             f"Crew Name: {self.name}  \n"
             f"Ticker: {self.ticker}  \n"
             f"LLM: {self.llm_provider} / {self.llm_model}  \n"
@@ -110,11 +110,12 @@ class CombinedCrewConfiguration(CrewConfiguration):
 
     def markdown(self, crew_description: bool = False) -> str:
         return (
-            super().markdown(crew_description)
+            "## Inputs\n\n"
             + f"News Source: {self.news_source}  \n"
             + f"Date range: {self.news_start} - {self.news_end}  \n"
             + f"SEC Filing Form: {self.form_type}  \n"
             + f"Filing Date: {self.filing_date.strftime('%Y-%m-%d')}  \n"
+            + super().markdown(crew_description)
         )
 
 
@@ -130,7 +131,7 @@ class CrewRunMetrics:
             + get_usage_metrics_as_string(self.token_usage, self.config.llm_model)
             + "\n"
             + f"Time spent: {format_time_spent(self.time_spent)}"
-            + "\n"
+            + "\n\n"
             + self.config.markdown(crew_description)
         )
 
@@ -190,7 +191,7 @@ def save_crew_output(
     output_dir = Path(defaults["crew_output_dir"]) / config.name
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    text_content = f"# Crew output:\n\n{output_content}\n\n"
+    text_content = f"# Crew Output\n\n{output_content}\n\n"
     text_content += crew_run_metrics.markdown(crew_description=True)
     if index_creation_message:
         text_content += f"\n\n{index_creation_message}"
