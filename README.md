@@ -101,11 +101,11 @@ We use [Alpha Vantage](https://www.alphavantage.co/) to get fundamental data (in
 You can create your `.env` file by copying the `.env.template` file in the repo.
 Set the following API keys in the `.env` file in the repo folder:
 
-- `ALPHAVANTAGE_API_KEY` for fundamental data.
-- `ALPACA_API_KEY` and `ALPACA_API_SECRET` for access to Benzinga Historical News API.
-- `GROQ_API_KEY` for access to running Groq models.
-- `OPENAI_API_KEY` for accessing OpenAI models `gpt-4o` and `gpt-4o-mini`.
-- `HF_TOKEN` for access to HuggingFace embedding models.
+- [ALPHAVANTAGE_API_KEY](https://www.alphavantage.co/) for fundamental data.
+- [ALPACA_API_KEY](https://docs.alpaca.markets/docs/historical-news-data) and `ALPACA_API_SECRET` for access to Benzinga Historical News API.
+- [GROQ_API_KEY](https://console.groq.com/playground) for access to running Groq models.
+- [OPENAI_API_KEY](https://platform.openai.com/settings/organization/api-keys) for accessing OpenAI models `gpt-4o` and `gpt-4o-mini`.
+- [HF_TOKEN](https://huggingface.co/settings/tokens) for access to HuggingFace embedding models.
 
 ### Virtual environment
 
