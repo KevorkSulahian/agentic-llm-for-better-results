@@ -4,9 +4,9 @@ config:
   theme: neutral
 ---
 flowchart LR
-    E["Filing from EDGAR"] --> rf["SEC Analyst - Risk Factors"]
-    rf --> S["SEC Filing Summarizer"]
-    E --> mda["SEC Analyst - MD&A"]
+    E["Filing from EDGAR"] --> rf["fa:fa-triangle-exclamation SEC Analyst - Risk Factors"]
+    rf --> S["fa:fa-file SEC Filing Summarizer"]
+    E --> mda["fa:fa-comments SEC Analyst - MD&A"]
     mda --> S
 
     classDef beige fill:#F5F5DC,stroke:black

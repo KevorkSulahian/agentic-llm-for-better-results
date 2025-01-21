@@ -2,138 +2,142 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/configuration/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/development/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples_index/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/crews/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/embedding_models/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/llm_models/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/packages/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/components/query_engine/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/crews/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/crews/combined/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/crews/market_data/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/crews/news/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/crews/sec/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/data/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/data/fundamentals/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/data/news/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/data/sec/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/data/sec/parsing/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
+    </url>
+    <url>
+         <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/combined/APP_gpt-4o_2025-01-21/</loc>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/combined/NVDA_gpt-4o-mini_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/combined/NVDA_gpt-4o_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/market_data/META_gpt-4o-mini_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/market_data/META_gpt-4o_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/market_data/META_llama3-8b_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/news/NVDA_gpt-4o-mini_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/news/NVDA_llama3-8b_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/news/TSLA_gpt-4o-mini_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/news/TSLA_llama3-8b_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/sec_mda_risk_factors/META_gpt-4o_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/sec_mda_risk_factors/NVDA_gpt-4o_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/examples/sec_mda_risk_factors/NVDA_llama3-8b_2024-11-18/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/tutorial/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
     <url>
          <loc>https://KevorkSulahian.github.io/agentic-llm-for-better-results/tutorial/news/</loc>
-         <lastmod>2024-11-18</lastmod>
+         <lastmod>2025-01-21</lastmod>
     </url>
 </urlset>
