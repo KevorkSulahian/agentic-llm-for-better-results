@@ -27,6 +27,7 @@ nav:
       - Combined:
           - NVDA gpt-4o: examples/combined/NVDA_gpt-4o_2024-11-18.md
           - NVDA gpt-4o-mini: examples/combined/NVDA_gpt-4o-mini_2024-11-18.md
+          - APP gpt-4o: examples/combined/APP_gpt-4o_2025-01-21.md
   - Crews:
       - crews/index.md
       - Market Data: crews/market_data.md
